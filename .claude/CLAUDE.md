@@ -48,8 +48,8 @@
 
 - **项目名称**: 无限流规则怪谈 (Fenli)
 - **技术栈**: Python FastAPI + MySQL + 原生 JS/CSS（桌面端 index.html + 移动端 m.html）
-- **当前版本**: v0.5.3
-- **当前阶段**: 核心功能完成，移动端已适配，orchestrator已重构（关键词召回+Pass2叙事）
+- **当前版本**: v0.6.1
+- **当前阶段**: Hook系统 + AI召回恢复 + 前端稳定性修复（流式空内容/Token过期/弹窗叠加/CSS transition）；移动端已适配；orchestrator双Pass架构（Pass1 AI召回+Pass2叙事+keyword fallback）
 - **项目目录**: D:\project\fenli\mvp
 - **启动方式**: cd mvp && MYSQL_PASS=root python server.py
 - **测试地址**: http://localhost:8777

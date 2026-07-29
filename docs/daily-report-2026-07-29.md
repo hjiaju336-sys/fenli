@@ -1,17 +1,17 @@
-# 日报：2026-07-29 v0.5.3 代码审查修复
+# 日报：2026-07-29 v0.6.1 代码审查修复
 
 > PM Agent | 老板：@hjiaju336
 
 ## 一句话总结
-- 当前产品状态：v0.5.3 开发+审查+测试全部完成，数据库已清理，代码已就绪，待老板确认后 push。
+- 当前产品状态：v0.6.1 开发+审查+测试全部完成，数据库已清理，代码已就绪，待老板确认后 push。
 
 ## 完成了什么
 
 | 模块 | 进展 | 负责人 | 耗时 |
 |------|------|--------|------|
 | 项目接手 & 全量验证 | 启动服务器，逐文件审查，WebSocket 全链路跑通 | PM | 1h |
-| PRD 撰写 | 产出 `docs/PRD-v0.5.3-代码审查修复.md`（6项需求） | PM | 0.5h |
-| 技术方案 | 产出 `docs/tech-design-v0.5.3.md`（含分派+排期） | Tech Lead | 0.5h |
+| PRD 撰写 | 产出 `docs/PRD-v0.6.1-代码审查修复.md`（6项需求） | PM | 0.5h |
+| 技术方案 | 产出 `docs/tech-design-v0.6.1.md`（含分派+排期） | Tech Lead | 0.5h |
 | F1: 恢复 AI Pass1 召回 | orchestrator 接入 pass1，独立 Pass1 provider，keyword fallback | Backend Agent | 1.5h |
 | F2: 流式空内容修复 | ai_provider 3处过滤空字符串（DeepSeek+Anthropic+collect） | Backend Agent | 0.3h |
 | F3: Token 401 拦截 | 前端 _fetch() 包装器，桌面+移动双端适配 | Web Agent | 0.5h |
@@ -20,7 +20,7 @@
 | Code Review | 5项全审，发现 F1 provider 独立化问题，已修复 | Code Reviewer | 0.5h |
 | QA 回归测试 | WebSocket 3轮（双模型+同模型+倒置）+ 401边界 + fallback边界 | QA Agent | 1h |
 | 数据库清理 | 清理 23 张表测试数据，保留 admin 账号 | Backend Agent | 0.3h |
-| 版本号更新 | CLAUDE.md / pm-agent.md / index.html → v0.5.3 | PM | 0.1h |
+| 版本号更新 | CLAUDE.md / pm-agent.md / index.html → v0.6.1 | PM | 0.1h |
 
 ## 代码改动清单
 
@@ -31,7 +31,7 @@
 | `static/index.html` | ~40行 | _fetch() / _cleanPopups() / CSS transition / 版本号 |
 | `static/m.html` | ~25行 | _fetch() 适配（LG/toast/navigateTo） |
 | `.claude/CLAUDE.md` | +1规则 | 第8条：实现必分派 + 版本号 |
-| `.claude/agents/pm-agent.md` | 版本号 | v0.5.2 → v0.5.3 |
+| `.claude/agents/pm-agent.md` | 版本号 | v0.5.2 → v0.6.1 |
 
 ## 卡在哪里
 - 无阻塞项。
@@ -51,7 +51,7 @@
 - 升级事件：0
 
 ## 当前版本
-- 版本号：v0.5.3
+- 版本号：v0.6.1
 - 部署方式：`cd mvp && MYSQL_PASS=root python server.py`
 - 测试地址：http://localhost:8777
 - 未 push 到 GitHub（待老板确认）
@@ -66,5 +66,5 @@
 | 版本号自动化 | P3 | CI/CD 时 |
 
 ## 下一步
-- 老板确认 → push to GitHub → 打 Tag v0.5.3
+- 老板确认 → push to GitHub → 打 Tag v0.6.1
 - v0.6 打磨冲刺：按 `docs/打磨冲刺计划-v0.6.md` 推进（Bug清零 Day1 → 移动端 Day2 → 桌面端 Day3…）
