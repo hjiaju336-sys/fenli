@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.db
+
+# Node
+node_modules/
+
+# Uploads
+static/uploads/*
+!static/uploads/.gitignore
+
+# Logs & temp
+*.log
+logs/
+screenshots/
+test_screenshots/
+test_data/
+
+# Environment
+.env
+*.local
+
+# IDE
+.vscode/
+.idea/
+
+# Playwright
+.playwright-mcp/

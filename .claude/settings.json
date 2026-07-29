@@ -1,0 +1,61 @@
+{
+  "description": "OPC Agent Framework - 多智能体协作配置",
+  "agents": {
+    "pm-agent": {
+      "path": ".claude/agents/pm-agent.md",
+      "description": "产品经理 Agent - 需求分析、调研、PRD、商业化、验收"
+    },
+    "tech-lead-agent": {
+      "path": ".claude/agents/tech-lead-agent.md",
+      "description": "技术负责人 Agent - 技术方案、选型、分派、审核"
+    },
+    "code-reviewer-agent": {
+      "path": ".claude/agents/code-reviewer-agent.md",
+      "description": "代码审查 Agent - 审查 + 修改代码"
+    },
+    "qa-agent": {
+      "path": ".claude/agents/qa-agent.md",
+      "description": "测试 Agent - 用户视角测试、体验反馈"
+    },
+    "backend-agent": {
+      "path": ".claude/agents/backend-agent.md",
+      "description": "后端开发 Agent"
+    },
+    "web-agent": {
+      "path": ".claude/agents/web-agent.md",
+      "description": "Web 前端开发 Agent"
+    },
+    "mobile-agent": {
+      "path": ".claude/agents/mobile-agent.md",
+      "description": "移动端开发 Agent"
+    },
+    "miniprogram-agent": {
+      "path": ".claude/agents/miniprogram-agent.md",
+      "description": "小程序开发 Agent"
+    },
+    "devops-agent": {
+      "path": ".claude/agents/devops-agent.md",
+      "description": "运维 Agent - 部署、监控、回滚"
+    },
+    "logger-agent": {
+      "path": ".claude/agents/logger-agent.md",
+      "description": "日志 Agent - 全流程记录、日报生成"
+    }
+  },
+  "templates": {
+    "prd": "templates/prd-template.md",
+    "tech-design": "templates/tech-design-template.md",
+    "task-card": "templates/task-card-template.md",
+    "test-report": "templates/test-report-template.md",
+    "daily-report": "templates/daily-report-template.md",
+    "defect-report": "templates/defect-report-template.md"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+/* 夜间护眼主题 */
+:root {
+  --bg: #1a1a2e; --surface: #2a2a3e; --parchment: #2e2e44; --parchment-dark: #252538;
+  --blood: #4a6fa5; --blood-light: #6a8fc5; --gold: #6a8abf; --gold-light: #8aaadf;
+  --ink: #c8c8dc; --ink-light: #a0a0b8; --shadow: rgba(0,0,0,.4);
+  --border: #3a3a5a; --radius: 6px;
+  --font: "Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
+}

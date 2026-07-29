@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>无限流规则怪谈</title>
+<style>
+:root{--bg:#0d0d1a;--parchment:#1a1a2e;--parchment-dark:#252540;--blood:#b84a5c;--blood-light:#d4708a;--gold:#d4a574;--gold-light:#e8c4a0;--ink:#e8d5c8;--ink-light:#b8a898;--shadow:rgba(0,0,0,.4);--border:#2a2a4a;--surface:#12122a;--radius:8px;--font:"PingFang SC","Microsoft YaHei","Noto Serif SC",sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.page{display:none;position:relative;z-index:1}.page.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.container{background:linear-gradient(175deg,var(--surface) 0%,var(--parchment) 40%,var(--parchment-dark) 100%);border:2px solid var(--border);border-radius:10px;box-shadow:0 0 0 4px rgba(180,120,180,.08),0 8px 40px var(--shadow),inset 0 1px 0 rgba(255,255,255,.05);position:relative;overflow:hidden}
+.container::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(120,100,180,.04));pointer-events:none;border-radius:10px}
+.topOverlay{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--blood),var(--blood-light));color:#fce8d0;padding:8px 36px;border-radius:4px;font-size:18px;font-weight:700;letter-spacing:4px;box-shadow:0 2px 12px rgba(180,80,100,.25);z-index:5;border:1.5px solid #7a3050}
+.btn{padding:10px 28px;border:none;border-radius:var(--radius);font-size:14px;font-family:var(--font);cursor:pointer;font-weight:600;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--blood),var(--blood-light));color:#fce8d0}.btn-primary:hover{box-shadow:0 4px 16px rgba(180,80,100,.35);transform:translateY(-1px)}
+.btn-secondary{background:var(--parchment-dark);color:var(--ink);border:1.5px solid var(--border)}.btn-secondary:hover{background:#353555}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#1a0c00}.btn-gold:hover{box-shadow:0 4px 16px rgba(200,160,100,.35)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.notice-box{margin:20px 0;padding:14px;background:rgba(180,120,180,.08);border:1.5px solid #4a3a5a;border-radius:var(--radius);font-size:12px;color:var(--ink-light);min-height:60px}
+.popup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}.popup-overlay.active{display:flex}
+.popup{background:linear-gradient(175deg,var(--surface),var(--parchment));border:2px solid var(--border);border-radius:10px;padding:24px 28px 18px;width:420px;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.5)}
+.popup .close-btn{position:absolute;top:10px;right:12px;width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--parchment-dark);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.input-row{margin-bottom:12px}.input-row label{display:block;font-size:12px;color:var(--ink-light);margin-bottom:4px}
+.input-row input,.input-row select{width:100%;padding:9px 12px;border:2px solid #3a3050;border-radius:var(--radius);background:rgba(255,255,255,.06);color:var(--ink);font-size:13px;font-family:var(--font)}.input-row input:focus{outline:none;border-color:var(--blood)}
+#page-login .container{width:460px;padding:80px 50px 40px;margin:0 auto}
+#page-login .input-group{margin-bottom:18px}#page-login label{display:block;font-size:13px;color:var(--ink-light);margin-bottom:6px}
+#page-login input[type=text],#page-login input[type=password]{width:100%;padding:11px 14px;border:2px solid #3a3050;border-radius:var(--radius);background:rgba(255,255,255,.06);color:var(--ink);font-size:14px;font-family:var(--font)}#page-login input:focus{outline:none;border-color:var(--blood)}
+#page-home .container{width:520px;padding:70px 44px 36px;margin:0 auto}
+.func-btns{display:flex;flex-direction:column;gap:14px;margin:20px 0}.func-btns .btn{padding:14px 20px;font-size:15px;text-align:center}
+#page-template .container{width:720px;padding:24px 30px 18px;margin:0 auto}
+.template-title{text-align:center;font-size:17px;font-weight:700;margin-bottom:12px;color:var(--blood)}
+.template-section{margin-bottom:16px}.template-section h4{color:var(--blood);font-size:13px;border-bottom:1px solid #4a3a5a;padding-bottom:4px;margin-bottom:8px}
+.template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.template-card{height:80px;border:2px dashed #3a3050;border-radius:var(--radius);background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:13px;color:#8a8098;cursor:pointer;transition:all .2s;text-align:center;line-height:1.5;padding:4px}.template-card:hover{border-color:var(--gold);background:rgba(255,255,255,.08)}.template-card.selected{border-color:var(--blood);border-style:solid;background:rgba(255,255,255,.06)}
+/* ── 游戏三栏布局 ── */
+.game-container{display:flex;flex-direction:column;height:92vh;max-height:92vh;padding:0!important}
+.game-topbar{display:flex;justify-content:space-between;align-items:center;padding:4px 12px;border-bottom:1.5px solid var(--border);font-size:12px;flex-shrink:0}
+.game-main{display:flex;flex:1;overflow:hidden;min-height:0}
+.game-sidebar{width:200px;border-right:1.5px solid var(--border);overflow-y:auto;padding:6px;flex-shrink:0;display:flex;flex-direction:column;gap:5px}
+.game-chat{flex:1;min-width:320px;display:flex;flex-direction:column}
+.game-vars{width:220px;border-left:1.5px solid var(--border);overflow-y:auto;padding:6px;flex-shrink:0;transition:width .25s ease;display:flex;flex-direction:column}
+.game-vars.collapsed{width:36px;overflow:hidden}.game-vars.collapsed .vars-content{display:none}.game-vars.collapsed .vars-header{font-size:0}.game-vars.collapsed .vars-header .btn-sm{font-size:10px}
+.vars-header{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--blood);margin-bottom:4px;flex-shrink:0}
+.vars-header .btn-sm{padding:2px 6px;font-size:10px}
+.vars-content{flex:1;overflow-y:auto;font-size:11px}
+.vars-content h3{font-size:11px;color:var(--blood);margin:4px 0 2px;border-bottom:1px solid rgba(180,120,180,.3)}
+.vars-content .v-item{margin:2px 0;padding:2px 4px;font-size:10px;border-left:2px solid var(--gold);cursor:pointer}
+.vars-content .v-item.spoiler{border-left-color:var(--blood);background:rgba(200,0,0,.08)}
+.vars-footer{flex-shrink:0;font-size:10px;padding-top:4px;border-top:1px solid rgba(180,120,180,.2)}
+.status-card{padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.3);font-size:11px}.status-card .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blood);margin-right:5px}
+.sidebar-stats{font-size:10px;color:#7b68ae;margin-top:auto;padding-top:4px;border-top:1px solid rgba(180,120,180,.2)}
+
+/* ── 聊天气泡 ── */
+.chat-msg-user{text-align:right;margin:6px 0;display:flex;justify-content:flex-end;align-items:flex-start;gap:4px}
+.chat-msg-user .bubble{background:rgba(180,120,180,.12);border-radius:12px 12px 4px 12px;padding:8px 12px;max-width:75%;font-size:13px;text-align:left}
+.chat-msg-ai{text-align:left;margin:6px 0;display:flex;justify-content:flex-start;align-items:flex-start;gap:4px}
+.chat-msg-ai .bubble{background:var(--parchment);border-radius:12px 12px 12px 4px;padding:8px 12px;max-width:85%;font-size:13px;line-height:1.7;white-space:pre-wrap;box-shadow:inset 0 0 0 1px rgba(180,120,180,.1)}
+.chat-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;border:2px solid var(--gold);object-fit:cover}
+.chat-avatar-sm{width:24px;height:24px;border-radius:50%;flex-shrink:0;border:1px solid var(--border);object-fit:cover;vertical-align:middle;margin-right:4px}
+.avatar-upload{display:flex;align-items:center;gap:8px;margin-top:6px}.avatar-upload img{width:48px;height:48px;border-radius:50%;border:2px solid var(--gold);object-fit:cover}
+.bg-picker{position:fixed;top:10px;right:10px;z-index:50;font-size:18px;cursor:pointer;background:rgba(0,0,0,.3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+.chat-msg-system{color:var(--blood);margin:6px 0;font-size:12px;text-align:center}
+.quote-highlight{color:var(--blood);font-weight:700}
+
+.chat-messages{flex:1;overflow-y:auto;padding:8px;font-size:13px;line-height:1.7}
+.chat-input-bar{display:flex;gap:6px;align-items:center;flex-shrink:0;padding-top:6px;border-top:1px solid rgba(180,120,180,.15)}
+.chat-input-bar textarea{flex:1;padding:8px 12px;border:2px solid #3a3050;border-radius:6px;background:rgba(255,255,255,.05);color:var(--ink);font-family:var(--font);font-size:14px;resize:none;max-height:80px;min-height:38px}.chat-input-bar textarea:focus{outline:none;border-color:var(--blood)}
+
+/* ── 汉堡菜单 ── */
+.hamburger{display:none!important;position:fixed;top:8px;left:8px;z-index:110;background:var(--gold);border:none;border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+
+/* ── 响应式 ── */
+#page-game .container{width:100vw;height:100vh;max-width:1400px;padding:0;display:flex;flex-direction:column}
+@media (max-width:1024px){.game-sidebar{width:160px}.game-vars{width:180px}.game-chat{min-width:280px}}
+@media (max-width:768px){
+  #page-game .container{height:100dvh;max-height:100dvh}
+  .game-sidebar{display:none;position:fixed;left:0;top:0;bottom:0;z-index:105;width:260px;background:var(--surface);border-right:2px solid var(--border);padding:12px}.game-sidebar.open{display:flex}
+  .game-vars{display:none;position:fixed;bottom:0;left:0;right:0;z-index:105;max-height:55vh;width:100%;border-left:0;border-top:2px solid var(--border);background:var(--surface)}.game-vars.open{display:flex}
+  .game-vars.collapsed{display:none}.game-vars.collapsed.open{display:flex}
+  .game-chat{min-width:100%}
+  .hamburger{display:block!important}
+}
+.circle-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--border);background:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink)}.circle-btn:hover{box-shadow:0 2px 8px rgba(200,160,100,.35)}
+#page-debug .container{width:700px;padding:20px 28px;margin:0 auto;max-height:75vh;overflow-y:auto;font-size:12px}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#3a3050;border-radius:3px}
+/* Toast */
+.toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:10px 22px;border-radius:6px;font-size:13px;font-family:var(--font);color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.3);animation:toastIn .3s ease,toastOut .35s ease 3.5s forwards;pointer-events:auto;white-space:nowrap}
+.toast-success{background:#3a7d3a;border:1px solid #5a9d5a}.toast-error{background:#8b2020;border:1px solid #b84c3c}.toast-info{background:#2a5a8a;border:1px solid #4a7aaa}.toast-loading{background:#4a3a5a;border:1px solid #6a5a7a}
+@keyframes toastIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-12px)}}
+/* 双栏 API 弹窗 */
+.api-dual{display:flex;gap:16px}.api-col{flex:1;border:1.5px solid #4a3a5a;border-radius:6px;padding:10px 12px;background:rgba(255,255,255,.25)}.api-col h5{font-size:12px;color:var(--blood);margin-bottom:8px;text-align:center;border-bottom:1px solid #4a3a5a;padding-bottom:4px}.api-col .input-row{margin-bottom:8px}.api-col .input-row label{font-size:11px}.api-col .input-row input{font-size:12px;padding:6px 10px}
+.theme-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.theme-dot{width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .2s;position:relative}.theme-dot:hover{transform:scale(1.15)}.theme-dot.active{border-color:var(--blood);box-shadow:0 0 0 2px var(--blood-light)}.theme-dot[data-t="default"]{background:linear-gradient(135deg,#0d0d1a,#d4a574)}.theme-dot[data-t="night"]{background:linear-gradient(135deg,#1a1a2e,#4a6fa5)}.theme-dot[data-t="pink"]{background:linear-gradient(135deg,#3a1828,#d4648a)}.theme-dot[data-t="horror"]{background:linear-gradient(135deg,#0a0000,#cc0000)}
+/* 模板详情页 */
+.star-rating{display:inline-flex;gap:2px;cursor:pointer}.star-rating .star{font-size:22px;color:#4a3a5a;transition:color .15s}.star-rating .star.active{color:var(--gold)}.star-rating .star:hover{color:var(--gold-light)}
+#page-template-detail .container{width:700px;padding:20px 30px;margin:0 auto}
+.detail-header{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}.detail-cover{width:120px;height:160px;border-radius:var(--radius);border:2px solid var(--border);object-fit:cover;background:var(--parchment-dark)}.detail-info{flex:1}.detail-info h2{margin:0 0 4px;font-size:18px;color:var(--blood)}.detail-info .meta{font-size:11px;color:var(--ink-light);margin-bottom:4px}
+.rating-bar{margin:10px 0;padding:8px 12px;background:rgba(180,120,180,.1);border-radius:var(--radius);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.comment-area{margin-top:16px;border-top:1px solid #4a3a5a;padding-top:12px}
+.comment-area textarea{width:100%;height:60px;padding:8px;border:2px solid #3a3050;border-radius:var(--radius);font-family:var(--font);font-size:12px;resize:vertical}
+.comment-item{padding:10px 0;border-bottom:1px solid #3a3050;font-size:12px}.comment-item .c-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}.comment-item .c-head .c-user{font-weight:700;color:var(--blood)}.comment-item .c-head .c-time{font-size:10px;color:#aaa}.comment-item .c-body{margin-left:32px;line-height:1.5}.comment-item .c-actions{margin-left:32px;margin-top:4px;display:flex;gap:12px;font-size:11px}.comment-item .c-actions span{cursor:pointer;color:var(--ink-light)}.comment-item .c-actions span:hover{color:var(--blood)}.comment-item .c-reply{margin-left:32px;margin-top:6px;padding:6px 10px;background:rgba(180,120,180,.06);border-radius:4px;font-size:11px;border-left:2px solid var(--gold)}
+.comments-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px}.comments-toolbar select{font-size:11px;padding:2px 6px;border:1px solid #3a3050;border-radius:3px;background:var(--surface)}
+.pager{text-align:center;margin-top:10px;display:flex;justify-content:center;gap:8px;align-items:center}.pager button{font-size:11px}
+.msg-edit-btn{display:none;position:absolute;right:4px;top:2px;font-size:10px;cursor:pointer;background:none;border:1px solid var(--border);border-radius:3px;padding:1px 4px;color:var(--ink-light)}
+.chat-msg-user:hover .msg-edit-btn,.chat-msg-user:hover .msg-rollback-btn{display:inline-block}
+.msg-rollback-btn{display:none;position:absolute;right:28px;top:2px;font-size:10px;cursor:pointer;background:none;border:1px solid var(--border);border-radius:3px;padding:1px 4px;color:var(--ink-light)}
+.chat-msg-user{position:relative}
+/* ── Hook事件编辑器 ── */
+.hook-card{border:1.5px solid #4a3a5a;border-radius:var(--radius);padding:10px 14px;margin-bottom:8px;background:rgba(255,255,255,.04);cursor:pointer;transition:all .2s;position:relative}.hook-card:hover{border-color:var(--gold);background:rgba(255,255,255,.06)}.hook-card.expanded{border-color:var(--blood);background:rgba(255,255,255,.06);cursor:default}
+.hook-card .hook-summary{display:flex;justify-content:space-between;align-items:center;gap:8px}.hook-card .hook-trigger-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(180,120,180,.15);color:var(--ink-light);white-space:nowrap}.hook-card .hook-effect-badge{font-size:10px;padding:2px 6px;border-radius:8px;background:rgba(200,160,60,.12);color:var(--gold-light);margin:0 2px}.hook-card .hook-actions{display:flex;gap:4px;flex-shrink:0}.hook-card .hook-body{display:none;margin-top:10px;padding-top:10px;border-top:1px solid #4a3a5a}.hook-card.expanded .hook-body{display:block}
+.hook-condition-row{display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap}.hook-condition-row select,.hook-condition-row input{padding:3px 6px;border:1.5px solid #3a3050;border-radius:4px;font-size:11px;font-family:var(--font);background:rgba(255,255,255,.06);color:var(--ink)}.hook-condition-row select{min-width:90px}.hook-condition-row input[type=text]{width:120px}.hook-condition-row input[type=number]{width:60px}
+.hook-effect-item{border:1px solid #3a3050;border-radius:6px;padding:8px 10px;margin-bottom:6px;background:rgba(0,0,0,.15);position:relative}.hook-effect-item .ef-del{position:absolute;top:2px;right:6px;cursor:pointer;color:var(--blood);font-weight:700;font-size:14px}.hook-effect-item label{font-size:10px;color:var(--ink-light);display:block;margin-top:4px}.hook-effect-item select,.hook-effect-item input[type=text],.hook-effect-item input[type=number],.hook-effect-item textarea{padding:3px 6px;border:1.5px solid #3a3050;border-radius:4px;font-size:11px;font-family:var(--font);background:rgba(255,255,255,.06);color:var(--ink);width:100%;margin-top:2px}.hook-effect-item textarea{height:40px;resize:vertical}
+.img-upload-preview{display:inline-block;position:relative;margin:4px}.img-upload-preview img{width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #4a3a5a}.img-upload-preview .img-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--blood);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none}
+.hook-editor-toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+/* ── Hook效果动画 ── */
+@keyframes flashRed{0%,100%{box-shadow:inset 0 0 80px rgba(255,0,0,.6)}50%{box-shadow:inset 0 0 0px rgba(255,0,0,0)}}
+@keyframes screenShake{0%,100%{transform:translate(0)}10%{transform:translate(-4px,2px)}20%{transform:translate(4px,-1px)}30%{transform:translate(-3px,-2px)}40%{transform:translate(3px,1px)}50%{transform:translate(-2px,-1px)}60%{transform:translate(2px,1px)}70%{transform:translate(-1px,0)}80%{transform:translate(1px,-1px)}90%{transform:translate(0,1px)}}
+@keyframes goldenGlow{0%,100%{box-shadow:0 0 20px rgba(212,165,116,.3),inset 0 0 30px rgba(212,165,116,.1)}50%{box-shadow:0 0 40px rgba(232,196,160,.5),inset 0 0 50px rgba(212,165,116,.2)}}
+@keyframes vignettePulse{0%,100%{box-shadow:inset 0 0 80px rgba(0,0,0,.5)}50%{box-shadow:inset 0 0 120px rgba(0,0,0,.8)}}
+@keyframes bloodEdge{0%{box-shadow:inset 0 0 0px rgba(180,74,92,0)}100%{box-shadow:inset 0 0 60px rgba(180,74,92,.5)}}
+@keyframes typewriter{from{width:0}to{width:100%}}
+@keyframes heartbeatWarm{0%,100%{box-shadow:inset 0 0 30px rgba(180,74,92,.3)}50%{box-shadow:inset 0 0 30px rgba(212,165,116,.4)}}
+@keyframes statusFlash{0%,100%{background:transparent}50%{background:var(--flash-color, rgba(180,74,92,.3))}}
+@keyframes breathing{0%,100%{transform:scale(1)}50%{transform:scale(1.008)}}
+@keyframes glitchText{0%{transform:translate(0)}20%{transform:translate(-2px,1px);filter:hue-rotate(90deg)}40%{transform:translate(2px,-1px)}60%{transform:translate(-1px,-1px);filter:hue-rotate(-90deg)}80%{transform:translate(1px,1px)}100%{transform:translate(0);filter:hue-rotate(0)}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-60px)}}
+.hook-flash-red{animation:flashRed .3s ease-in-out 3}
+.hook-screen-shake{animation:screenShake .4s ease-in-out}
+.hook-golden-glow{animation:goldenGlow 3s ease-in-out}
+.hook-vignette-pulse{animation:vignettePulse 3s ease-in-out}
+.hook-blood-edge{animation:bloodEdge 3s ease-in-out forwards}
+.hook-heartbeat-warm{animation:heartbeatWarm 5s ease-in-out}
+.hook-glitch-text{animation:glitchText .1s linear 20}
+.hook-breathing{animation:breathing 4s ease-in-out}
+/* ── 弹窗效果 ── */
+.hook-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:250;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s ease}
+.hook-portrait-popup{text-align:center;max-width:420px;width:90%}.hook-portrait-popup img{max-width:200px;max-height:260px;object-fit:contain;border-radius:8px;border:2px solid var(--gold);margin-bottom:12px;box-shadow:0 0 30px rgba(200,160,100,.3)}.hook-portrait-popup .npc-line{font-size:16px;color:var(--ink);line-height:1.6;margin:8px 0}
+.hook-ending-card{text-align:center;padding:30px 20px;background:linear-gradient(175deg,var(--surface),var(--parchment));border:2px solid var(--gold);border-radius:12px;max-width:450px;width:90%}.hook-ending-card .end-icon{font-size:56px;margin-bottom:10px}.hook-ending-card .end-title{font-size:20px;font-weight:700;color:var(--blood);margin-bottom:6px}.hook-ending-card .end-desc{font-size:14px;color:var(--ink);margin-bottom:14px}
+.hook-note-card{max-width:400px;width:90%;padding:20px;border-radius:8px;border:2px solid;font-size:14px;line-height:1.7}.hook-note-card.parchment{background:#f5e6c8;color:#3a2a10;border-color:#c8a060}.hook-note-card.medical{background:#e8f0e8;color:#1a3a1a;border-color:#6a9060;font-family:monospace}.hook-note-card.diary{background:#f0e0e8;color:#3a1a2a;border-color:#c080a0}
+.hook-clue-image{max-width:500px;width:90%;text-align:center}.hook-clue-image img{max-width:100%;max-height:60vh;object-fit:contain;border-radius:6px;border:2px solid var(--border)}.hook-clue-image .caption{font-size:13px;color:var(--ink-light);margin-top:8px}
+.hook-binary-choice{max-width:400px;width:90%;text-align:center;padding:20px;background:var(--parchment);border:2px solid var(--blood);border-radius:10px}.hook-binary-choice .bc-btns{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.hook-fullscreen-text{position:fixed;inset:0;z-index:260;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;letter-spacing:4px;animation:fadeIn .5s ease;pointer-events:none}.hook-fullscreen-text.normal{color:var(--ink)}.hook-fullscreen-text.blood{color:var(--blood)}.hook-fullscreen-text.gold{color:var(--gold)}
+.hook-chapter-title{text-align:center;padding:20px;font-size:24px;font-weight:700;color:var(--gold);letter-spacing:6px;animation:fadeIn .8s ease}
+.hook-scene-transition{text-align:center;padding:16px;font-size:16px;color:var(--ink-light);font-style:italic;letter-spacing:2px}
+/* ── 输入锁定遮罩 ── */
+.input-lock-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px}.input-lock-overlay .lock-text{font-size:14px;color:var(--blood);margin-bottom:8px;text-align:center;padding:0 20px}.input-lock-overlay .lock-timer{font-size:24px;font-weight:700;color:var(--gold);margin-bottom:8px}.input-lock-overlay .lock-close{position:absolute;top:8px;right:12px;width:28px;height:28px;border-radius:50%;border:2px solid var(--blood);background:rgba(0,0,0,.6);color:var(--blood);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}.input-lock-overlay .lock-keyword-input{width:200px;padding:6px 10px;border:1.5px solid var(--gold);border-radius:4px;background:rgba(0,0,0,.5);color:var(--ink);font-size:13px;text-align:center;margin-top:8px}
+/* ── 舒适度开关 ── */
+.comfort-section{margin-top:8px;border-top:1px solid #4a3a5a;padding-top:8px}.comfort-section h5{font-size:12px;color:var(--blood);margin-bottom:6px;text-align:center}.comfort-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:11px;color:var(--ink-light)}.comfort-toggle{position:relative;width:40px;height:22px;flex-shrink:0}.comfort-toggle input{opacity:0;width:0;height:0}.comfort-toggle .slider{position:absolute;cursor:pointer;inset:0;background:#3a3050;border-radius:22px;transition:.3s}.comfort-toggle .slider::before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:var(--ink-light);border-radius:50%;transition:.3s}.comfort-toggle input:checked+.slider{background:var(--blood)}.comfort-toggle input:checked+.slider::before{transform:translateX(18px);background:#fce8d0}
+/* ── 降级提示 ── */
+.degrade-notice{position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:300;background:rgba(60,30,30,.9);color:#f0c0a0;padding:6px 16px;border-radius:16px;font-size:11px;animation:fadeIn .3s ease;pointer-events:none;white-space:nowrap;border:1px solid rgba(200,100,80,.4)}
+/* ── 粒子效果 ── */
+.particle{position:fixed;pointer-events:none;z-index:240;animation:floatUp 4s ease-out forwards}
+/* ── 好感度动画 ── */
+.fav-float{position:fixed;z-index:255;font-size:20px;font-weight:700;pointer-events:none;animation:floatUp 2s ease-out forwards}
+</style><link id="theme-css" rel="stylesheet" href="data:text/css," disabled></head>
+<body>
+<canvas id="mouse-trail" style="position:fixed;inset:0;z-index:9998;pointer-events:none;display:none"></canvas>
+
+<div id="page-login" class="page active">
+<div class="container">
+<div class="topOverlay">无限流规则怪谈</div>
+<div class="input-group"><label>账号</label><input type="text" id="login-user" placeholder="用户名"></div>
+<div class="input-group"><label>密码</label><input type="password" id="login-pass" placeholder="密码"></div>
+<button class="btn btn-primary" style="width:100%" onclick="doLogin()">确认登录</button>
+<div style="text-align:center;margin-top:8px"><span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="doRegister()">没有账号？点击注册</span></div>
+<div class="notice-box" id="login-notice">新玩家请直接注册，已有账号请登录</div>
+<div class="bottom-announce" style="margin-top:20px;padding:8px;text-align:center;font-size:11px;color:#7b68ae;border-top:1px solid #4a3a5a">v0.5.2 — 无限流规则怪谈</div>
+</div></div>
+
+<div id="page-home" class="page">
+<div class="container">
+<div class="topOverlay">无限流规则怪谈</div>
+<div class="func-btns">
+<button class="btn btn-secondary" onclick="navTo('page-template')">快速开始 — 选择模板</button>
+<button class="btn btn-secondary" onclick="openSaves()">继续游戏 — 加载存档</button>
+<button class="btn btn-secondary" onclick="navTo('page-template')">模板管理 — 浏览与自建</button>
+<button class="btn btn-secondary" onclick="openApiConfig()">系统设置 — API与模型</button>
+<button class="btn btn-secondary btn-sm" onclick="navTo('page-profile')">个人中心</button>
+<button class="btn btn-secondary btn-sm" onclick="navTo('page-suggestions')">建议反馈</button>
+<button class="btn btn-secondary btn-sm" onclick="navTo('page-admin')" id="btn-admin-entry" style="display:none">管理面板</button>
+<button class="btn btn-secondary btn-sm" onclick="navTo('page-debug')">调试面板</button>
+</div>
+<div class="notice-box">选择功能开始。新玩家建议先设置 API Key，再选择模板开局。</div>
+</div></div>
+
+<div id="page-template" class="page">
+<div class="container">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<button class="btn btn-secondary btn-sm" onclick="navTo('page-home')">返回</button>
+<div class="template-title" style="margin:0">模板选择</div>
+<div style="width:60px"></div>
+</div>
+<div class="template-section"><h4>标准模板</h4><div class="template-grid" id="std-grid"></div></div>
+<div class="template-section"><h4>云端共享</h4><div class="template-grid" id="cloud-grid"></div></div>
+<div class="template-section"><h4>自建模板</h4><div class="template-grid" id="my-grid"></div><div style="text-align:right;margin-top:4px"><button class="btn btn-secondary btn-sm" onclick="navTo('page-editor')">+ 新建</button></div></div>
+<div id="template-confirm" style="display:none;text-align:center;margin-top:6px;padding:8px;background:rgba(180,120,180,.12);border-radius:6px;border:1px solid #4a3a5a"><span id="template-selected-name"></span><button class="btn btn-primary btn-sm" style="margin-left:12px" onclick="confirmTemplate()">确认并开始</button></div>
+</div></div>
+
+<div id="page-editor" class="page">
+<div class="container" style="width:680px;padding:16px 24px;margin:0 auto;max-height:92vh;overflow-y:auto">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<button class="btn btn-secondary btn-sm" onclick="navTo('page-template')">← 返回</button>
+<div class="template-title" style="margin:0">新建模板</div>
+<div style="width:60px"></div>
+</div>
+<!-- 步骤指示器 -->
+<div id="editor-steps" style="display:flex;gap:4px;justify-content:center;margin-bottom:12px;font-size:11px;flex-wrap:wrap">
+<span class="ed-step active" data-s="1">① 基本信息</span><span style="color:#d4a574">→</span>
+<span class="ed-step" data-s="2">② 世界设定</span><span style="color:#d4a574">→</span>
+<span class="ed-step" data-s="3">③ 地图设定</span><span style="color:#d4a574">→</span>
+<span class="ed-step" data-s="4">④ 规则设定</span><span style="color:#d4a574">→</span>
+<span class="ed-step" data-s="5">⑤ 角色设定</span><span style="color:#d4a574">→</span>
+<span class="ed-step" data-s="6">⑥ 物品设定</span><span style="color:#d4a574">→</span>
+<span class="ed-step" data-s="7">⑦ 世界书</span><span style="color:#d4a574">→</span>
+<span class="ed-step" data-s="8">⑧ ⚡事件配置</span><span style="color:#d4a574">→</span>
+<span class="ed-step" data-s="9">⑨ 预览上传</span>
+</div>
+<style>.ed-step{padding:2px 8px;border-radius:10px;background:rgba(180,120,180,.08);color:#b8a898}.ed-step.active{background:var(--blood);color:#fce8d0;font-weight:700}.ed-card{border:1.5px solid #4a3a5a;border-radius:var(--radius);padding:8px 12px;margin-bottom:8px;background:rgba(255,255,255,.25);position:relative}.ed-card h5{font-size:12px;color:var(--blood);margin:0 0 4px}.ed-card .ed-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}.ed-card .ed-row label{font-size:11px;color:var(--ink-light);display:block}.ed-card .ed-row input,.ed-card .ed-row textarea,.ed-card .ed-row select{padding:4px 8px;border:1.5px solid #3a3050;border-radius:4px;font-size:11px;font-family:var(--font);background:rgba(255,255,255,.6)}.ed-card .ed-row textarea{width:100%;height:48px;resize:vertical}.ed-card .ed-row input[type=text]{width:100%}.ed-card .ed-del{position:absolute;top:4px;right:8px;cursor:pointer;font-size:14px;color:var(--blood);font-weight:700}</style>
+<div id="editor-step-content"></div>
+<div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+<button class="btn btn-secondary btn-sm" id="ed-prev" onclick="edPrev()" style="display:none">← 上一步</button>
+<button class="btn btn-primary btn-sm" id="ed-next" onclick="edNext()">下一步 →</button>
+<button class="btn btn-gold btn-sm" id="ed-finish" onclick="edFinish()" style="display:none">生成并保存</button>
+</div>
+<!-- 高级模式折叠 -->
+<div style="margin-top:16px;border-top:1px solid #4a3a5a;padding-top:8px" id="ed-advanced-section">
+<div style="font-size:12px;cursor:pointer;color:var(--ink-light);text-align:center" onclick="var d=document.getElementById('ed-advanced-body');var arrow=this.querySelector('span');d.style.display=d.style.display==='none'?'block':'none';arrow.textContent=d.style.display==='none'?'▶':'▼'"><span>▶</span> 高级模式（直接编辑JSON）</div>
+<div id="ed-advanced-body" style="display:none;margin-top:8px">
+<input type="hidden" id="editor-name">
+<textarea id="editor-json" style="width:100%;height:200px;padding:8px;border:2px solid #3a3050;border-radius:6px;font-family:var(--font);font-size:12px" placeholder='{"tags":[{"tag_name":"...","category":"world","tag_hint":"...","tag_detail":{...}}]}'></textarea>
+<div style="display:flex;gap:6px;justify-content:center;margin-top:6px">
+<button class="btn btn-secondary btn-sm" onclick="edImportJSON()">从JSON导入</button>
+<button class="btn btn-primary btn-sm" onclick="savePreset('server')">直接保存</button>
+<button class="btn btn-gold btn-sm" onclick="savePreset('cloud')">上传云端</button>
+</div>
+</div></div>
+</div></div>
+
+	<div id="page-template-detail" class="page">
+	<div class="container">
+	<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+	<button class="btn btn-secondary btn-sm" onclick="navTo('page-template')">← 返回模板列表</button>
+	<button class="btn btn-primary btn-sm" id="detail-start-btn" onclick="startFromDetail()">开始游戏</button>
+	</div>
+	<div id="detail-content">加载中...</div>
+	</div></div>
+
+
+	<div id="page-profile" class="page">
+	<div class="container" style="width:600px;padding:20px 30px;margin:0 auto">
+	<button class="btn btn-secondary btn-sm" onclick="navTo('page-home')">← 返回</button>
+	<div id="profile-info" style="margin-top:12px">加载中...</div>
+	<div style="display:flex;gap:8px;margin-top:10px">
+	<button class="btn btn-gold btn-sm" onclick="doSignIn()" id="btn-signin">签到领积分</button>
+	<button class="btn btn-primary btn-sm" onclick="openExchange()">兑换码</button>
+	</div>
+	<div id="profile-points-history" style="margin-top:12px;font-size:12px;max-height:200px;overflow-y:auto"></div>
+	</div></div>
+
+	<div id="page-suggestions" class="page">
+	<div class="container" style="width:600px;padding:20px 30px;margin:0 auto">
+	<button class="btn btn-secondary btn-sm" onclick="navTo('page-home')">← 返回</button>
+	<div class="template-title" style="margin-top:8px">建议反馈</div>
+	<div class="input-row"><label>分类</label><select id="sg-cat"><option value="bug">Bug反馈</option><option value="feature">功能建议</option><option value="other">其他</option></select></div>
+	<div class="input-row"><label>内容</label><textarea id="sg-content" style="width:100%;height:80px;padding:8px;border:2px solid #3a3050;border-radius:var(--radius);font-family:var(--font);font-size:12px;resize:vertical" placeholder="详细描述你的建议或Bug..."></textarea></div>
+	<button class="btn btn-primary btn-sm" onclick="submitSuggestion()">提交</button>
+	<div style="margin-top:14px;border-top:1px solid #4a3a5a;padding-top:8px">
+	<div style="font-weight:700;font-size:13px;color:var(--blood);margin-bottom:6px">我的建议</div>
+	<div id="my-suggestions" style="font-size:12px">加载中...</div>
+	</div>
+	</div></div>
+
+	<div id="page-admin" class="page">
+	<div class="container" style="width:900px;padding:20px;margin:0 auto;display:flex;gap:12px;max-height:88vh">
+	<div style="width:130px;border-right:1px solid var(--border);padding-right:8px;flex-shrink:0;display:flex;flex-direction:column;gap:3px">
+	<button class="btn btn-sm btn-secondary" onclick="adminTab('users')" style="display:block;width:100%">用户管理</button>
+	<button class="btn btn-sm btn-secondary" onclick="adminTab('codes')" style="display:block;width:100%">兑换码</button>
+	<button class="btn btn-sm btn-secondary" onclick="adminTab('comments')" style="display:block;width:100%">评论管理</button>
+	<button class="btn btn-sm btn-secondary" onclick="adminTab('reports')" style="display:block;width:100%">举报处理</button>
+	<button class="btn btn-sm btn-secondary" onclick="adminTab('suggestions')" style="display:block;width:100%">建议列表</button>
+	<button class="btn btn-sm btn-secondary" onclick="adminTab('announce')" style="display:block;width:100%">系统公告</button>
+	<button class="btn btn-sm btn-secondary" onclick="adminTab('stats')" style="display:block;width:100%">系统统计</button>
+	<button class="btn btn-sm btn-secondary" onclick="navTo('page-home')" style="display:block;width:100%;margin-top:auto">返回</button>
+	</div>
+	<div id="admin-content" style="flex:1;overflow-y:auto;font-size:12px;min-height:400px"></div>
+	</div></div>
+<button class="hamburger" id="btn-hamburger" onclick="toggleSidebar()">☰</button>
+
+<div id="page-game" class="page">
+<div class="container game-container">
+<div class="game-topbar">
+  <span style="display:flex;gap:8px;align-items:center"><b id="world-name">--</b> <small id="world-desc">--</small></span>
+  <span style="display:flex;gap:8px;align-items:center">
+    <button class="btn btn-sm btn-secondary" id="btn-rules-toggle" onclick="toggleVars()" title="显示/隐藏变量面板">📋</button>
+    <button class="btn btn-sm btn-secondary" onclick="showBgMenu()" title="更换底图">🎨</button>
+    <span id="game-status" style="font-size:10px;color:var(--ink-light)">未连接</span>
+    <span style="font-size:10px;cursor:pointer;color:var(--blood);text-decoration:underline" onclick="leaveGame()">返回</span>
+  </span>
+</div>
+<div class="game-main">
+ <aside class="game-sidebar" id="game-sidebar">
+  <div class="status-card" style="background:rgba(139,32,32,.08);border-color:var(--blood)"><span class="dot"></span><b id="sb-world-name">--</b><br><small id="sb-world-desc">--</small></div>
+  <div id="player-cards"></div>
+  <div class="sidebar-stats"><div>标签:<span id="st-tags">-</span></div><div>记忆:<span id="st-mems">-</span></div><div>操作:<span id="st-ops">-</span> Token:<span id="st-tk">-</span></div></div>
+ </aside>
+ <main class="game-chat" id="game-chat">
+  <div class="chat-messages" id="chat-msgs"><div class="chat-msg-system">加载中...</div></div>
+  <div class="chat-input-bar">
+   <select id="nvalue-select" onchange="setNValue(this.value)" style="width:52px;padding:2px;font-size:11px;border:1.5px solid var(--border);border-radius:4px;background:rgba(255,255,255,.4);font-family:var(--font)" title="上下文窗口轮数（影响AI记忆/回滚范围/总结频率）"><option value="3">N3</option><option value="5" selected>N5</option><option value="7">N7</option><option value="10">N10</option><option value="15">N15</option><option value="20">N20</option></select><button class="btn btn-secondary btn-sm" onclick="doSave()">存</button>
+   <textarea id="game-input" placeholder="你要做什么？" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+   <button class="circle-btn" id="btn-send" onclick="sendMsg()">发</button>
+   <button class="circle-btn" id="btn-cancel" style="background:var(--blood-light);color:#fce8d0;display:none" onclick="cancelMsg()">停</button>
+   <button class="btn btn-secondary btn-sm" onclick="doRollback()">回滚</button>
+   <button class="circle-btn" onclick="openApiConfig()" style="font-size:12px">设</button>
+  </div>
+ </main>
+ <aside class="game-vars" id="game-vars">
+  <div class="vars-header">变量面板 <button class="btn btn-sm btn-secondary" id="btn-collapse-vars" onclick="toggleVars()">◀</button></div>
+  <div class="vars-content" id="vars-content"><p style="font-size:11px;color:#888">暂无变量数据</p></div>
+  <div class="vars-footer"><label style="cursor:pointer"><input type="checkbox" id="spoiler-toggle" onchange="toggleSpoiler()"> 剧透模式</label></div>
+ </aside>
+</div>
+</div></div>
+
+<div id="page-debug" class="page">
+<div class="container">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="template-title" style="margin:0">调试面板</div><button class="btn btn-secondary btn-sm" onclick="navTo('page-home')">返回</button></div>
+<div id="debug-content">加载中...</div>
+</div></div>
+
+<div class="popup-overlay" id="popup-api">
+<div class="popup" style="width:640px"><div class="close-btn" onclick="closePopup('popup-api')">X</div>
+<div style="font-weight:700;margin-bottom:10px;color:var(--blood);text-align:center">API 配置</div>
+<div class="api-dual">
+<div class="api-col"><h5>Pass1 标签召回<br><small style="color:#888">建议:便宜模型</small></h5>
+<div class="input-row"><label>地址</label><input type="text" id="api-url1" value="https://api.deepseek.com"></div>
+<div class="input-row"><label>密钥</label><div style="display:flex;gap:3px"><input type="password" id="api-key1"><button class="btn btn-sm btn-secondary" onclick="toggleKey('api-key1','toggle-key-btn1')" id="toggle-key-btn1">显示</button></div></div>
+<div class="input-row"><label>模型</label><div style="display:flex;gap:3px"><input type="text" id="api-model1" list="model-list1" value="deepseek-v4-flash" style="flex:1"><datalist id="model-list1"><option value="deepseek-v4-flash"><option value="deepseek-v4-pro"></datalist><button class="btn btn-sm btn-secondary" onclick="fetchModels(1)">拉取</button></div></div>
+</div>
+<div class="api-col"><h5>Pass2 剧情生成<br><small style="color:#888">建议:强力模型</small></h5>
+<div class="input-row"><label>地址</label><input type="text" id="api-url2" value="https://api.deepseek.com"></div>
+<div class="input-row"><label>密钥</label><div style="display:flex;gap:3px"><input type="password" id="api-key2"><button class="btn btn-sm btn-secondary" onclick="toggleKey('api-key2','toggle-key-btn2')" id="toggle-key-btn2">显示</button></div></div>
+<div class="input-row"><label>模型</label><div style="display:flex;gap:3px"><input type="text" id="api-model2" list="model-list2" value="deepseek-v4-pro" style="flex:1"><datalist id="model-list2"><option value="deepseek-v4-flash"><option value="deepseek-v4-pro"></datalist><button class="btn btn-sm btn-secondary" onclick="fetchModels(2)">拉取</button></div></div>
+</div>
+</div>
+<div style="font-size:10px;color:#888;margin:6px 0;text-align:center">如果仅填写 Pass1 密钥，Pass2 将自动复用。默认推荐: Pass1 = deepseek-v4-flash, Pass2 = deepseek-v4-pro</div>
+<div style="border-top:1px solid #4a3a5a;margin:8px 0;padding-top:8px">
+<div style="font-size:12px;color:var(--ink-light);text-align:center;margin-bottom:6px">主题选择</div>
+<div class="theme-row">
+<div class="theme-dot active" data-t="default" title="羊皮卷（默认）" onclick="switchTheme('default')"></div>
+<div class="theme-dot" data-t="night" title="夜间护眼" onclick="switchTheme('night')"></div>
+<div class="theme-dot" data-t="pink" title="粉色可爱" onclick="switchTheme('pink')"></div>
+<div class="theme-dot" data-t="horror" title="血腥诡异" onclick="switchTheme('horror')"></div>
+</div>
+<div style="text-align:center;margin-top:4px"><label style="font-size:10px;color:#888"><input type="checkbox" id="trail-toggle" onchange="toggleTrail()"> 鼠标拖尾特效</label></div>
+<div style="margin-top:6px" class="avatar-upload"><img id="avatar-preview" src="data:," style="background:var(--parchment-dark)"><div><button class="btn btn-sm btn-secondary" onclick="uploadAvatar()">更换头像</button><div style="font-size:9px;color:#888">建议 128x128, 小于512KB</div></div></div>
+<div class="comfort-section"><h5>体验偏好</h5>
+<div class="comfort-row"><span>闪烁特效 (闪红/震动/乱码)</span><label class="comfort-toggle"><input type="checkbox" id="comfort-flash" checked onchange="saveComfortUI()"><span class="slider"></span></label></div>
+<div class="comfort-row"><span>恐怖音效 (心跳/尖叫/静音)</span><label class="comfort-toggle"><input type="checkbox" id="comfort-audio" checked onchange="saveComfortUI()"><span class="slider"></span></label></div>
+<div class="comfort-row"><span>画面扭曲 (模糊/暗角/血色)</span><label class="comfort-toggle"><input type="checkbox" id="comfort-distort" checked onchange="saveComfortUI()"><span class="slider"></span></label></div>
+<div class="comfort-row"><span>跳吓弹窗 (立绘/图片弹出)</span><label class="comfort-toggle"><input type="checkbox" id="comfort-jumpscare" checked onchange="saveComfortUI()"><span class="slider"></span></label></div>
+<div class="comfort-row"><span>输入锁定 (恐怖锁定)</span><label class="comfort-toggle"><input type="checkbox" id="comfort-lock" checked onchange="saveComfortUI()"><span class="slider"></span></label></div>
+</div>
+</div>
+<button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="saveApiConfig()">确认保存</button>
+</div></div>
+
+<div class="popup-overlay" id="popup-saves">
+<div class="popup" style="width:500px"><div class="close-btn" onclick="closePopup('popup-saves')">X</div>
+<div style="font-weight:700;margin-bottom:10px;color:var(--blood)">存档管理</div>
+<div id="saves-list" style="max-height:300px;overflow-y:auto;font-size:12px">加载中...</div>
+<div style="display:flex;gap:8px;margin-top:12px">
+<button class="btn btn-primary btn-sm" onclick="doSave()">快速存档</button>
+<button class="btn btn-secondary btn-sm" onclick="loadSaves()">刷新</button>
+<button class="btn btn-secondary btn-sm" onclick="document.getElementById('upload-save-file').click()">导入</button>
+<input type="file" id="upload-save-file" style="display:none" accept=".json" onchange="uploadSave(this.files[0])">
+</div></div></div>
+
+<div class="popup-overlay" id="popup-ending">
+<div class="popup" style="text-align:center">
+<div style="font-size:40px;margin-bottom:8px" id="ending-icon"></div>
+<div style="font-weight:700;font-size:18px;margin-bottom:14px" id="ending-title"></div>
+<div style="margin-bottom:16px" id="ending-desc"></div>
+<button class="btn btn-primary" onclick="closePopup('popup-ending');navTo('page-home')">返回主菜单</button><button class="btn btn-gold" onclick="shareEnding()" style="margin-left:8px">📋 分享结局</button>
+</div></div>
+
+<script>
+var ST={get:function(k,d){try{var v=localStorage.getItem('mvp_'+k);return v?JSON.parse(v):d}catch(e){return d}},set:function(k,v){localStorage.setItem('mvp_'+k,JSON.stringify(v))},getS:function(k,d){return localStorage.getItem('mvp_'+k)||d},setS:function(k,v){localStorage.setItem('mvp_'+k,v)}};
+var _token=ST.getS('token',''),_user=ST.getS('user',''),_apikey1=ST.getS('apikey1',''),_apikey2=ST.getS('apikey2',''),_ws=null,_busy=false,_selFile='',_turnCount=0,_nValue=parseInt(ST.getS('nvalue','5'))||5;
+
+var _DEF_AVATAR_PLAYER='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#5a7a9a"/><circle cx="50" cy="38" r="16" fill="#c8d8e8"/><ellipse cx="50" cy="72" rx="24" ry="18" fill="#c8d8e8"/></svg>');
+var _DEF_AVATAR_AI='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#c9a050"/><rect x="28" y="20" width="44" height="30" rx="4" fill="#1a0c00"/><circle cx="40" cy="35" r="5" fill="#fce8d0"/><circle cx="60" cy="35" r="5" fill="#fce8d0"/><rect x="36" y="48" width="28" height="6" rx="2" fill="#1a0c00"/><rect x="32" y="60" width="36" height="8" rx="2" fill="#1a0c00"/><rect x="28" y="74" width="14" height="8" rx="2" fill="#1a0c00"/><rect x="58" y="74" width="14" height="8" rx="2" fill="#1a0c00"/></svg>');
+// Toast 容器
+(function(){
+  var tc=document.createElement('div');tc.className='toast-container';tc.id='toast-container';document.body.appendChild(tc);
+  // 恢复已保存的 API 配置
+  if(_apikey1){var e=document.getElementById('api-key1');if(e)e.value=_apikey1}
+  if(_apikey2){var e=document.getElementById('api-key2');if(e)e.value=_apikey2}
+  var u1=ST.getS('apiurl1',''),u2=ST.getS('apiurl2',''),m1=ST.getS('model1','deepseek-v4-flash'),m2=ST.getS('model2','deepseek-v4-pro');
+  if(u1)document.getElementById('api-url1').value=u1;if(u2)document.getElementById('api-url2').value=u2;
+  if(m1)document.getElementById('api-model1').value=m1;if(m2)document.getElementById('api-model2').value=m2;
+  var ul=ST.getS('last_user',''),pl=ST.getS('last_pass','');
+  if(ul)document.getElementById('login-user').value=ul;if(pl)document.getElementById('login-pass').value=pl;
+  // 恢复主题与拖尾
+  var savedTheme=ST.getS('theme','default');switchTheme(savedTheme,true);
+  var trailOn=ST.get('trail',false);document.getElementById('trail-toggle').checked=trailOn;if(trailOn)startTrail();
+  // 恢复头像
+  var av=ST.getS('avatar','');if(!av||!(/^(data:|https?:\/\/|\/static\/)/.test(av)))av=getPlayerAvatar();
+  var pre=document.getElementById('avatar-preview');if(pre)pre.src=av;
+  // 恢复底图
+  ['game','home','login'].forEach(function(p){applyBg(p)});
+  // 恢复n值
+  var nSel=document.getElementById('nvalue-select');if(nSel)nSel.value=_nValue;
+  // 若已登录，检查管理员状态
+  if(_token)checkAdmin();
+  // 加载舒适度设置
+  loadComfortUI();
+})();
+
+// ── 主题切换 ─────────────────────────────────────────
+function switchTheme(name,silent){
+  name=name||'default';
+  // Safety: validate theme name to avoid loading invalid paths like /undefined
+  name=String(name).replace(/[\/\\]/g,'_');
+  var validThemes=['default','night','pink','horror'];
+  if(validThemes.indexOf(name)===-1)name='default';
+  var link=document.getElementById('theme-css');
+  if(name==='default'){link.href='data:text/css,';link.disabled=true;}else{link.disabled=false;link.href='/static/themes/'+name+'.css?v='+Date.now();}
+  ST.setS('theme',name);
+  document.querySelectorAll('.theme-dot').forEach(function(d){d.classList.toggle('active',d.getAttribute('data-t')===name)});
+  if(!silent)showToast('主题已切换: '+(name==='default'?'羊皮卷':name==='night'?'夜间护眼':name==='pink'?'粉色可爱':'血腥诡异'),'success');
+  if(window._trailActive){window._trailColor=getTrailColors(name)}
+}
+function getTrailColors(t){var m={night:['#4a6fa5','#6a8fc5','#8aaadf','#aaccff'],pink:['#d4648a','#e8a0b4','#f0c0d4','#ffe4ec'],horror:['#cc0000','#ee2222','#ff4444','#880000']};return m[t]||['#d4a574','#e8c4a0','#b84a5c']}
+
+// ── 鼠标拖尾 ─────────────────────────────────────────
+var _trailParticles=[],_trailRAF=null,_trailMouse={x:-100,y:-100},_trailActive=false;
+function startTrail(){
+  if(_trailActive)return;
+  if('ontouchstart' in window||navigator.maxTouchPoints>0){ST.set('trail',false);showToast('移动设备已自动禁用拖尾','info');return}
+  _trailActive=true;_trailParticles=[];var c=document.getElementById('mouse-trail');
+  c.style.display='block';c.width=window.innerWidth;c.height=window.innerHeight;
+  window._trailColor=getTrailColors(ST.getS('theme','default'));
+  window.addEventListener('mousemove',_onTrailMove);window.addEventListener('resize',_onTrailResize);
+  _trailTick()
+}
+function stopTrail(){
+  _trailActive=false;document.getElementById('mouse-trail').style.display='none';
+  window.removeEventListener('mousemove',_onTrailMove);window.removeEventListener('resize',_onTrailResize);
+  if(_trailRAF){cancelAnimationFrame(_trailRAF);_trailRAF=null}
+  _trailParticles=[];ST.set('trail',false)
+}
+function toggleTrail(){var on=document.getElementById('trail-toggle').checked;ST.set('trail',on);on?startTrail():stopTrail()}
+function _onTrailMove(e){_trailMouse.x=e.clientX;_trailMouse.y=e.clientY;_spawnParticle()}
+function _onTrailResize(){var c=document.getElementById('mouse-trail');c.width=window.innerWidth;c.height=window.innerHeight}
+function _spawnParticle(){
+  var colors=window._trailColor||['#d4a574','#e8c4a0','#b84a5c'];
+  var c=colors[Math.floor(Math.random()*colors.length)];
+  _trailParticles.push({x:_trailMouse.x,y:_trailMouse.y,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2-1,life:1,decay:.015+Math.random()*.025,size:2+Math.random()*3,color:c});
+  if(_trailParticles.length>80)_trailParticles.shift()
+}
+function _trailTick(){
+  if(!_trailActive)return;
+  if(!window._trailParticles||!window._trailParticles.length){_trailRAF=requestAnimationFrame(_trailTick);return}
+  var c=document.getElementById('mouse-trail'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);
+  for(var i=_trailParticles.length-1;i>=0;i--){
+    var p=_trailParticles[i];p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;
+    if(p.life<=0){_trailParticles.splice(i,1);continue}
+    ctx.globalAlpha=p.life*.6;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill()
+  }
+  ctx.globalAlpha=1;_trailRAF=requestAnimationFrame(_trailTick)
+}
+
+function navTo(id){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});document.querySelectorAll('.popup-overlay').forEach(function(e){e.classList.remove('active');if(e.id!=='popup-api'&&e.id!=='popup-saves'&&e.id!=='popup-ending')e.remove()});var el=document.getElementById(id);if(!el)return;el.classList.add('active');window._cp=id;if(id==='page-template')loadTemplates();if(id==='page-debug')loadDebug();if(id==='page-game')connectWS();if(id==='page-profile')loadProfile();if(id==='page-suggestions')loadMySuggestions();if(id==='page-admin')adminTab('users');if(id==='page-editor')edInit()}
+function openPopup(id){document.getElementById(id).classList.add('active')}
+function closePopup(id){document.getElementById(id).classList.remove('active')}
+function toggleKey(fieldId,btnId){var e=document.getElementById(fieldId),b=document.getElementById(btnId);if(e.type==='password'){e.type='text';b.textContent='隐藏'}else{e.type='password';b.textContent='显示'}}
+function saveComfortUI(){
+  var c={flash:document.getElementById('comfort-flash').checked,audio:document.getElementById('comfort-audio').checked,distort:document.getElementById('comfort-distort').checked,jumpscare:document.getElementById('comfort-jumpscare').checked,lock:document.getElementById('comfort-lock').checked};
+  setComfort(c);
+}
+function loadComfortUI(){
+  var c=getComfort();
+  ['flash','audio','distort','jumpscare','lock'].forEach(function(k){
+    var cb=document.getElementById('comfort-'+k);if(cb)cb.checked=c[k]!==false;
+  });
+}
+function openApiConfig(){var e1=document.getElementById('api-key1'),e2=document.getElementById('api-key2');if(!e1.value)_apikey1=ST.getS('apikey1','');if(!e2.value)_apikey2=ST.getS('apikey2','');if(_apikey1&&!e1.value)e1.value=_apikey1;if(_apikey2&&!e2.value)e2.value=_apikey2;openPopup('popup-api')}
+function openSaves(){openPopup('popup-saves');loadSaves()}
+function setNValue(v){_nValue=parseInt(v)||10;ST.setS('nvalue',_nValue);showToast('上下文窗口设为 '+_nValue+' 轮','info')}
+function leaveGame(){if(_busy)cancelMsg();clearAllHookEffects();navTo('page-home')}
+function _auth(){return _token||ST.getS('token','')}
+
+// Toast 通知
+function showToast(msg,type){
+  type=type||'info';
+  var icons={success:'✓',error:'✗',info:'ℹ',loading:'◌'};
+  var el=document.createElement('div');el.className='toast toast-'+type;
+  el.textContent=(icons[type]||'')+' '+msg;
+  var tc=document.getElementById('toast-container');
+  tc.appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.remove()},4000);
+}
+
+// 为所有 fetch 包装 toast 反馈
+function _fetchOk(url,opts,okMsg,errMsg,cb){
+  var b=opts&&opts.body;opts=opts||{};
+  opts.headers=opts.headers||{};
+  if(!opts.headers['Content-Type']&&b)opts.headers['Content-Type']='application/json';
+  if(!opts.headers['Authorization'])opts.headers['Authorization']='Bearer '+_auth();
+  return fetch(url,opts).then(function(r){return r.json()}).then(function(d){
+    if(d.error){showToast((errMsg||'操作失败')+': '+d.error,'error');if(cb)cb(d,true)}
+    else{showToast(okMsg||'操作成功','success');if(cb)cb(d,false)}
+  }).catch(function(e){showToast((errMsg||'网络错误')+': '+e.message,'error');if(cb)cb(null,true)})
+}
+
+function showAlert(msg,cb){var o=document.createElement('div');o.className='popup-overlay active';o.innerHTML='<div class=\"popup\" style=\"text-align:center\"><div style=\"margin-bottom:14px\">'+escHTML(msg)+'</div><button class=\"btn btn-primary\" id=\"_aok\">确定</button></div>';document.body.appendChild(o);o.querySelector('#_aok').onclick=function(){o.remove();if(cb)cb()}}
+function showConfirm(msg,cb){var o=document.createElement('div');o.className='popup-overlay active';o.innerHTML='<div class=\"popup\" style=\"text-align:center\"><div style=\"margin-bottom:14px\">'+escHTML(msg)+'</div><div style=\"display:flex;gap:10px;justify-content:center\"><button class=\"btn btn-primary\" id=\"_cyes\">确认</button><button class=\"btn btn-secondary\" id=\"_cno\">取消</button></div></div>';document.body.appendChild(o);o.querySelector('#_cyes').onclick=function(){o.remove();cb()};o.querySelector('#_cno').onclick=function(){o.remove()}}
+
+// ── 引号高亮 ──
+function highlightQuotes(text){
+  var safe=escHTML(text);
+  // 西文引号: escHTML 将 " 转为 &quot;，用惰性匹配 .*?
+  safe=safe.replace(/&quot;(.*?)&quot;/g,'<span class="quote-highlight">“$1”</span>');
+  // 日文引号: escHTML 不转义
+  safe=safe.replace(/「(.*?)」/g,'<span class="quote-highlight">「$1」</span>');
+  return safe;
+}
+
+// ── 剧透判定 ──
+function isSpoilerField(key){
+  return key.startsWith('隐藏')||key.startsWith('_')||['真实规则','隐藏真相','隐藏区域','隐藏效果','真实身份'].indexOf(key)>=0;
+}
+var _spoilerOn=false;
+function toggleSpoiler(){
+  var cb=document.getElementById('spoiler-toggle');
+  if(cb.checked){
+    showConfirm('剧透可能影响游戏体验，确定开启吗？',function(){
+      _spoilerOn=true;cb.checked=true;renderVars();
+      showToast('剧透模式已开启','info');
+    });
+    // 取消时重置
+    setTimeout(function(){if(!_spoilerOn)cb.checked=false;},600);
+  } else {
+    _spoilerOn=false;cb.checked=false;
+    document.querySelectorAll('.spoiler').forEach(function(e){e.style.display='none'});
+    renderVars();
+  }
+}
+
+// ── 变量面板渲染 ──
+function renderVars(){
+  var c=document.getElementById('vars-content'),html='';
+  if(!window._lastTagsByCat){c.innerHTML='<p style=\"font-size:11px;color:#888\">等待游戏数据...</p>';return}
+  var tags=window._lastTagsByCat||{},cats={world:'当前副本',map:'地图',rule:'规则',character:'角色',item:'物品'};
+  var charIndex=0;
+  for(var ck in cats){
+    var list=tags[ck]||[];if(!list.length)continue;
+    html+='<h3>'+cats[ck]+'</h3>';
+    for(var i=0;i<list.length;i++){
+      var t=list[i],name=t.tag_name||'',hint=t.tag_hint||'',detail=t.tag_detail||{},isSpoiler=false,spoilerKeys=[];
+      for(var k in detail){if(detail.hasOwnProperty(k)&&isSpoilerField(k)){isSpoiler=true;spoilerKeys.push(k)}}
+      if(isSpoiler&&!_spoilerOn)continue;
+      var cls='v-item'+(isSpoiler?' spoiler':'');
+      // ── 角色卡片增强显示 ──
+      if(ck==='character'&&!detail['是否玩家']){
+        var portrait=detail['立绘']||detail['立绘表情']||'';
+        if(portrait&&typeof portrait==='object')portrait=portrait['默认']||Object.values(portrait)[0]||'';
+        var theme=detail['主题色']||'var(--gold)';
+        var charTags=detail['角色标签']||[];
+        var rels=detail['对其他角色的态度']||{};
+        var att=detail['对玩家的态度']||{};var fav=parseInt(att['好感度'])||0,trust=parseInt(att['信任度'])||0;
+        html+='<div class=\"'+cls+' char-card\" style=\"border-left:3px solid '+theme+';margin:4px 0;padding:6px 8px;background:rgba(255,255,255,.04);border-radius:0 6px 6px 0;box-shadow:0 0 6px '+theme+'22\">';
+        html+='<div style=\"display:flex;align-items:center;gap:5px\">';
+        if(portrait)html+='<img class=\"char-portrait\" src=\"'+escHTML(portrait)+'\" onerror=\"this.remove()\" style=\"width:32px;height:32px;border-radius:50%;border:2px solid '+theme+';object-fit:cover;flex-shrink:0;box-shadow:0 0 8px '+theme+'44\">';
+        html+='<div style=\"flex:1;min-width:0\"><b style=\"font-size:11px;color:'+theme+'\">'+escHTML(name)+'</b>';
+        if(charTags.length)html+='<br><span style=\"font-size:9px;color:#888\">'+escHTML(charTags.join(' · '))+'</span>';
+        html+='</div></div>';
+        // 好感度（仅剧透模式显示数值）
+        if(_spoilerOn&&(att['好感度']!=null||att['信任度']!=null)){
+          html+='<div style=\"font-size:9px;margin-top:2px;color:#888\">';
+          if(att['好感度']!=null)html+='好感 '+att['好感度']+'/100 ';
+          if(att['信任度']!=null)html+='信任 '+att['信任度']+'/100';
+          html+='</div>';
+        }
+        // 与其他角色关系
+        var relKeys=Object.keys(rels);
+        if(relKeys.length){
+          html+='<div style=\"font-size:9px;color:#888;margin-top:2px\">';
+          for(var ri=0;ri<Math.min(relKeys.length,3);ri++){
+            var rk=relKeys[ri],rv=rels[rk];if(typeof rv==='string'&&rv.length>20)rv=rv.substring(0,20)+'...';
+            html+='→ '+escHTML(rk)+': <span style=\"color:var(--ink-light)\">'+escHTML(String(rv))+'</span> ';
+          }
+          html+='</div>';
+        }
+        html+='</div>';
+        charIndex++;
+      }else{
+        html+='<div class=\"'+cls+'\" title=\"'+escHTML(hint)+'\">'+escHTML(name);
+        if(isSpoiler&&_spoilerOn){for(var si=0;si<spoilerKeys.length;si++){var sk=spoilerKeys[si],sv=String(detail[sk]||'').substring(0,30);html+='<br><small style=\"color:var(--blood)\">'+escHTML(sk)+': '+escHTML(sv)+'</small>'}}
+        html+='</div>';
+      }
+    }
+  }
+  // ── 模板世界书（后端注入） ──
+  var wb=window._worldBook||[];
+  if(wb.length){
+    html+='<h3>🌐 模板世界书 <small style=\"color:#888;font-weight:400\">('+wb.length+'条)</small></h3>';
+    var activeWb=0;
+    for(var wi=0;wi<wb.length;wi++){
+      var entry=wb[wi];if(!entry.enabled&&entry.enabled!==undefined)continue;
+      if(entry.constant){html+='<div class=\"v-item\" style=\"border-left-color:#4af;font-size:10px\">🔵 '+escHTML(entry.content||'').substring(0,50)+'...</div>';activeWb++}
+      else{html+='<div class=\"v-item\" style=\"font-size:10px\" title=\"触发词: '+(entry.keys||[]).join(', ')+'\">🟢 ['+escHTML((entry.keys||[]).join(',')).substring(0,40)+'] '+escHTML(entry.content||'').substring(0,40)+'...</div>';activeWb++}
+    }
+    if(!activeWb)html+='<div class=\"v-item\" style=\"color:#888;font-size:10px\">（无启用条目）</div>';
+  }
+  // ── 我的世界书（本地编辑，不影响后端） ──
+  var myWb=_getMyWorldBook();
+  html+='<h3 style=\"display:flex;justify-content:space-between\">📝 我的世界书 <button class=\"btn btn-sm btn-secondary\" onclick=\"openMyWbEditor()\" style=\"font-size:9px;padding:1px 6px\">+</button></h3>';
+  if(myWb.length){
+    for(var mwi=0;mwi<myWb.length;mwi++){
+      var me=myWb[mwi];if(!me.enabled)continue;
+      html+='<div class=\"v-item\" style=\"font-size:10px;cursor:pointer\" title=\"点击编辑\" onclick=\"openMyWbEditor('+mwi+')\">';
+      if(me.constant)html+='🔵 ';else html+='🟢 ['+escHTML((me.keys||[]).join(',')).substring(0,30)+'] ';
+      html+=escHTML((me.content||'').substring(0,45))+'...</div>';
+    }
+  }else{html+='<div class=\"v-item\" style=\"color:#888;font-size:10px\">（空）点击+添加个人设定</div>';}
+  c.innerHTML=html||'<p style=\"font-size:11px;color:#888\">暂无变量</p>';
+  // Update player cards with portrait
+  var pd=window._lastPlayerDetail;
+  if(pd){
+    var cards='',skip=['是否玩家','外貌','扩展信息'];
+    var pPortrait=pd['立绘']||'';
+    if(pPortrait&&typeof pPortrait==='object')pPortrait=pPortrait['默认']||Object.values(pPortrait)[0]||'';
+    if(pPortrait)cards+='<div style=\"text-align:center;margin-bottom:4px\"><img src=\"'+escHTML(pPortrait)+'\" style=\"width:48px;height:48px;border-radius:50%;border:2px solid var(--gold);object-fit:cover\" onerror=\"this.remove()\"></div>';
+    for(var k in pd){if(!pd.hasOwnProperty(k)||skip.indexOf(k)>=0||k.indexOf('立绘')>=0)continue;var v=pd[k];if(Array.isArray(v))v=v.join(', ');else if(typeof v==='object'&&v!==null)v=JSON.stringify(v).substring(0,40);if(typeof v==='string'&&v.length>40)v=v.substring(0,40)+'...';cards+='<div class=\"status-card\"><span class=\"dot\"></span><b>'+k+'</b>: '+v+'</div>'}
+    document.getElementById('player-cards').innerHTML=cards||'<div class=\"status-card\">无数据</div>';
+  }
+}
+
+// ── 面板折叠 + 汉堡菜单 ──
+function toggleVars(){var vv=document.getElementById('game-vars'),b=document.getElementById('btn-collapse-vars');vv.classList.toggle('collapsed');if(b)b.textContent=vv.classList.contains('collapsed')?'▶':'◀'}
+function toggleSidebar(){var sb=document.getElementById('game-sidebar');sb.classList.toggle('open')}
+
+// ── 我的世界书（前端本地，localStorage） ──
+function _getMyWorldBook(){try{return JSON.parse(localStorage.getItem('mvp_my_worldbook')||'[]')}catch(e){return[]}}
+function _saveMyWorldBook(arr){localStorage.setItem('mvp_my_worldbook',JSON.stringify(arr))}
+function openMyWbEditor(idx){
+  var myWb=_getMyWorldBook(),isNew=(idx===undefined||idx===null),entry=isNew?{keys:[],content:'',constant:false,enabled:true}:myWb[idx]||{};
+  var o=document.createElement('div');o.className='popup-overlay active';
+  o.innerHTML='<div class=\"popup\" style=\"width:500px;max-height:80vh;overflow-y:auto\"><div class=\"close-btn\" onclick=\"this.parentElement.parentElement.remove()\">X</div>'
+    +'<h4 style=\"color:var(--blood)\">'+(isNew?'新增':'编辑')+'个人世界书</h4>'
+    +'<div class=\"input-row\"><label>触发关键词（逗号分隔，空=常驻蓝灯）</label><input type=\"text\" id=\"_mwb_keys\" value=\"'+escHTML((entry.keys||[]).join(','))+'\"></div>'
+    +'<div class=\"input-row\"><label>设定内容</label><textarea id=\"_mwb_content\" style=\"width:100%;height:100px;padding:8px;border:2px solid #3a3050;border-radius:6px;font-family:var(--font);font-size:13px;resize:vertical\">'+escHTML(entry.content||'')+'</textarea></div>'
+    +'<div class=\"input-row\"><label><input type=\"checkbox\" id=\"_mwb_constant\" '+(entry.constant?'checked':'')+'> 常驻（蓝灯，不检查关键词，始终生效）</label></div>'
+    +'<div style=\"display:flex;gap:8px;justify-content:flex-end\">'
+    +(isNew?'':'<button class=\"btn btn-sm btn-secondary\" onclick=\"_delMyWb('+idx+');this.parentElement.parentElement.parentElement.remove();renderVars()\" style=\"background:#8b2020;color:#fce8d0\">删除</button>')
+    +'<button class=\"btn btn-sm btn-primary\" onclick=\"_saveMyWbEntry('+idx+');this.parentElement.parentElement.parentElement.remove();renderVars()\">保存</button></div></div>';
+  document.body.appendChild(o);
+}
+function _saveMyWbEntry(idx){
+  var keys=document.getElementById('_mwb_keys').value.split(',').map(function(s){return s.trim()}).filter(Boolean);
+  var content=document.getElementById('_mwb_content').value.trim();
+  var constant=document.getElementById('_mwb_constant').checked;
+  if(!content)return;
+  var myWb=_getMyWorldBook(),entry={keys:keys,content:content,constant:constant,enabled:true};
+  if(idx===undefined||idx===null||idx>=myWb.length)myWb.push(entry);else myWb[idx]=entry;
+  _saveMyWorldBook(myWb);showToast('世界书已保存','success');
+}
+function _delMyWb(idx){var myWb=_getMyWorldBook();myWb.splice(idx,1);_saveMyWorldBook(myWb);showToast('已删除','info')}
+
+// ── 默认头像 SVG ──
+
+function getPlayerAvatar(){var a=ST.getS('avatar','');if(!a||a==='undefined'||a.length<20||!(/^(data:|https?:\/\/|\/static\/)/.test(a)))return _DEF_AVATAR_PLAYER;return a}
+function getAIAvatar(){return window._aiAvatar||_DEF_AVATAR_AI}
+
+// ── 头像上传 ──
+function uploadAvatar(){
+  var inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    var f=inp.files[0];if(!f)return;
+    if(f.size>512*1024){showToast('图片不能超过512KB','error');return}
+    var reader=new FileReader();
+    reader.onload=function(e){
+      ST.setS('avatar',e.target.result);
+      var pre=document.getElementById('avatar-preview');if(pre)pre.src=e.target.result;
+      // 刷新页面上所有玩家头像
+      var allAvatars=document.querySelectorAll('.chat-msg-user .chat-avatar');
+      for(var i=0;i<allAvatars.length;i++){allAvatars[i].src=e.target.result}
+      showToast('头像已更新','success');
+    };
+    reader.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+// ── 底图自定义 ──
+function openBgPicker(page){
+  var inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    var f=inp.files[0];if(!f)return;
+    if(f.size>2*1024*1024){showToast('图片不能超过2MB','error');return}
+    var reader=new FileReader();
+    reader.onload=function(e){
+      ST.setS('bg_'+page,e.target.result);
+      applyBg(page);
+      showToast('底图已更新','success');
+    };
+    reader.readAsDataURL(f);
+  };
+  inp.click();
+}
+function resetBg(page){
+  ST.setS('bg_'+page,'');
+  applyBg(page);
+  showToast('已恢复默认底图','success');
+}
+function applyBg(page){
+  var el=document.getElementById('page-'+page);
+  if(!el)return;
+  var bg=ST.getS('bg_'+page,'');
+  if(bg&&bg.length>10&&bg.indexOf('data:')===0){el.style.backgroundImage='url('+bg+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center'}
+  else{el.style.backgroundImage='none';el.style.backgroundSize='';el.style.backgroundPosition=''}
+}
+function showBgMenu(){
+  var p=window._cp||'page-game';var page=p.replace('page-','');
+  var o=document.createElement('div');o.className='popup-overlay active';
+  o.innerHTML='<div class=\"popup\" style=\"text-align:center\"><div style=\"margin-bottom:12px;font-weight:700;color:var(--blood)\">底图设置</div><div style=\"display:flex;gap:8px;justify-content:center\"><button class=\"btn btn-primary btn-sm\" id=\"_bgup\">上传图片</button><button class=\"btn btn-secondary btn-sm\" id=\"_bgdef\">恢复默认</button><button class=\"btn btn-secondary btn-sm\" id=\"_bgcls\">关闭</button></div></div>';
+  document.body.appendChild(o);
+  o.querySelector('#_bgup').onclick=function(){o.remove();openBgPicker(page)};
+  o.querySelector('#_bgdef').onclick=function(){o.remove();resetBg(page)};
+  o.querySelector('#_bgcls').onclick=function(){o.remove()};
+}
+
+function shareEnding(){
+  var title=document.getElementById('ending-title').textContent;
+  var desc=document.getElementById('ending-desc').textContent;
+  var world=document.getElementById('world-name')?document.getElementById('world-name').textContent:'未知副本';
+  var text='【无限流规则怪谈】\n副本: '+world+'\n结局: '+title+'\n'+desc+'\n\n来试试你能活到第几轮？';
+  if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){showToast('结局已复制到剪贴板，分享给朋友吧！','success')})}
+  else{showToast('分享文字已生成','info')}
+}
+function showEnding(type){
+  var cfg={victory:{icon:'🏆',title:'恭喜通关！',desc:'你成功完成了这个副本的挑战。'},death:{icon:'💀',title:'你已死亡',desc:'在这个规则怪谈中，你没能活到最后...'},escape:{icon:'🏃',title:'仓皇逃脱',desc:'你使用了特殊手段逃离了这里。'}};
+  var c=cfg[type]||cfg.death;
+  document.getElementById('ending-icon').textContent=c.icon;
+  document.getElementById('ending-title').textContent=c.title;
+  document.getElementById('ending-desc').textContent=c.desc;
+  document.getElementById('popup-ending').classList.add('active');
+}
+
+function doLogin(){var u=document.getElementById('login-user').value.trim(),p=document.getElementById('login-pass').value.trim();if(!u){showToast('请输入用户名','error');document.getElementById('login-user').focus();return;}if(!p){showToast('请输入密码','error');document.getElementById('login-pass').focus();return;}showToast('登录中...','loading');fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})}).then(function(r){return r.json()}).then(function(d){if(d.token){_token=d.token;_user=d.username;ST.setS('token',d.token);ST.setS('user',d.username);ST.setS('last_user',u);ST.setS('last_pass',p);showToast('登录成功','success');navTo('page-home');checkAdmin()}else showToast(d.error||'登录失败','error')}).catch(function(e){showToast('网络错误: '+e.message,'error')})}
+function doRegister(){var u=document.getElementById('login-user').value.trim(),p=document.getElementById('login-pass').value.trim();if(!u||!p)return;showToast('注册中...','loading');fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})}).then(function(r){return r.json()}).then(function(d){if(d.token){_token=d.token;_user=d.username;ST.setS('token',d.token);ST.setS('user',d.username);ST.setS('last_user',u);ST.setS('last_pass',p);showToast('注册成功','success');navTo('page-home');checkAdmin()}else showToast(d.error||'注册失败','error')}).catch(function(e){showToast('网络错误: '+e.message,'error')})}
+function checkAdmin(){fetch('/api/user/profile',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){var b=document.getElementById('btn-admin-entry');if(b)b.style.display=d.is_admin?'block':'none'}).catch(function(){})}
+
+function saveApiConfig(){
+  var k1=document.getElementById('api-key1').value.trim(),k2=document.getElementById('api-key2').value.trim();
+  if(k1){_apikey1=k1;ST.setS('apikey1',k1)}else{ST.setS('apikey1','')}
+  if(k2){_apikey2=k2;ST.setS('apikey2',k2)}else{ST.setS('apikey2','')}
+  var u1=document.getElementById('api-url1').value.trim(),u2=document.getElementById('api-url2').value.trim();
+  ST.setS('apiurl1',u1);ST.setS('apiurl2',u2);
+  ST.setS('model1',document.getElementById('api-model1').value.trim());
+  ST.setS('model2',document.getElementById('api-model2').value.trim());
+  showToast('API配置已保存','success');
+  closePopup('popup-api');
+}
+function fetchModels(n){
+  var url=(document.getElementById('api-url'+n).value||'').replace(/\/+$/,''),key=document.getElementById('api-key'+n).value.trim();
+  if(!key){showToast('请先填写密钥','error');return}
+  showToast('拉取模型列表中...','loading');
+  fetch(url+'/models',{headers:{'Authorization':'Bearer '+key}}).then(function(r){return r.json()}).then(function(d){
+    var m=(d.data||d||[]).map(function(x){return typeof x==='string'?x:(x.id||'')});m=m.filter(Boolean);
+    var listEl=document.getElementById('model-list'+n);
+    listEl.innerHTML=m.map(function(x){return '<option value="'+x.replace(/"/g,'&quot;')+'">'}).join('');
+    showToast('已加载 '+m.length+' 个模型','success');
+  }).catch(function(e){showToast('拉取失败，可手动输入模型名','error')})
+}
+
+function escHTML(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+
+// ── 模板选择（模板页面上的选中+确认流程） ──
+var _selType='', _selFileName='';
+function selectTemplate(type, id, name, desc, rank, evt) {
+  document.querySelectorAll('.template-card.selected').forEach(function(c){c.classList.remove('selected')});
+  if (evt && evt.currentTarget) evt.currentTarget.classList.add('selected');
+  _selType = type;
+  _selFile = id;
+  _selFileName = name;
+  var label = name + (rank ? ' (' + rank + '级)' : '') + (desc ? ' - ' + desc : '');
+  document.getElementById('template-selected-name').textContent = label;
+  document.getElementById('template-confirm').style.display = 'block';
+}
+function confirmTemplate() {
+  if (!_selFile) { showToast('请先在模板区域点击选择一个模板','error'); return; }
+  if (_selType !== 'preset') { showToast('请选择标准模板','error'); return; }
+  showConfirm('加载模板将覆盖当前数据，确定开始游戏？', function(){
+    showToast('加载中...','loading');
+    if(window._ws){try{window._ws.close()}catch(e){}}
+    _fetchOk('/api/presets/'+encodeURIComponent(_selFile)+'/load',{method:'POST'},'模板加载成功','加载失败',function(d,err){
+      if(!err) navTo('page-game');
+    });
+  });
+}
+
+function loadTemplates(){
+  // 标准模板 → 点击选中，确认栏开始
+  fetch('/api/presets').then(function(r){return r.json()}).then(function(d){var h='';(d.presets||[]).forEach(function(p){h+='<div class=\"template-card\" onclick=\"selectTemplate(\'preset\',\''+escHTML(p.filename)+'\',\''+escHTML(p.name)+'\',\''+escHTML(p.desc||'')+'\',\''+escHTML(p.rank)+'\',event)\">'+escHTML(p.name)+'<br><small>'+escHTML(p.rank)+'级</small></div>'});document.getElementById('std-grid').innerHTML=h||'(无)'}).catch(function(){document.getElementById('std-grid').innerHTML='加载失败'})
+  // 云端 → 详情页
+  fetch('/api/copies').then(function(r){return r.json()}).then(function(d){var h='';(d.copies||[]).forEach(function(c){h+='<div class=\"template-card\" onclick=\"openTemplateDetail(&quot;cloud&quot;,'+c.id+',&quot;'+escHTML(c.title)+'&quot;,&quot;'+escHTML(c.desc||'')+'&quot;,&quot;&quot;)\">'+escHTML(c.title)+'<br><small>'+c.downloads+'次</small></div>'});document.getElementById('cloud-grid').innerHTML=h||'(暂无)'}).catch(function(){document.getElementById('cloud-grid').innerHTML='加载失败'})
+  // 自建 → 详情页
+  fetch('/api/saves',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){var h='';(d.saves||[]).forEach(function(s){if(s.slot_name.indexOf('preset_')===0)h+='<div class=\"template-card\" onclick=\"openTemplateDetail(&quot;user&quot;,'+s.id+',&quot;'+escHTML(s.slot_name.replace('preset_',''))+'&quot;,&quot;&quot;,&quot;&quot;)\">'+escHTML(s.slot_name.replace('preset_',''))+'<br><small>自建</small></div>'});document.getElementById('my-grid').innerHTML=h||'(暂无)'}).catch(function(){document.getElementById('my-grid').innerHTML='加载失败'})
+}
+
+// ── 模板详情页 ──────────────────────────────────────
+var _detailType='',_detailId='',_detailName='',_detailInfo={};
+function openTemplateDetail(type,id,name,desc,rank){
+  _detailType=type;_detailId=id;_detailName=name;
+  navTo('page-template-detail');
+  var html='<div class="detail-header">';
+  html+='<div class="detail-info"><h2>'+escHTML(name)+'</h2>';
+  if(rank)html+='<div class="meta">难度: '+escHTML(rank)+'级</div>';
+  if(desc)html+='<div class="meta">'+escHTML(desc)+'</div>';
+  html+='</div></div>';
+  html+='<div class="rating-bar" id="detail-rating-bar">加载评分中...</div>';
+  html+='<div id="detail-opening-preview" style="font-size:12px;color:var(--ink-light);margin:8px 0;padding:8px;background:rgba(180,120,180,.06);border-radius:4px;max-height:80px;overflow:hidden">加载中...</div>';
+  html+='<hr style="border-color:#4a3a5a;margin:8px 0">';
+  html+='<div class="comment-area">';
+  html+='<div style="margin-bottom:8px"><textarea id="comment-input" placeholder="写下你的评论..."></textarea><button class="btn btn-primary btn-sm" style="margin-top:4px" onclick="postComment()">发表评论</button></div>';
+  html+='<div class="comments-toolbar"><span id="comments-count">0 条评论</span><select id="comments-sort" onchange="loadComments(1)"><option value="time">按时间</option><option value="likes">按点赞数</option></select></div>';
+  html+='<div id="comments-list">加载中...</div>';
+  html+='<div class="pager" id="comments-pager"></div>';
+  html+='</div>';
+  document.getElementById('detail-content').innerHTML=html;
+  loadRatings();loadComments(1);
+  // 尝试加载模板详情（开场白等）
+  if(type==='preset'){fetch('/api/presets').then(function(r){return r.json()}).then(function(d){(d.presets||[]).forEach(function(p){if(p.filename===id){_detailInfo=p;showDetailPreview()}})})}
+  else if(type==='cloud'){fetch('/api/copies/'+id).then(function(r){return r.json()}).then(function(d){if(!d.error)_detailInfo=d;showDetailPreview()})}
+}
+
+function showDetailPreview(){
+  var info=_detailInfo,el=document.getElementById('detail-opening-preview');
+  if(!el)return;
+  var op=info.opening_monologue||info.opening||'';
+  if(op){el.textContent='开场白: '+op.substring(0,150)+(op.length>150?'...':'')}
+  else{el.textContent='暂未设置开场白'}
+}
+
+// ── 评分 ─────────────────────────────────────────────
+function renderStars(rating){var h='<div class="star-rating" id="star-rating-el">';for(var i=1;i<=5;i++)h+='<span class="star'+(i<=rating?' active':'')+'" data-star="'+i+'" onclick="submitRating('+i+')">★</span>';h+='</div>';return h}
+function loadRatings(){
+  fetch('/api/ratings/'+_detailType+'/'+encodeURIComponent(_detailId)).then(function(r){return r.json()}).then(function(d){
+    var el=document.getElementById('detail-rating-bar'),avg=d.avg||0,count=d.count||0,my=d.my_rating||0;
+    el.innerHTML=renderStars(Math.round(avg))+' <span style="font-size:13px">'+avg.toFixed(1)+'</span> <span style="font-size:10px;color:#888">('+count+'评)</span>'+(my?' <span style="font-size:11px;color:var(--gold)">你的: '+renderStars(my)+'</span>':' <span style="font-size:10px;color:#888">点击打星</span>');
+  }).catch(function(){document.getElementById('detail-rating-bar').innerHTML='评分加载失败'})
+}
+function submitRating(star){
+  fetch('/api/ratings/'+_detailType+'/'+encodeURIComponent(_detailId),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({rating:star})}).then(function(r){return r.json()}).then(function(d){
+    if(d.ok||d.avg!==undefined){showToast('评分成功','success');loadRatings()}else showToast(d.error||'评分失败','error')
+  }).catch(function(e){showToast('评分失败: '+e.message,'error')})
+}
+
+// ── 评论 ─────────────────────────────────────────────
+var _commentPage=1;
+function loadComments(page){
+  _commentPage=page||1;var sort=document.getElementById('comments-sort')?document.getElementById('comments-sort').value:'time';
+  fetch('/api/comments/'+_detailType+'/'+encodeURIComponent(_detailId)+'?page='+_commentPage+'&size=20&sort='+sort,{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+    var list=d.comments||[],total=d.total||0,pages=Math.ceil(total/20)||1,html='';
+    document.getElementById('comments-count').textContent=total+' 条评论';
+    if(!list.length){html='<div style="color:#888;text-align:center;padding:20px">暂无评论，来写第一条吧</div>'}
+    else{list.forEach(function(c){html+=renderComment(c)});}
+    document.getElementById('comments-list').innerHTML=html;
+    var pager='';if(_commentPage>1)pager+='<button class="btn btn-sm btn-secondary" onclick="loadComments('+(_commentPage-1)+')">上一页</button>';
+    pager+='<span style="font-size:11px">第'+_commentPage+'/'+pages+'页</span>';
+    if(_commentPage<pages)pager+='<button class="btn btn-sm btn-secondary" onclick="loadComments('+(_commentPage+1)+')">下一页</button>';
+    document.getElementById('comments-pager').innerHTML=pager;
+  }).catch(function(){document.getElementById('comments-list').innerHTML='评论加载失败'})
+}
+function renderComment(c,isReply){
+  var h='<div class="comment-item">';
+  h+='<div class="c-head"><img class="chat-avatar-sm" src="'+escHTML(c.avatar||'')+'" onerror="this.remove()" style="width:24px;height:24px">';
+  h+='<span class="c-user">'+escHTML(c.username||'?')+'</span>';
+  h+='<span class="c-time">'+escHTML(c.created_at||'')+'</span></div>';
+  h+='<div class="c-body">'+escHTML(c.content||'')+'</div>';
+  h+='<div class="c-actions">';
+  h+='<span onclick="likeComment('+c.id+')">❤ '+c.likes+'</span>';
+  h+='<span onclick="replyComment('+c.id+')">回复</span>';
+  h+='<span onclick="reportComment('+c.id+')">举报</span></div>';
+  // 回复列表
+  if(c.replies){c.replies.forEach(function(r){h+='<div class="c-reply"><b>'+escHTML(r.username||'?')+':</b> '+escHTML(r.content||'')+'</div>'})}
+  h+='</div>';return h
+}
+function postComment(){
+  var inp=document.getElementById('comment-input'),content=inp.value.trim();
+  if(!content){showToast('请输入评论内容','error');return}
+  fetch('/api/comments/'+_detailType+'/'+encodeURIComponent(_detailId),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({content:content})}).then(function(r){return r.json()}).then(function(d){
+    if(d.id||d.ok){inp.value='';showToast('评论成功','success');loadComments(_commentPage)}else showToast(d.error||'评论失败','error')
+  }).catch(function(e){showToast('评论失败: '+e.message,'error')})
+}
+function likeComment(cid){
+  fetch('/api/comments/like/'+cid,{method:'POST',headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+    if(d.ok!==false)showToast(d.liked?'已点赞':'已取消','success');else showToast(d.error||'操作失败','error');
+    loadComments(_commentPage);
+  }).catch(function(e){showToast('操作失败: '+e.message,'error')})
+}
+function replyComment(cid){
+  var reply=prompt('输入回复内容:');
+  if(!reply||!reply.trim())return;
+  fetch('/api/comments/'+_detailType+'/'+encodeURIComponent(_detailId),{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},
+    body:JSON.stringify({content:reply.trim(),parent_id:cid})
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d.ok){showToast('回复成功','success');loadComments(_commentPage)}
+    else showToast(d.error||'回复失败','error')
+  }).catch(function(e){showToast('回复失败: '+e.message,'error')});
+}
+function reportComment(cid){
+  showConfirm('确定举报该评论？',function(){var reason=prompt('举报原因（可选）:');_fetchOk('/api/comments/report/'+cid,{method:'POST',body:JSON.stringify({reason:reason||''})},'举报已提交','举报失败')})
+}
+
+// ── 从详情页开始游戏 ──
+function startFromDetail(){
+  var tok = _auth();
+  if(!tok){ showToast('请先登录','error'); navTo('page-login'); return; }
+  showConfirm('加载模板将覆盖当前数据，确定吗？',function(){
+    showToast('加载中...','loading');
+    if(window._ws){try{window._ws.close()}catch(e){}}
+    if(_detailType==='preset'){
+      _fetchOk('/api/presets/'+encodeURIComponent(_detailId)+'/load',{method:'POST'},_detailName+' 加载成功','加载失败',function(d,err){if(!err)navTo('page-game')})
+    }else if(_detailType==='cloud'){
+      _fetchOk('/api/copies/'+_detailId+'/load',{method:'POST'},_detailName+' 加载成功','加载失败',function(d,err){if(!err)navTo('page-game')})
+    }else{
+      fetch('/api/saves/'+_detailId,{headers:{'Authorization':'Bearer '+tok}}).then(function(r){return r.json()}).then(function(d){
+        if(d.error){ showToast(d.error,'error'); return; }
+        if(d.save){fetch('/api/saves/upload',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({slot_name:'loaded',save_data:d.save})}).then(function(r2){return r2.json()}).then(function(d2){if(d2.ok){showToast('模板加载成功','success');navTo('page-game')}else{showToast(d2.error||'模板无效','error')}})}else showToast('模板无效','error')
+      }).catch(function(e){showToast('网络错误: '+e.message,'error')})
+    }
+  })
+}
+
+function savePreset(target,preData){var name,data;if(preData){data=preData;name=data.name||''}else{name=(document.getElementById('editor-name')||{}).value||'';var raw=(document.getElementById('editor-json')||{}).value||'';if(!name||!raw){showAlert('请填写名称和内容');return}try{data=JSON.parse(raw)}catch(e){showAlert('JSON格式错误');return}data.name=name}if(!name){showAlert('请填写模板名称');return}if(target==='local'){ST.set('preset_'+Date.now(),data);showToast('已保存到本地','success');showAlert('已保存到本地')}else if(target==='server'){fetch('/api/saves/upload',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({slot_name:'preset_'+name,is_auto:false,save_data:data})}).then(function(r){return r.json()}).then(function(d){if(d.ok){showToast('已保存到服务器','success');showAlert('已保存到服务器')}else showToast('保存失败','error')}).catch(function(e){showToast('网络错误: '+e.message,'error')})}else{showToast('上传中...','loading');fetch('/api/copies/upload',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({title:name,desc:data.desc||'',tags:'',save_data:data})}).then(function(r){return r.json()}).then(function(d){if(d.ok){showToast('已上传云端','success');showAlert('已上传云端')}else showToast('上传失败','error')}).catch(function(e){showToast('网络错误: '+e.message,'error')})}}
+
+function connectWS(){if(_ws&&_ws.readyState===WebSocket.OPEN)return;var tok=_token||ST.getS('token','');_ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/ws?token='+encodeURIComponent(tok));_ws.onopen=function(){var s=document.getElementById('game-status');if(s){s.textContent='已连接';s.style.color='#4a4'}};_ws.onclose=function(){_busy=false;setBtns(false);if(window._cp==='page-game'){var s=document.getElementById('game-status');if(s){s.textContent='断开,重连中...';s.style.color='#a44'};clearTimeout(window._reconnectTimer);window._reconnectTimer=setTimeout(connectWS,3000)}};_ws.onmessage=function(ev){try{handleWS(JSON.parse(ev.data))}catch(e){console.error('WS parse error:',e)}}}
+function handleWS(d){
+  if(d.type==='init_state'||d.type==='turn_complete'){
+    // 侧栏: 角色卡片（XSS修复）
+    var pd=d.player_detail||{};window._lastPlayerDetail=pd;var cards='',skip=['是否玩家','is_player','外貌','appearance','扩展信息','头像','avatar'];
+    // 角色头像
+    var charAvatar=pd['头像']||pd['avatar']||'';
+    if(charAvatar&&(charAvatar.indexOf('data:')===0||charAvatar.indexOf('http')===0||charAvatar.indexOf('/static/')===0)){cards+='<div style=\"text-align:center;margin-bottom:4px\"><img class=\"chat-avatar-sm\" src=\"'+escHTML(charAvatar)+'\" style=\"width:40px;height:40px\" onerror=\"this.remove()\"></div>'}
+    for(var k in pd){if(!pd.hasOwnProperty(k)||skip.indexOf(k)>=0)continue;var v=pd[k];if(Array.isArray(v))v=v.join(', ');else if(typeof v==='object'&&v!==null)v=JSON.stringify(v).substring(0,50);v=escHTML(String(v));if(v.length>40)v=v.substring(0,40)+'...';cards+='<div class=\"status-card\"><span class=\"dot\"></span><b>'+escHTML(k)+'</b>: '+v+'</div>'}
+    document.getElementById('player-cards').innerHTML=cards||'<div class=\"status-card\">无数据</div>';
+    document.getElementById('st-tags').textContent=(d.hotTags||[]).length;document.getElementById('st-mems').textContent=(d.hotMemories||[]).length;
+    // 顶栏 + 侧栏
+    if(d.world_name){document.getElementById('world-name').textContent=d.world_name;document.getElementById('sb-world-name').textContent=d.world_name;document.getElementById('world-desc').textContent=d.world_desc||'--';document.getElementById('sb-world-desc').textContent=d.world_desc||'--'}
+    // 初始消息
+    if(d.world_intro){document.getElementById('chat-msgs').innerHTML='<div class=\"chat-msg-system\">'+escHTML(d.world_intro)+'</div>'}
+    if(d.type==='init_state'&&(d.opening_monologue||(window._savedMessages||[]).length>0)){var saved=window._savedMessages||[];if(saved.length>0){var chatMsgs=document.getElementById('chat-msgs');chatMsgs.innerHTML='';for(var si=0;si<saved.length;si++){var sm=saved[si];if(sm.role==='user'){chatMsgs.innerHTML+='<div class=\"chat-msg-user\" data-turn=\"'+(si+1)+'\"><img class=\"chat-avatar\" src=\"'+getPlayerAvatar()+'\" onerror=\"this.remove()\"><div class=\"bubble\">'+escHTML(sm.content.replace(/^你: /,''))+'</div></div>'}else if(sm.role==='ai'){chatMsgs.innerHTML+='<div class=\"chat-msg-ai\"><img class=\"chat-avatar\" src=\"'+getAIAvatar()+'\" onerror=\"this.remove()\"><div class=\"bubble\">'+highlightQuotes(sm.content)+'</div></div>'}else{chatMsgs.innerHTML+='<div class=\"chat-msg-system\">'+escHTML(sm.content)+'</div>'}}var ums=chatMsgs.querySelectorAll('.chat-msg-user');for(var ui=0;ui<ums.length;ui++)addEditButton(ums[ui]);window._savedMessages=null}else{document.getElementById('chat-msgs').innerHTML+='<div class=\"chat-msg-ai\"><img class=\"chat-avatar\" src=\"'+getAIAvatar()+'\" onerror=\"this.remove()\"><div class=\"bubble\">'+highlightQuotes(d.opening_monologue)+'</div></div>'}}
+    // 读取 AI 头像
+    if(d.type==='init_state'&&d.ai_avatar_url){window._aiAvatar=d.ai_avatar_url}
+    if(d.type==='init_state'&&d.all_tags_by_category){window._lastTagsByCat=d.all_tags_by_category;window._worldBook=d.world_book||[];renderVars();}
+  }
+  if(d.type==='turn_complete'){
+    _turnCount++;
+    _busy=false;setBtns(false);
+    var s=document.getElementById('game-status');if(s){s.textContent='OK ['+(d.pass1_tokens||0)+'+'+(d.pass2_tokens||0)+'tk '+(d.latency_ms||0)+'ms]';s.style.color='#4a4'}
+    document.getElementById('st-ops').textContent='+'+d.created+' ~'+d.updated+' -'+d.dropped;
+    document.getElementById('st-tk').textContent=(d.pass1_tokens||0)+(d.pass2_tokens||0)
+    var et=d.ending_type||'none';
+    if(et!=='none')showEnding(et);
+    // 重新渲染最近AI气泡（引号高亮）
+    var msgs=document.getElementById('chat-msgs'),aiBubbles=msgs.querySelectorAll('.chat-msg-ai .bubble');
+    for(var bi=aiBubbles.length-1;bi>=0;bi--){var raw=aiBubbles[bi].getAttribute('data-raw');if(raw){aiBubbles[bi].innerHTML=highlightQuotes(raw);break}}
+    // 更新变量面板
+    if(d.all_tags_by_category){window._lastTagsByCat=d.all_tags_by_category;renderVars();}
+  }else if(d.type==='narrative_chunk'){
+    var msgs=document.getElementById('chat-msgs'),last=msgs.lastElementChild;
+    if(!last||!last.classList.contains('chat-msg-ai')){last=document.createElement('div');last.className='chat-msg-ai';var aiImg=document.createElement('img');aiImg.className='chat-avatar';aiImg.src=getAIAvatar();aiImg.setAttribute('onerror',"this.src='"+_DEF_AVATAR_AI+"'");last.appendChild(aiImg);var bubble=document.createElement('div');bubble.className='bubble';last.appendChild(bubble);msgs.appendChild(last)}
+    var bub=last.querySelector('.bubble');bub.textContent+=d.text;bub.setAttribute('data-raw',bub.textContent);msgs.scrollTop=msgs.scrollHeight
+  }else if(d.type==='hook_effects'){
+    if(d.effects&&d.effects.length){
+      d.effects.sort(function(a,b){return(b.priority||0)-(a.priority||0)});
+      renderHookEffects(d.effects,0);
+    }
+  }else if(d.type==='error'){_busy=false;setBtns(false);showAlert(d.message)}
+  else if(d.type==='cancelled'){_busy=false;setBtns(false)}
+}
+function setBtns(b){_busy=b;document.getElementById('btn-send').style.display=b?'none':'';document.getElementById('btn-cancel').style.display=b?'':'none'}
+
+// ═══ 舒适度开关 ═══════════════════════════════════
+function getComfort(){ try{ return JSON.parse(localStorage.getItem('mvp_comfort')||'{"flash":true,"audio":true,"distort":true,"jumpscare":true,"lock":true}') }catch(e){ return {flash:true,audio:true,distort:true,jumpscare:true,lock:true} } }
+function setComfort(c){ localStorage.setItem('mvp_comfort',JSON.stringify(c)) }
+function shouldPlay(effectType){
+  var c=getComfort();
+  if(['flash_red','screen_shake','glitch_text','vignette_pulse'].indexOf(effectType)>=0)return c.flash!==false;
+  if(['sound_fx','bg_music','sudden_silence','heartbeat_warm','music_box'].indexOf(effectType)>=0)return c.audio!==false;
+  if(['screen_blur','blood_edge','color_tone','breathing'].indexOf(effectType)>=0)return c.distort!==false;
+  if(['portrait_popup','clue_image','scene_illustration','note_card','ending_card','binary_choice','fullscreen_text_popup','diary_flip','scene_transition'].indexOf(effectType)>=0)return c.jumpscare!==false;
+  if(effectType==='input_lock')return c.lock!==false;
+  return true;
+}
+function degradeNotice(desc){ var el=document.createElement('div');el.className='degrade-notice';el.textContent='⚠ 恐怖效果已关闭：'+desc;document.body.appendChild(el);setTimeout(function(){el.remove()},3000); }
+
+// ═══ Hook效果渲染引擎 ═══════════════════════════════
+var _activeHookTimers=[];
+function _hookSchedule(fn,ms){var id=setTimeout(function(){var i=_activeHookTimers.indexOf(id);if(i>=0)_activeHookTimers.splice(i,1);fn()},ms);_activeHookTimers.push(id);return id}
+function clearAllHookEffects(){
+  _activeHookTimers.forEach(function(t){clearTimeout(t)});_activeHookTimers=[];
+  document.querySelectorAll('.hook-popup-overlay,.hook-fullscreen-text,.hook-chapter-title,.hook-scene-transition,.input-lock-overlay,.fav-float,.degrade-notice,.particle').forEach(function(e){e.remove()});
+  var gc=document.getElementById('game-chat');if(gc){gc.classList.remove('hook-flash-red','hook-screen-shake','hook-golden-glow','hook-vignette-pulse','hook-blood-edge','hook-heartbeat-warm','hook-glitch-text','hook-breathing');gc.style.boxShadow='';gc.style.filter='';gc.style.transform='';gc.style.borderColor='';gc.style.background=''}
+  document.body.style.filter='';
+}
+
+function renderHookEffects(effects,idx){
+  if(idx>=effects.length)return;
+  var ef=effects[idx],type=ef.type||'',params=ef.params||{},delay=(ef.delay_turns||0)*0; // delay handled backend
+  function next(){ renderHookEffects(effects,idx+1); }
+  if(!shouldPlay(type)){
+    if(['flash_red','screen_shake','glitch_text'].indexOf(type)>=0)degradeNotice(type.replace(/_/g,' '));
+    else if(['portrait_popup','clue_image','ending_card','binary_choice'].indexOf(type)>=0){ setTimeout(function(){degradeNotice(type.replace(/_/g,' '))},3000); }
+    next();return;
+  }
+  switch(type){
+    case 'flash_red': renderEffect_flash_red(params,next); break;
+    case 'screen_shake': renderEffect_screen_shake(params,next); break;
+    case 'golden_glow': renderEffect_golden_glow(params,next); break;
+    case 'vignette_pulse': renderEffect_vignette_pulse(params,next); break;
+    case 'blood_edge': renderEffect_blood_edge(params,next); break;
+    case 'screen_blur': renderEffect_screen_blur(params,next); break;
+    case 'glitch_text': renderEffect_glitch_text(params,next); break;
+    case 'heartbeat_warm': renderEffect_heartbeat_warm(params,next); break;
+    case 'breathing': renderEffect_breathing(params,next); break;
+    case 'portrait_popup': renderEffect_portrait_popup(params,next); break;
+    case 'ending_card': renderEffect_ending_card(params,next); break;
+    case 'clue_image': renderEffect_clue_image(params,next); break;
+    case 'note_card': renderEffect_note_card(params,next); break;
+    case 'typewriter': renderEffect_typewriter(params,next); break;
+    case 'fullscreen_text': renderEffect_fullscreen_text(params,next); break;
+    case 'chapter_title': renderEffect_chapter_title(params,next); break;
+    case 'scene_transition': renderEffect_scene_transition(params,next); break;
+    case 'diary_flip': renderEffect_diary_flip(params,next); break;
+    case 'npc_chat': renderEffect_npc_chat(params,next); break;
+    case 'npc_enter': renderEffect_npc_enter(params,next); break;
+    case 'npc_exit': renderEffect_npc_exit(params,next); break;
+    case 'fav_animation': renderEffect_fav_animation(params,next); break;
+    case 'expression_change': renderEffect_expression_change(params,next); break;
+    case 'binary_choice': renderEffect_binary_choice(params,next); break;
+    case 'input_lock': renderEffect_input_lock(params,next); break;
+    case 'reveal_tag': renderEffect_reveal_tag(params,next); break;
+    case 'rule_reveal': renderEffect_rule_reveal(params,next); break;
+    case 'border_color': renderEffect_border_color(params,next); break;
+    case 'chat_bg': renderEffect_chat_bg(params,next); break;
+    case 'status_flash': renderEffect_status_flash(params,next); break;
+    case 'button_morph': renderEffect_button_morph(params,next); break;
+    case 'petal_fall': renderEffect_petal_fall(params,next); break;
+    case 'sunlight': renderEffect_sunlight(params,next); break;
+    case 'music_box': renderEffect_music_box(params,next); break;
+    case 'sudden_silence': renderEffect_sudden_silence(params,next); break;
+    case 'color_tone': renderEffect_color_tone(params,next); break;
+    case 'particles': renderEffect_particles(params,next); break;
+    case 'bg_music': renderEffect_bg_music(params,next); break;
+    case 'sound_fx': renderEffect_sound_fx(params,next); break;
+    case 'npc_comfort': renderEffect_npc_comfort(params,next); break;
+    case 'warm_flashback': renderEffect_warm_flashback(params,next); break;
+    case 'fullscreen_text_popup': renderEffect_fullscreen_text_popup(params,next); break;
+    case 'dialogue_bubble': renderEffect_dialogue_bubble(params,next); break;
+    case 'scene_illustration': renderEffect_scene_illustration(params,next); break;
+    case 'give_item': renderEffect_give_item(params,next); break;
+    case 'attr_change': renderEffect_attr_change(params,next); break;
+    case 'point_reward': renderEffect_point_reward(params,next); break;
+    case 'local_flag': renderEffect_local_flag(params,next); break;
+    default: next();
+  }
+}
+// ── P0 核心效果 ──
+function renderEffect_flash_red(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var dur=parseFloat(p.duration)||0.5,cnt=parseInt(p.count)||3; gc.classList.add('hook-flash-red'); _hookSchedule(function(){gc.classList.remove('hook-flash-red');next()},dur*1000*cnt+100); }
+function renderEffect_screen_shake(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var map={light:300,medium:500,heavy:800}; var dur=map[p.intensity]||500; gc.classList.add('hook-screen-shake'); _hookSchedule(function(){gc.classList.remove('hook-screen-shake');next()},dur+100); }
+function renderEffect_golden_glow(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var dur=(parseFloat(p.duration)||3)*1000; gc.classList.add('hook-golden-glow'); _hookSchedule(function(){gc.classList.remove('hook-golden-glow');next()},dur+100); }
+function renderEffect_portrait_popup(p,next){ var ov=document.createElement('div');ov.className='hook-popup-overlay'; ov.innerHTML='<div class="hook-portrait-popup">'+(p.image_url?'<img src="'+escHTML(p.image_url)+'" onerror="this.style.display=\'none\'">':'')+'<div class="npc-line">'+(p.npc_name?'<b>'+escHTML(p.npc_name)+'</b>: ':'')+escHTML(p.line||'')+'</div><button class="btn btn-primary btn-sm" id="_ppclose">继续</button></div>'; document.body.appendChild(ov); ov.querySelector('#_ppclose').onclick=function(){ov.remove();next()}; ov.onclick=function(e){if(e.target===ov){ov.remove();next()}}; }
+function renderEffect_ending_card(p,next){ var ov=document.createElement('div');ov.className='hook-popup-overlay';ov.style.zIndex='300'; ov.innerHTML='<div class="hook-ending-card"><div class="end-icon">'+(p.icon||'🌕')+'</div><div class="end-title">'+escHTML(p.title||'结局')+'</div><div class="end-desc">'+escHTML(p.desc||'')+'</div><button class="btn btn-primary" id="_endok">返回主菜单</button></div>'; document.body.appendChild(ov); ov.querySelector('#_endok').onclick=function(){ov.remove();navTo('page-home')}; }
+function renderEffect_clue_image(p,next){ var ov=document.createElement('div');ov.className='hook-popup-overlay'; ov.innerHTML='<div class="hook-clue-image"><img src="'+escHTML(p.image_url||'')+'" onerror="this.parentElement.innerHTML=\'<div style=color:var(--blood);padding:20px>图片加载失败</div>\'"><div class="caption">'+escHTML(p.caption||'')+'</div><button class="btn btn-primary btn-sm" id="_clclose" style="margin-top:10px">关闭</button></div>'; document.body.appendChild(ov); ov.querySelector('#_clclose').onclick=function(){ov.remove();next()}; ov.onclick=function(e){if(e.target===ov){ov.remove();next()}}; }
+function renderEffect_note_card(p,next){ var ov=document.createElement('div');ov.className='hook-popup-overlay'; var style=p.style||'parchment'; ov.innerHTML='<div class="hook-note-card '+style+'"><h3>'+escHTML(p.title||'')+'</h3>'+(p.image?'<img src="'+escHTML(p.image)+'" style="max-width:100%;max-height:200px;object-fit:contain;margin:6px 0;border-radius:4px" onerror="this.remove()">':'')+'<p>'+escHTML(p.content||'')+'</p><button class="btn btn-sm" style="margin-top:8px;background:#888;color:#fff" id="_ncclose">关闭</button></div>'; document.body.appendChild(ov); ov.querySelector('#_ncclose').onclick=function(){ov.remove();next()}; ov.onclick=function(e){if(e.target===ov){ov.remove();next()}}; }
+function renderEffect_npc_chat(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var npcName=p.npc_name||'???',content=p.line||p.content||''; var div=document.createElement('div');div.className='chat-msg-ai'; div.innerHTML='<img class="chat-avatar" src="data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#8a6090"/><text x="50" y="60" text-anchor="middle" fill="#fce8d0" font-size="20">'+escHTML(npcName.charAt(0))+'</text></svg>')+'" onerror="this.remove()"><div class="bubble"><b>'+escHTML(npcName)+':</b> '+escHTML(content)+'</div>'; msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight; _hookSchedule(next,500); }
+function renderEffect_input_lock(p,next){
+  var gc=document.getElementById('game-chat');if(!gc){next();return}
+  var text=p.text||'你被恐惧攘住，无法行动...';
+  var timeoutSec=Math.min(parseInt(p.timeout_seconds)||10,15);
+  var unlockMethod=p.unlock_method||'timeout';
+  var kw=p.unlock_keyword||'';
+  var inp=document.getElementById('game-input'),sendBtn=document.getElementById('btn-send');
+  var ov=document.createElement('div');ov.className='input-lock-overlay';ov.id='input-lock-el';
+  ov.innerHTML='<button class="lock-close" id="lock-x-btn" title="强制解锁">×</button><div class="lock-text">'+escHTML(text)+'</div><div class="lock-timer" id="lock-timer">'+timeoutSec+'s</div>';
+  if(unlockMethod==='input'&&kw)ov.innerHTML+='<input type="text" class="lock-keyword-input" id="lock-kw-input" placeholder="输入关键字解锁...">';
+  gc.appendChild(ov);
+  if(inp)inp.disabled=true;if(sendBtn)sendBtn.disabled=true;
+  var remaining=timeoutSec,unlocked=false;
+  function doUnlock(){
+    if(unlocked)return;unlocked=true;
+    var el=document.getElementById('input-lock-el');if(el)el.remove();
+    if(inp)inp.disabled=false;if(sendBtn)sendBtn.disabled=false;
+    next();
+  }
+  var timer=setInterval(function(){remaining--;var tel=document.getElementById('lock-timer');if(tel)tel.textContent=remaining+'s';if(remaining<=0){clearInterval(timer);doUnlock()}},1000);
+  _activeHookTimers.push(timer);
+  var safetyTimer=setTimeout(function(){clearInterval(timer);doUnlock()},timeoutSec*1000+500);
+  _activeHookTimers.push(safetyTimer);
+  var xBtn=ov.querySelector('#lock-x-btn');if(xBtn)xBtn.onclick=function(){clearInterval(timer);clearTimeout(safetyTimer);doUnlock()};
+  var kwInput=ov.querySelector('#lock-kw-input');if(kwInput){kwInput.onkeydown=function(e){if(e.key==='Enter'){if(kwInput.value.trim()===kw){clearInterval(timer);clearTimeout(safetyTimer);doUnlock()}else{kwInput.value='';kwInput.placeholder='错误，请重试'}}}}
+}
+function renderEffect_reveal_tag(p,next){ var tagName=p.tag_name||''; if(tagName){ var msgs=document.getElementById('chat-msgs');if(msgs){ var div=document.createElement('div');div.className='chat-msg-system';div.textContent='🏷 揭示标签：'+tagName;msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight}} next(); }
+// ── P1 效果 ──
+function renderEffect_vignette_pulse(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var dur=(parseFloat(p.duration)||3)*1000; gc.classList.add('hook-vignette-pulse'); _hookSchedule(function(){gc.classList.remove('hook-vignette-pulse');next()},dur+100); }
+function renderEffect_blood_edge(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var dur=(parseFloat(p.duration)||3)*1000; gc.classList.add('hook-blood-edge'); _hookSchedule(function(){gc.classList.remove('hook-blood-edge');next()},dur+100); }
+function renderEffect_screen_blur(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var dur=(parseFloat(p.duration)||2)*1000; gc.style.filter='blur('+(p.intensity==='heavy'?'4px':'2px')+')'; _hookSchedule(function(){gc.style.filter='';next()},dur+100); }
+function renderEffect_glitch_text(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var dur=(parseFloat(p.duration)||2)*1000; gc.classList.add('hook-glitch-text'); _hookSchedule(function(){gc.classList.remove('hook-glitch-text');next()},dur+100); }
+function renderEffect_heartbeat_warm(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var dur=(parseFloat(p.duration)||5)*1000; gc.classList.add('hook-heartbeat-warm'); _hookSchedule(function(){gc.classList.remove('hook-heartbeat-warm');next()},dur+100); }
+function renderEffect_breathing(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var dur=(parseFloat(p.duration)||4)*1000; gc.classList.add('hook-breathing'); _hookSchedule(function(){gc.classList.remove('hook-breathing');next()},dur+100); }
+function renderEffect_typewriter(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var text=p.text||'',div=document.createElement('div');div.className='chat-msg-system';msgs.appendChild(div);var i=0;function type(){if(i<text.length){div.textContent+=text.charAt(i);i++;_hookSchedule(type,40+Math.random()*60)}else{next()}}type();msgs.scrollTop=msgs.scrollHeight;}
+function renderEffect_fullscreen_text(p,next){ var ov=document.createElement('div');ov.className='hook-fullscreen-text '+(p.style||'normal');ov.textContent=p.text||'';document.body.appendChild(ov); _hookSchedule(function(){ov.remove();next()},2500); }
+function renderEffect_chapter_title(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var div=document.createElement('div');div.className='hook-chapter-title';div.innerHTML=escHTML(p.text||'')+(p.subtitle?'<br><small style="font-size:14px;color:var(--ink-light);font-weight:400">'+escHTML(p.subtitle)+'</small>':'');msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight; _hookSchedule(function(){div.style.opacity='0';div.style.transition='opacity 1s';setTimeout(function(){div.remove();next()},1000)},2000); }
+function renderEffect_scene_transition(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var div=document.createElement('div');div.className='hook-scene-transition';div.textContent=p.text||'';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight; _hookSchedule(function(){div.remove();next()},2500); }
+function renderEffect_fav_animation(p,next){ var npc=p.npc_name||'NPC',amount=p.amount||'+0'; var el=document.createElement('div');el.className='fav-float';el.textContent=npc+' '+(amount.indexOf('+')>=0||parseInt(amount)>0?'❤':'💔')+' '+amount; el.style.left=(40+Math.random()*40)+'%';el.style.top='50%'; el.style.color=amount.indexOf('+')>=0||parseInt(amount)>0?'#ff6b8a':'#888'; document.body.appendChild(el); _hookSchedule(function(){el.remove();next()},2000); }
+function renderEffect_expression_change(p,next){ next(); }
+function renderEffect_binary_choice(p,next){
+  var ov=document.createElement('div');ov.className='hook-popup-overlay';ov.style.zIndex='280';
+  ov.innerHTML='<div class="hook-binary-choice"><h3 style="color:var(--blood);margin-bottom:10px">做出选择</h3><div class="bc-btns"><button class="btn btn-primary" id="_bcA">'+escHTML(p.option_a||'选项A')+'</button><button class="btn btn-secondary" id="_bcB">'+escHTML(p.option_b||'选项B')+'</button></div></div>';
+  document.body.appendChild(ov);
+  function choose(result){ ov.remove(); var msgs=document.getElementById('chat-msgs');if(msgs){var div=document.createElement('div');div.className='chat-msg-system';div.textContent=result||'';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight} next(); }
+  ov.querySelector('#_bcA').onclick=function(){choose(p.result_a)}; ov.querySelector('#_bcB').onclick=function(){choose(p.result_b)};
+}
+function renderEffect_border_color(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var color=p.color||'#b84a5c',dur=(parseFloat(p.duration)||3)*1000; gc.style.borderColor=color; gc.style.boxShadow='0 0 20px '+color+'44'; _hookSchedule(function(){gc.style.borderColor='';gc.style.boxShadow='';next()},dur); }
+function renderEffect_chat_bg(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} var dur=(parseFloat(p.duration)||5)*1000;if(p.image_url){gc.style.background='url('+escHTML(p.image_url)+') center/cover'} _hookSchedule(function(){if(p.image_url)gc.style.background='';next()},dur); }
+function renderEffect_status_flash(p,next){ var st=document.getElementById('game-status');if(!st){next();return} var color=p.color||'rgba(180,74,92,.3)',dur=(parseFloat(p.duration)||2)*1000; document.documentElement.style.setProperty('--flash-color',color); st.style.animation='statusFlash '+dur+'ms ease-in-out'; _hookSchedule(function(){st.style.animation='';next()},dur+100); }
+function renderEffect_button_morph(p,next){ next(); }
+// ── P2 简化效果 ──
+function renderEffect_npc_enter(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var div=document.createElement('div');div.className='chat-msg-system';div.textContent='✨ '+escHTML(p.npc_name||'NPC')+'登场'+(p.line?'：'+escHTML(p.line):'');msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;next();}
+function renderEffect_npc_exit(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var div=document.createElement('div');div.className='chat-msg-system';div.textContent='💫 '+escHTML(p.npc_name||'NPC')+'退场';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;next();}
+function renderEffect_npc_comfort(p,next){ renderEffect_portrait_popup(p,next); }
+function renderEffect_rule_reveal(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var div=document.createElement('div');div.className='chat-msg-system';div.innerHTML='📜 <b>规则揭示：'+escHTML(p.rule_name||'')+'</b><br>'+escHTML(p.rule_text||'');msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;next();}
+function renderEffect_petal_fall(p,next){ var colors={sakura:['#ffb7c5','#ffc0cb','#ffd1dc'],light:['#ffe4b5','#fff8dc','#ffefd5'],gold:['#ffd700','#ffec8b','#daa520']};var c=colors[p.style]||colors.sakura; for(var i=0;i<20;i++){var pt=document.createElement('div');pt.className='particle';pt.style.left=Math.random()*100+'%';pt.style.top='-20px';pt.style.width=(6+Math.random()*8)+'px';pt.style.height=(6+Math.random()*8)+'px';pt.style.background=c[Math.floor(Math.random()*c.length)];pt.style.borderRadius='50%';pt.style.animationDuration=(3+Math.random()*3)+'s';pt.style.animationDelay=Math.random()*2+'s';document.body.appendChild(pt);_hookSchedule(function(){pt.remove()},6000)} next(); }
+function renderEffect_sunlight(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} gc.style.background='linear-gradient(180deg,rgba(255,240,200,.1),transparent)'; _hookSchedule(function(){gc.style.background='';next()},5000); }
+function renderEffect_music_box(p,next){ var gc=document.getElementById('game-chat');if(!gc){next();return} gc.style.filter='brightness(1.1)'; _hookSchedule(function(){gc.style.filter='';next()},4000); }
+function renderEffect_sudden_silence(p,next){ var dur=(parseFloat(p.duration)||2)*1000; _hookSchedule(next,dur); }
+function renderEffect_color_tone(p,next){ var tones={cold:'sepia(0.3) hue-rotate(180deg)',warm:'sepia(0.3) saturate(1.2)',red:'sepia(0.5) hue-rotate(-30deg)',desaturated:'grayscale(0.5)'}; document.body.style.filter=tones[p.tone]||''; _hookSchedule(function(){document.body.style.filter='';next()},4000); }
+function renderEffect_particles(p,next){ var colors={rain:'#aaccff',snow:'#ffffff',ash:'#888888',firefly:'#ffff88',petal:'#ffb7c5'};var c=colors[p.type]||'#ffffff'; for(var i=0;i<15;i++){var pt=document.createElement('div');pt.className='particle';pt.style.left=Math.random()*100+'%';pt.style.top='-10px';pt.style.width=(3+Math.random()*5)+'px';pt.style.height=(3+Math.random()*5)+'px';pt.style.background=c;pt.style.borderRadius='50%';pt.style.animationDuration=(4+Math.random()*4)+'s';pt.style.animationDelay=Math.random()*3+'s';document.body.appendChild(pt);_hookSchedule(function(){pt.remove()},8000)} next(); }
+function renderEffect_bg_music(p,next){ next(); }
+function renderEffect_sound_fx(p,next){ next(); }
+function renderEffect_warm_flashback(p,next){ var ov=document.createElement('div');ov.className='hook-fullscreen-text gold';ov.style.opacity='0.8';ov.textContent=p.text||'';document.body.appendChild(ov); _hookSchedule(function(){ov.remove();next()},3000); }
+function renderEffect_fullscreen_text_popup(p,next){ var ov=document.createElement('div');ov.className='hook-popup-overlay'; ov.innerHTML='<div class="hook-fullscreen-text '+(p.style||'normal')+'" style="position:relative;cursor:pointer">'+escHTML(p.text||'')+'<br><small style="font-size:12px;color:#888;font-weight:400">点击关闭</small></div>'; document.body.appendChild(ov); ov.onclick=function(){ov.remove();next()}; }
+function renderEffect_dialogue_bubble(p,next){ renderEffect_npc_chat(p,next); }
+function renderEffect_scene_illustration(p,next){ renderEffect_clue_image({image_url:p.image_url,caption:p.caption||''},next); }
+function renderEffect_give_item(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var div=document.createElement('div');div.className='chat-msg-system';div.textContent='🎁 获得物品：'+escHTML(p.item_name||'')+(p.item_desc?' - '+escHTML(p.item_desc):'');msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;next();}
+function renderEffect_attr_change(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var field=p.field==='sanity'?'理智值':'血量'; var div=document.createElement('div');div.className='chat-msg-system';div.textContent=(parseInt(p.amount)>0?'✨':'💢')+' '+field+' '+(parseInt(p.amount)>0?'+':'')+(p.amount||'0');msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;next();}
+function renderEffect_point_reward(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var div=document.createElement('div');div.className='chat-msg-system';div.textContent='⭐ 积分 +'+(p.amount||0);msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;next();}
+function renderEffect_local_flag(p,next){ next(); }
+function renderEffect_diary_flip(p,next){ var ov=document.createElement('div');ov.className='hook-popup-overlay';ov.style.zIndex='270'; ov.innerHTML='<div class="hook-note-card diary"><h3>'+escHTML(p.title||'')+'</h3>'+(p.image?'<img src="'+escHTML(p.image)+'" style="max-width:100%;max-height:200px;object-fit:contain;margin:6px 0;border-radius:4px" onerror="this.remove()">':'')+'<p>'+escHTML(p.content||'')+'</p><button class="btn btn-sm" style="margin-top:8px;background:#888;color:#fff" id="_dfclose">关闭</button></div>'; document.body.appendChild(ov); ov.querySelector('#_dfclose').onclick=function(){ov.remove();next()}; ov.onclick=function(e){if(e.target===ov){ov.remove();next()}}; }
+function sendMsg(){var inp=document.getElementById('game-input'),msg=inp.value.trim();if(!msg||_busy)return;var ak1=_apikey1||ST.getS('apikey1','');if(!ak1){showToast('请先在系统设置中填写API Key','error');return}var ak2=_apikey2||ST.getS('apikey2','');if(!ak2)ak2=ak1;if(!_ws||_ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(function(){sendMsg()},800);return}inp.value='';inp.style.height='auto';setBtns(true);var div=document.createElement('div');div.className='chat-msg-user';div.setAttribute('data-turn',_turnCount);var img=document.createElement('img');img.className='chat-avatar';img.src=getPlayerAvatar();img.setAttribute('onerror','this.remove()');div.appendChild(img);var bub=document.createElement('div');bub.className='bubble';bub.innerHTML='<b>你:</b> '+escHTML(msg);div.appendChild(bub);document.getElementById('chat-msgs').appendChild(div);addEditButton(div);var m1=ST.getS('model1','deepseek-v4-flash'),m2=ST.getS('model2','deepseek-v4-pro');_ws.send(JSON.stringify({type:'user_turn',userInput:msg,apiKey1:ak1,apiKey2:ak2,modelSmall:m1,modelLarge:m2,nValue:_nValue,myWorldBook:_getMyWorldBook()}));document.getElementById('game-status').textContent='AI思考中...'}
+function cancelMsg(){if(_ws&&_busy)_ws.send(JSON.stringify({type:'cancel'}))}
+function doRollback(){showConfirm('回滚将丢弃当前未存档的进度，确定吗？',function(){if(_busy)cancelMsg();setTimeout(function(){location.reload()},500)})}
+
+function addEditButton(chatMsgEl){
+  var editBtn=document.createElement('button');editBtn.className='msg-edit-btn';editBtn.textContent='✎';editBtn.onclick=function(){editMessage(chatMsgEl)};
+  var rollBtn=document.createElement('button');rollBtn.className='msg-rollback-btn';rollBtn.textContent='↩';rollBtn.title='回滚到此处';rollBtn.onclick=function(){rollbackToMessage(chatMsgEl)};
+  chatMsgEl.appendChild(editBtn);chatMsgEl.appendChild(rollBtn);
+}
+function editMessage(chatMsgEl){
+  var bub=chatMsgEl.querySelector('.bubble');if(!bub)return;
+  var originalHTML=bub.innerHTML;
+  var btns=chatMsgEl.querySelectorAll('.msg-edit-btn,.msg-rollback-btn');for(var i=0;i<btns.length;i++)btns[i].style.display='none';
+  var originalText=bub.textContent.replace(/^你: /,'');
+  var ta=document.createElement('textarea');
+  ta.value=originalText;
+  ta.style.cssText='width:100%;min-height:60px;padding:8px;border:2px solid var(--gold);border-radius:6px;font-family:var(--font);font-size:13px';
+  var btnRow=document.createElement('div');btnRow.style.cssText='display:flex;gap:6px;margin-top:6px;justify-content:flex-end';
+  var confirmBtn=document.createElement('button');confirmBtn.textContent='确认修改';confirmBtn.className='btn btn-sm btn-primary';
+  var cancelBtn=document.createElement('button');cancelBtn.textContent='取消';cancelBtn.className='btn btn-sm btn-secondary';
+  confirmBtn.onclick=function(){
+    var newText=ta.value.trim();
+    if(!newText)return;
+    bub.innerHTML='<b>你:</b> '+escHTML(newText);
+    addEditButton(chatMsgEl);
+    if(_ws&&_ws.readyState===WebSocket.OPEN&&!_busy){
+      setBtns(true);
+      var m1=ST.getS('model1','deepseek-v4-flash'),m2=ST.getS('model2','deepseek-v4-pro');
+      _ws.send(JSON.stringify({type:'user_turn',userInput:newText,apiKey1:_apikey1,apiKey2:_apikey2||_apikey1,modelSmall:m1,modelLarge:m2,nValue:_nValue,myWorldBook:_getMyWorldBook()}));
+      document.getElementById('game-status').textContent='AI思考中...';
+    }
+  };
+  cancelBtn.onclick=function(){
+    bub.innerHTML=originalHTML;
+    addEditButton(chatMsgEl);
+  };
+  btnRow.appendChild(confirmBtn);btnRow.appendChild(cancelBtn);
+  bub.innerHTML='';bub.appendChild(ta);bub.appendChild(btnRow);
+}
+function rollbackToMessage(chatMsgEl){
+  var turn=parseInt(chatMsgEl.getAttribute('data-turn'));if(isNaN(turn)){showToast('无法确定回滚点','error');return}
+  showConfirm('回滚到第'+(turn+1)+'条消息之前？该消息之后的所有进度将丢失。',function(){
+    if(_busy)cancelMsg();
+    showToast('回滚中...','loading');
+    fetch('/api/rollback/'+turn,{method:'POST',headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+      if(d.ok){showToast('已回滚','success');setTimeout(function(){location.reload()},800)}
+      else showToast(d.error||'回滚失败','error')
+    }).catch(function(e){showToast('回滚失败: '+e.message,'error')})
+  });
+}
+function doSave(){var msgs=[];var children=document.getElementById('chat-msgs').children;for(var i=0;i<children.length;i++){var c=children[i];var role=c.classList.contains('chat-msg-user')?'user':(c.classList.contains('chat-msg-ai')?'ai':'system');msgs.push({role:role,content:c.textContent.substring(0,500)})};fetch('/api/saves',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({slot_name:'存档 '+new Date().toLocaleTimeString(),turn_number:_turnCount,recent_messages:msgs})}).then(function(r){return r.json()}).then(function(d){if(d.ok){showToast('已保存，共'+d.count+'个存档','success')}else showToast('保存失败','error')}).catch(function(e){showToast('保存失败: '+e.message,'error')})}
+function loadSaves(){fetch('/api/saves',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){var list=d.saves||[],html='';if(!list.length)html='暂无存档';else list.forEach(function(s){html+='<div style=\"padding:6px;border-bottom:1px solid #4a3a5a;display:flex;justify-content:space-between;align-items:center\"><span>'+escHTML(s.slot_name)+' <small style=color:#888>回合'+s.turn_number+' '+escHTML(s.created_at)+'</small></span><span><button class=\"btn btn-sm btn-primary\" onclick=\"loadSave('+s.id+')\">加载</button> <button class=\"btn btn-sm btn-secondary\" onclick=\"delSave('+s.id+')\">删</button></span></div>'});document.getElementById('saves-list').innerHTML=html}).catch(function(e){showToast('加载存档失败','error')})}
+function loadSave(id){showConfirm('加载存档将覆盖当前进度，确定吗？',function(){showToast('加载存档中...','loading');fetch('/api/saves/'+id,{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){if(d.save){window._savedMessages=d.save.recent_messages||[];fetch('/api/saves/upload',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({slot_name:'loaded',save_data:d.save})}).then(function(r){return r.json()}).then(function(){showToast('存档加载成功','success');navTo('page-game')}).catch(function(e){showToast('加载失败: '+e.message,'error')})}else showToast('存档无效','error')}).catch(function(e){showToast('读取失败: '+e.message,'error')})})}
+function delSave(id){showConfirm('确定删除此存档？',function(){_fetchOk('/api/saves/'+id,{method:'DELETE'},'已删除','删除失败',function(){loadSaves()})})}
+function uploadSave(file){var r=new FileReader();r.onload=function(e){try{var d=JSON.parse(e.target.result),sd=d.tags?d:(d.save||d);showToast('导入中...','loading');_fetchOk('/api/saves/upload',{method:'POST',body:JSON.stringify({slot_name:file.name.replace('.json',''),save_data:sd})},'导入成功','导入失败',function(dd,err){if(!err)loadSaves()})}catch(ex){showToast('文件格式错误: '+ex.message,'error')}};r.readAsText(file)}
+
+function loadDebug(){fetch('/debug/state').then(function(r){return r.json()}).then(function(d){var html='<h4>库统计</h4>';for(var k in d.counts)html+=k+': '+d.counts[k]+' | ';html+='<h4 style=\"margin-top:10px\">分类</h4>';var tbc=d.tags_by_category||{};for(var c in tbc)html+='<b>'+c+'</b>: '+tbc[c].join(', ')+'<br>';html+='<h4 style=\"margin-top:10px\">玩家</h4><pre style=\"font-size:11px\">'+JSON.stringify(d.player||{},null,2)+'</pre>';document.getElementById('debug-content').innerHTML=html}).catch(function(){document.getElementById('debug-content').innerHTML='加载失败'})}
+
+// ── 用户面板 ──
+function loadProfile(){
+  fetch('/api/user/profile',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+    var h='<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
+    h+='<img src="'+(d.avatar_url||'')+'" onerror="this.style.display=\'none\'" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--gold);object-fit:cover">';
+    h+='<div><b style="font-size:16px">'+escHTML(d.username||'?')+'</b><br><small style="color:#888">玩家ID: '+escHTML(d.player_id||'')+'</small></div></div>';
+    h+='<div style="font-size:12px;line-height:2">';
+    h+='💰 积分: <b style="color:var(--gold)">'+(d.points||0)+'</b> | ';
+    h+='📅 连续签到: '+(d.sign_in_streak||0)+'天 | ';
+    h+='🎮 游玩: '+(d.play_count||0)+'次 | ';
+    h+='✅ 通关: '+(d.clear_count||0)+'次 | ';
+    h+='📝 模板: '+(d.template_count||0)+'个';
+    h+='</div>';
+    document.getElementById('profile-info').innerHTML=h;
+    // 管理员入口
+    var adminBtn=document.getElementById('btn-admin-entry');
+    if(adminBtn)adminBtn.style.display=d.is_admin?'block':'none';
+    var b=document.getElementById('btn-signin');
+    if(d.signed_in_today){b.textContent='今日已签到 ✓ ('+d.sign_in_streak+'天连续)';b.style.opacity='.7';b.style.background='#666'}else{b.disabled=false;b.style.opacity='1'}
+    loadPointHistory(1);
+  }).catch(function(e){document.getElementById('profile-info').innerHTML='加载失败: '+e.message})
+}
+function doSignIn(){
+  fetch('/api/user/sign-in',{method:'POST',headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+    if(d.ok||d.bonus!==undefined){showToast('签到成功，获得 '+(d.bonus||0)+' 积分','success');loadProfile()}else showToast(d.error||'签到失败','error')
+  }).catch(function(e){showToast('签到失败: '+e.message,'error')})
+}
+function openExchange(){
+  var code=prompt('请输入兑换码:');
+  if(!code)return;
+  fetch('/api/points/exchange',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({code:code})}).then(function(r){return r.json()}).then(function(d){
+    if(d.points!==undefined){showToast('兑换成功，获得 '+d.points+' 积分','success');loadProfile()}else showToast(d.error||'兑换失败','error')
+  }).catch(function(e){showToast('兑换失败: '+e.message,'error')})
+}
+function loadPointHistory(page){
+  page=page||1;
+  fetch('/api/user/point-history?page='+page+'&size=15',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+    var list=d.transactions||[],h='<div style="font-weight:700;font-size:12px;margin-top:8px;border-bottom:1px solid #4a3a5a;padding-bottom:4px">积分流水</div>';
+    if(!list.length)h+='<div style="color:#888;padding:8px">暂无记录</div>';
+    else list.forEach(function(t){h+='<div style="padding:4px 0;border-bottom:1px solid #f0e8d0">'+escHTML(t.reason)+' <span style="color:'+(t.amount>0?'#4a4':'#a44')+'">'+(t.amount>0?'+':'')+t.amount+'</span> <small style="color:#aaa">'+escHTML(t.created_at)+'</small></div>'});
+    document.getElementById('profile-points-history').innerHTML=h;
+  }).catch(function(e){document.getElementById('profile-points-history').innerHTML='加载失败'})
+}
+
+// ── 建议面板 ──
+function submitSuggestion(){
+  var cat=document.getElementById('sg-cat').value,content=document.getElementById('sg-content').value.trim();
+  if(!content){showToast('请填写内容','error');return}
+  _fetchOk('/api/suggestions',{method:'POST',body:JSON.stringify({category:cat,content:content})},'建议已提交，感谢反馈！','提交失败',function(d,err){if(!err){document.getElementById('sg-content').value='';loadMySuggestions()}})
+}
+function loadMySuggestions(){
+  fetch('/api/suggestions/my',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+    var list=d.suggestions||[],html='';
+    if(!list.length)html='<div style="color:#888;padding:8px">暂无建议</div>';
+    else list.forEach(function(s){
+      var statusMap={pending:'⏳ 审核中',acknowledged:'👀 已查看',implemented:'✅ 已采纳',declined:'❌ 已拒绝'};
+      html+='<div style="padding:8px 0;border-bottom:1px solid #3a3050">';
+      html+='<b>['+escHTML(s.category)+']</b> '+escHTML(s.content)+'<br>';
+      html+='<small style="color:#888">'+escHTML(s.created_at)+' | 状态: '+(statusMap[s.status]||s.status)+'</small>';
+      if(s.admin_reply)html+='<div style="background:rgba(180,120,180,.1);padding:4px 8px;margin-top:4px;border-radius:4px;font-size:11px">📢 管理员回复: '+escHTML(s.admin_reply)+'</div>';
+      html+='</div>';
+    });
+    document.getElementById('my-suggestions').innerHTML=html;
+  }).catch(function(e){document.getElementById('my-suggestions').innerHTML='加载失败'})
+}
+
+// ── 管理面板 ──────────────────────────────────────
+var _adminTab='users',_adminPage=1;
+function adminTab(tab){_adminTab=tab;_adminPage=1;var el=document.getElementById('admin-content');if(tab==='users')loadAdminUsers(1);else if(tab==='codes')loadAdminCodes(1);else if(tab==='comments')loadAdminComments(1);else if(tab==='reports')loadAdminReports(1);else if(tab==='suggestions')loadAdminSuggestions(1);else if(tab==='announce')loadAdminAnnounce();else if(tab==='stats')loadAdminStats();}
+
+function _adminFetch(url,opts,cb,errMsg){
+  opts=opts||{};opts.headers=opts.headers||{};opts.headers['Authorization']='Bearer '+_auth();
+  fetch(url,opts).then(function(r){return r.json()}).then(function(d){cb(d)}).catch(function(e){showToast((errMsg||'操作失败')+': '+e.message,'error')})
+}
+
+function _adminPager(total,pages,loadFn){
+  var h='';if(_adminPage>1)h+='<button class="btn btn-sm btn-secondary" onclick="'+loadFn+'('+(_adminPage-1)+')">上一页</button> ';
+  h+='第'+_adminPage+'/'+Math.max(pages,1)+'页 共'+total+'条 ';
+  if(_adminPage<pages)h+='<button class="btn btn-sm btn-secondary" onclick="'+loadFn+'('+(_adminPage+1)+')">下一页</button>';
+  return h;
+}
+
+// 用户管理
+function loadAdminUsers(page){_adminPage=page||1;
+  _adminFetch('/api/admin/users?page='+_adminPage+'&size=20',{},function(d){
+    var list=d.users||[],total=d.total||0,pages=Math.ceil(total/20),html='<div style="font-weight:700;margin-bottom:8px;color:var(--blood)">用户管理</div>';
+    html+='<input id="admin-user-search" placeholder="搜索用户..." style="padding:4px 8px;border:1px solid #3a3050;border-radius:3px;margin-bottom:6px;width:200px" onkeyup="if(event.key===\'Enter\')searchAdminUsers()"><button class="btn btn-sm btn-secondary" onclick="searchAdminUsers()" style="margin-left:4px">搜索</button>';
+    html+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:6px"><tr style="background:rgba(180,120,180,.15)"><th style="padding:4px">用户名</th><th>ID</th><th>积分</th><th>状态</th><th>操作</th></tr>';
+    list.forEach(function(u){
+      var pts=u.points!=null?u.points:(u.balance||0);var ban=!!u.is_banned;
+      html+='<tr style="border-bottom:1px solid #3a3050"><td style="padding:4px">'+escHTML(u.username||'')+'</td><td>'+escHTML(u.player_id||'')+'</td><td>'+pts+'</td><td style="color:'+(ban?'#a44':'#4a4')+'">'+(ban?'已封禁':'正常')+'</td>';
+      html+='<td><button class="btn btn-sm btn-secondary" onclick="editAdminUser(\''+u.player_id+'\','+pts+')">编辑</button> ';
+      html+='<button class="btn btn-sm '+(ban?'btn-primary':'btn-secondary')+'" onclick="toggleBan(\''+u.player_id+'\','+ban+')">'+(ban?'解封':'封禁')+'</button></td></tr>';
+    });
+    html+='</table><div style="margin-top:8px">'+_adminPager(total,pages,'loadAdminUsers')+'</div>';
+    document.getElementById('admin-content').innerHTML=html;
+  },'加载用户失败')
+}
+function searchAdminUsers(){var q=document.getElementById('admin-user-search').value.trim();_adminFetch('/api/admin/users?search='+encodeURIComponent(q)+'&size=20',{},function(d){loadAdminUsers_show(d)},'搜索失败')}
+function loadAdminUsers_show(d){var list=d.users||[],total=d.total||0;document.getElementById('admin-content').innerHTML='<div style="font-weight:700;margin-bottom:8px;color:var(--blood)">用户管理 - 搜索结果('+total+')</div><button class="btn btn-sm btn-secondary" onclick="loadAdminUsers(1)">返回列表</button>'+_renderUserTable(list,total,1)}
+function _renderUserTable(list,total,pages){var h='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:6px"><tr style="background:rgba(180,120,180,.15)"><th style="padding:4px">用户名</th><th>ID</th><th>积分</th><th>状态</th><th>操作</th></tr>';list.forEach(function(u){var pts=u.points!=null?u.points:(u.balance||0);var ban=!!u.is_banned;h+='<tr style="border-bottom:1px solid #3a3050"><td style="padding:4px">'+escHTML(u.username||'')+'</td><td>'+escHTML(u.player_id||'')+'</td><td>'+pts+'</td><td style="color:'+(ban?'#a44':'#4a4')+'">'+(ban?'已封禁':'正常')+'</td><td><button class="btn btn-sm btn-secondary" onclick="editAdminUser(\''+u.player_id+'\','+pts+')">编辑</button> <button class="btn btn-sm '+(ban?'btn-primary':'btn-secondary')+'" onclick="toggleBan(\''+u.player_id+'\','+(ban?1:0)+')">'+(ban?'解封':'封禁')+'</button></td></tr>'});h+='</table>';return h}
+function editAdminUser(pid,points){
+  var np=prompt('修改积分 (当前:'+points+')',points);if(np===null)return;
+  _adminFetch('/api/admin/users/'+pid,{method:'PUT',body:JSON.stringify({balance:parseInt(np)||0})},function(d){showToast('更新成功','success');loadAdminUsers(_adminPage)},'更新失败')
+}
+function toggleBan(pid,banned){showConfirm('确定'+(banned?'解封':'封禁')+'该用户？',function(){_adminFetch('/api/admin/users/'+pid+'/ban',{method:'POST',body:JSON.stringify({ban:!banned})},function(d){showToast(d.ok?'操作成功':'操作失败',d.ok?'success':'error');loadAdminUsers(_adminPage)},'操作失败')})}
+
+// 兑换码
+function loadAdminCodes(page){_adminPage=page||1;
+  _adminFetch('/api/admin/exchange-codes?page='+_adminPage+'&size=30',{},function(d){
+    var list=d.codes||[],total=d.total||0,pages=Math.ceil(total/30),html='<div style="font-weight:700;margin-bottom:8px;color:var(--blood)">兑换码管理</div>';
+    html+='<div style="margin-bottom:8px;display:flex;gap:4px;align-items:center;flex-wrap:wrap">';
+    html+='数量:<input id="gen-count" value="10" style="width:50px;padding:2px 4px;border:1px solid #3a3050;border-radius:3px"> ';
+    html+='面值:<input id="gen-points" value="100" style="width:60px;padding:2px 4px;border:1px solid #3a3050;border-radius:3px"> ';
+    html+='批次:<input id="gen-batch" placeholder="batch" style="width:70px;padding:2px 4px;border:1px solid #3a3050;border-radius:3px"> ';
+    html+='<button class="btn btn-primary btn-sm" onclick="generateCodes()">批量生成</button></div>';
+    html+='<table style="width:100%;border-collapse:collapse;font-size:11px"><tr style="background:rgba(180,120,180,.15)"><th style="padding:4px">兑换码</th><th>面值</th><th>批次</th><th>使用者</th><th>时间</th></tr>';
+    list.forEach(function(c){html+='<tr style="border-bottom:1px solid #3a3050"><td style="padding:4px;font-family:monospace">'+escHTML(c.code)+'</td><td>'+c.points+'</td><td>'+escHTML(c.batch_id||'')+'</td><td>'+(c.is_used?escHTML(c.used_by||'')+'<br><small>'+escHTML(c.used_at||'')+'</small>':'<span style="color:#4a4">未使用</span>')+'</td><td><small>'+escHTML(c.created_at)+'</small></td></tr>'});
+    html+='</table><div style="margin-top:8px">'+_adminPager(total,pages,'loadAdminCodes')+'</div>';
+    document.getElementById('admin-content').innerHTML=html;
+  },'加载失败')
+}
+function generateCodes(){
+  var count=parseInt(document.getElementById('gen-count').value)||10,points=parseInt(document.getElementById('gen-points').value)||100,batch=document.getElementById('gen-batch').value.trim()||'batch_'+Date.now();
+  _adminFetch('/api/admin/exchange-codes',{method:'POST',body:JSON.stringify({count:count,points:points,batch_id:batch})},function(d){showToast('已生成 '+d.count+' 个兑换码','success');loadAdminCodes(_adminPage)},'生成失败')
+}
+
+// 评论管理
+function loadAdminComments(page){_adminPage=page||1;
+  _adminFetch('/api/admin/comments?page='+_adminPage+'&size=20',{},function(d){
+    var list=d.comments||[],total=d.total||0,pages=Math.ceil(total/20),html='<div style="font-weight:700;margin-bottom:8px;color:var(--blood)">评论管理</div>';
+    list.forEach(function(c){html+='<div style="padding:6px 0;border-bottom:1px solid #3a3050;font-size:11px"><b>'+escHTML(c.username||'')+'</b> <small>'+escHTML(c.created_at)+'</small> | 点赞:'+c.likes+' | 状态:'+(c.is_approved?'<span style="color:#4a4">通过</span>':'<span style="color:#a44">待审</span>')+'<br>'+escHTML((c.content||'').substring(0,200))+'<br><button class="btn btn-sm btn-secondary" onclick="delComment('+c.id+')">删除</button> <button class="btn btn-sm '+(c.is_approved?'btn-secondary':'btn-primary')+'" onclick="approveComment('+c.id+','+(c.is_approved?1:0)+')">'+(c.is_approved?'驳回':'通过')+'</button></div>'});
+    html+='<div style="margin-top:8px">'+_adminPager(total,pages,'loadAdminComments')+'</div>';
+    document.getElementById('admin-content').innerHTML=html;
+  },'加载失败')
+}
+function delComment(cid){showConfirm('确定删除该评论？',function(){_adminFetch('/api/admin/comments/'+cid,{method:'DELETE'},function(d){showToast('已删除','success');loadAdminComments(_adminPage)},'删除失败')})}
+function approveComment(cid,curr){_adminFetch('/api/admin/comments/'+cid+'/approve',{method:'POST',body:JSON.stringify({approved:!curr})},function(d){showToast(curr?'已驳回':'已通过','success');loadAdminComments(_adminPage)},'操作失败')}
+
+// 举报
+function loadAdminReports(page){_adminPage=page||1;
+  _adminFetch('/api/admin/reports?page='+_adminPage+'&size=20',{},function(d){
+    var list=d.reports||[],total=d.total||0,pages=Math.ceil(total/20),html='<div style="font-weight:700;margin-bottom:8px;color:var(--blood)">举报处理</div>';
+    list.forEach(function(r){html+='<div style="padding:6px 0;border-bottom:1px solid #3a3050;font-size:11px">举报人:'+escHTML(r.reporter_id||'')+' | 评论ID:'+r.comment_id+' | '+escHTML(r.created_at)+'<br>原因:'+escHTML(r.reason||'')+' | 状态:'+(r.is_resolved?'<span style="color:#4a4">已处理</span>':'<span style="color:#a44">待处理</span>')+'<br>'+(r.is_resolved?'':'<button class="btn btn-sm btn-primary" onclick="resolveReport('+r.id+')">标记已处理</button>')+'</div>'});
+    html+='<div style="margin-top:8px">'+_adminPager(total,pages,'loadAdminReports')+'</div>';
+    document.getElementById('admin-content').innerHTML=html;
+  },'加载失败')
+}
+function resolveReport(rid){_adminFetch('/api/admin/reports/'+rid,{method:'PUT',body:JSON.stringify({is_resolved:true})},function(d){showToast('已处理','success');loadAdminReports(_adminPage)},'操作失败')}
+
+// 建议
+function loadAdminSuggestions(page){_adminPage=page||1;
+  _adminFetch('/api/admin/suggestions?page='+_adminPage+'&size=20',{},function(d){
+    var list=d.suggestions||[],total=d.total||0,pages=Math.ceil(total/20),html='<div style="font-weight:700;margin-bottom:8px;color:var(--blood)">建议列表</div>';
+    list.forEach(function(s){
+      html+='<div style="padding:6px 0;border-bottom:1px solid #3a3050;font-size:11px"><b>'+escHTML(s.username||'')+'</b> ['+escHTML(s.category)+'] '+escHTML(s.created_at)+'<br>'+escHTML(s.content)+'<br>状态:'+escHTML(s.status)+'<br>';
+      if(s.admin_reply)html+='管理员回复: '+escHTML(s.admin_reply)+'<br>';
+      html+='<input id="sreply-'+s.id+'" placeholder="回复..." style="padding:2px 4px;border:1px solid #3a3050;border-radius:3px;margin-right:4px;width:200px;font-size:11px"><button class="btn btn-sm btn-secondary" onclick="replySuggestion('+s.id+')">回复</button> ';
+      html+='<select id="sstatus-'+s.id+'" style="font-size:10px;padding:1px 2px"><option value="pending"'+('pending'===s.status?' selected':'')+'>审核中</option><option value="acknowledged"'+('acknowledged'===s.status?' selected':'')+'>已查看</option><option value="implemented"'+('implemented'===s.status?' selected':'')+'>已采纳</option><option value="declined"'+('declined'===s.status?' selected':'')+'>已拒绝</option></select>';
+      html+='<button class="btn btn-sm btn-secondary" onclick="updateSuggestion('+s.id+')">更新状态</button></div>';
+    });
+    html+='<div style="margin-top:8px">'+_adminPager(total,pages,'loadAdminSuggestions')+'</div>';
+    document.getElementById('admin-content').innerHTML=html;
+  },'加载失败')
+}
+function replySuggestion(sid){var r=document.getElementById('sreply-'+sid).value.trim();if(!r)return;_adminFetch('/api/admin/suggestions/'+sid,{method:'PUT',body:JSON.stringify({admin_reply:r})},function(d){showToast('已回复','success');loadAdminSuggestions(_adminPage)},'回复失败')}
+function updateSuggestion(sid){var st=document.getElementById('sstatus-'+sid).value;_adminFetch('/api/admin/suggestions/'+sid,{method:'PUT',body:JSON.stringify({status:st})},function(d){showToast('已更新','success');loadAdminSuggestions(_adminPage)},'更新失败')}
+
+// 公告
+function loadAdminAnnounce(){
+  _adminFetch('/api/announcements/list?size=50',{},function(d){
+    var list=d.announcements||[],html='<div style="font-weight:700;margin-bottom:8px;color:var(--blood)">系统公告</div>';
+    html+='<div style="margin-bottom:10px"><textarea id="ann-content" style="width:100%;height:70px;padding:6px;border:1px solid #3a3050;border-radius:3px;font-family:var(--font);font-size:12px" placeholder="公告内容..."></textarea><button class="btn btn-primary btn-sm" style="margin-top:4px" onclick="postAnnounce()">发布公告</button></div>';
+    list.forEach(function(a){html+='<div style="padding:6px 0;border-bottom:1px solid #3a3050;font-size:11px">'+escHTML(a.content)+'<br><small>'+escHTML(a.created_at)+' | '+(a.is_active?'<span style="color:#4a4">激活</span>':'<span style="color:#888">已下线</span>')+'</small></div>'});
+    document.getElementById('admin-content').innerHTML=html;
+  },'加载失败')
+}
+function postAnnounce(){var c=document.getElementById('ann-content').value.trim();if(!c)return;_adminFetch('/api/admin/announcements',{method:'POST',body:JSON.stringify({content:c})},function(d){showToast('已发布','success');loadAdminAnnounce()},'发布失败')}
+
+// 统计
+function loadAdminStats(){
+  _adminFetch('/api/admin/stats',{},function(d){
+    var html='<div style="font-weight:700;margin-bottom:8px;color:var(--blood)">系统统计</div>';
+    html+='<div style="font-size:12px;line-height:2">';
+    html+='总用户: <b>'+d.total_users+'</b><br>';
+    html+='日活(近30天): <b>'+d.active_users_30d+'</b><br>';
+    html+='总模板: <b>'+d.total_templates+'</b><br>';
+    html+='总评论: <b>'+d.total_comments+'</b><br>';
+    html+='积分总发行: <b>'+d.total_points_issued+'</b><br>';
+    html+='积分总消耗: <b>'+d.total_points_consumed+'</b><br>';
+    html+='</div>';
+    document.getElementById('admin-content').innerHTML=html;
+  },'加载失败')
+}
+
+// ── 引导式模板编辑器 ──────────────────────────────────
+var _editStep=1,_editData={name:'',desc:'',world:{name:'',surface:'',hidden:'',clear:'',opening:''},maps:[],rules:[],chars:[],items:[],worldBook:[],hooks:[]};
+function edInit(){
+  _editStep=1;_editData={name:'',desc:'',world:{name:'',surface:'',hidden:'',clear:'',opening:''},maps:[],rules:[],chars:[],items:[],worldBook:[],hooks:[]};
+  edRender(1);
+}
+function edSetStep(s){
+  if(s<1||s>9)return;
+  edCollectData();_editStep=s;edRender(s);
+  var el=document.getElementById('editor-step-content');
+  if(el)el.scrollTop=0;
+}
+function edNext(){edCollectData();edSetStep(Math.min(_editStep+1,9))}
+function edPrev(){edCollectData();edSetStep(Math.max(_editStep-1,1))}
+function edCollectData(){
+  if(_editStep===1){
+    var nm=document.getElementById('ed-name');if(nm)_editData.name=nm.value.trim();
+    var ds=document.getElementById('ed-desc');if(ds)_editData.desc=ds.value.trim();
+  }else if(_editStep===2){
+    ['name','surface','hidden','clear','opening'].forEach(function(k){var el=document.getElementById('ed-w-'+k);if(el)_editData.world[k]=el.value.trim()})
+  }else if(_editStep===3){
+    _editData.maps=edCollectCards('map',['name','desc','hidden','connected','danger'])
+  }else if(_editStep===4){
+    _editData.rules=edCollectCards('rule',['name','surface','real','trigger','consequence'])
+  }else if(_editStep===5){
+    _editData.chars=edCollectCards('char',['name','hp','sanity','appearance','isPlayer','items'])
+  }else if(_editStep===6){
+    _editData.items=edCollectCards('item',['name','desc','effect','quantity'])
+  }else if(_editStep===7){
+    _editData.worldBook=edCollectCards('wb',['title','keys','content','constant','priority'])
+  }else if(_editStep===8){
+    edCollectHooks();
+  }
+}
+function edCollectCards(type,fields){
+  var cards=[],i=0;
+  while(true){
+    var card={},found=false;
+    for(var j=0;j<fields.length;j++){
+      var el=document.getElementById('ed-'+type+'-'+i+'-'+fields[j]);
+      if(el){card[fields[j]]=fields[j]==='isPlayer'?el.checked:(el.value||'').trim();found=true}
+    }
+    if(!found)break;
+    cards.push(card);i++;
+  }
+  return cards
+}
+function edRender(s){
+  // Update step indicators
+  var steps=document.querySelectorAll('.ed-step');
+  steps.forEach(function(sp){sp.classList.toggle('active',parseInt(sp.getAttribute('data-s'))===s)});
+  // Show/hide buttons
+  var prev=document.getElementById('ed-prev'),next=document.getElementById('ed-next'),fin=document.getElementById('ed-finish');
+  prev.style.display=s===1?'none':'';next.style.display=s===9?'none':'';fin.style.display=s===9?'':'none';
+  var c=document.getElementById('editor-step-content'),h='';
+  if(s===1){
+    h+='<div class="ed-card"><h5>基本信息</h5>';
+    h+='<div class="ed-row"><label>模板名称 *</label><input type="text" id="ed-name" value="'+escHTML(_editData.name)+'" placeholder="给模板起个名字"></div>';
+    h+='<div class="ed-row"><label>简介</label><textarea id="ed-desc" placeholder="简单描述这个副本...">'+escHTML(_editData.desc)+'</textarea></div></div>';
+  }else if(s===2){
+    h+='<div class="ed-card"><h5>世界设定</h5>';
+    h+=edField('ed-w-name','副本名称 *',_editData.world.name,'例如：血月医院');
+    h+=edField('ed-w-surface','表面介绍',_editData.world.surface,'外观描述，玩家第一印象');
+    h+=edField('ed-w-hidden','隐藏真相',_editData.world.hidden,'不为人知的秘密...');
+    h+=edField('ed-w-clear','通关条件',_editData.world.clear,'例如：找到出口并存活7天');
+    h+=edField('ed-w-opening','开场白',_editData.world.opening,'进入游戏时AI主动说的第一句话');
+    h+='</div>';
+  }else if(s===3){
+    h+=edCardGroup('map',_editData.maps,['name','desc','hidden','connected','danger'],{name:'地图名称',desc:'描述',hidden:'隐藏信息',connected:'相连区域',danger:'危险等级'},'地图');
+  }else if(s===4){
+    h+=edCardGroup('rule',_editData.rules,['name','surface','real','trigger','consequence'],{name:'规则名称',surface:'表面规则',real:'真实规则',trigger:'触发条件',consequence:'违反后果'},'规则');
+  }else if(s===5){
+    h+=edCardGroup('char',_editData.chars,['name','hp','sanity','appearance','isPlayer','items','portrait','themeColor','tags','speakingStyle','attitudeToPlayer','relations'],{name:'角色名称 *',hp:'血量',sanity:'理智值',appearance:'外貌描述',isPlayer:'是否玩家角色',items:'持有物品(逗号分隔)',portrait:'立绘URL(可选)',themeColor:'主题色(可选,如#c0392b)',tags:'角色标签(逗号分隔,可选)',speakingStyle:'说话风格(可选)',attitudeToPlayer:'对玩家态度描述(可选)',relations:'对其他角色态度(可选,格式:角色名:态度描述,逗号分隔)'},'角色');
+  }else if(s===6){
+    h+=edCardGroup('item',_editData.items,['name','desc','effect','quantity'],{name:'物品名称',desc:'描述',effect:'效果/用途',quantity:'数量'},'物品');
+  }else if(s===7){
+    // 世界书步骤
+    if(!_editData.worldBook)_editData.worldBook=[];
+    h+='<div class="ed-card"><h5>世界书 <small style=\"color:#888;font-weight:400\">（额外全局提示词，关键词触发时自动注入AI上下文）</small></h5>';
+    h+='<p style=\"font-size:11px;color:#888;margin-bottom:8px\">参考酒馆(World Info)设计。每条设定包含关键词和内容——当聊天中出现关键词时，该设定自动注入AI提示词。</p>';
+    h+=edCardGroup('wb',_editData.worldBook,['title','keys','content','constant','priority'],{title:'条目名称(备忘)',keys:'触发关键词(逗号分隔)*',content:'注入内容 *',constant:'常驻(蓝灯)',priority:'优先级(越大越靠后,默认100)'},'世界书条目');
+    h+='</div>';
+  }else if(s===8){
+    // ⚡ Hook事件配置
+    if(!_editData.hooks)_editData.hooks=[];
+    var hooks=_editData.hooks;
+    h+='<div class="ed-card"><h5>⚡ 事件配置 <small style="color:#888;font-weight:400">（定义关键词/状态触发的特效与剧情事件）</small></h5>';
+    h+='<p style="font-size:11px;color:#888;margin-bottom:8px">设置触发条件→选择效果→叠加多个效果。触发后按优先级顺序在前端播放。</p>';
+    // hook cards list
+    if(hooks.length===0){
+      h+='<div style="text-align:center;padding:20px;color:#888">暂无事件配置，点击下方按钮添加</div>';
+    }else{
+      for(var hi=0;hi<hooks.length;hi++){
+        var hk=hooks[hi],trig=hk.trigger||{},effs=hk.effects||[];
+        var trigSummary='';
+        if(trig.type==='keyword')trigSummary='关键词: '+(trig.words||'')+' ('+(trig.source||'both')+')';
+        else if(trig.type==='state')trigSummary='状态条件('+(trig.logic||'and')+') x'+(trig.conditions||[]).length;
+        else trigSummary='未配置触发';
+        var effSummary=effs.map(function(e){return '<span class="hook-effect-badge">'+escHTML(e.type||'?')+'</span>'}).join(' ');
+        h+='<div class="hook-card" id="hook-card-'+hi+'" onclick="edToggleHook('+hi+',event)">';
+        h+='<div class="hook-summary"><span style="flex:1;min-width:0"><span class="hook-trigger-badge">'+escHTML(trigSummary)+'</span> '+effSummary+'</span>';
+        h+='<span class="hook-actions"><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();edMoveHook('+hi+',-1)" title="上移">↑</button><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();edMoveHook('+hi+',1)" title="下移">↓</button><button class="btn btn-sm" style="background:#8b2020;color:#fce8d0" onclick="event.stopPropagation();edDelHook('+hi+')">×</button></span></div>';
+        h+='<div class="hook-body" id="hook-body-'+hi+'"></div></div>';
+      }
+    }
+    h+='<div style="text-align:center;margin-top:8px"><button class="btn btn-sm btn-gold" onclick="edAddHook(event)">+ 添加事件</button></div>';
+    h+='</div>';
+  }else if(s===9){
+    var json=edBuildJSON();
+    h+='<div class="ed-card"><h5>预览生成的JSON</h5>';
+    h+='<textarea readonly style="width:100%;height:300px;padding:8px;border:2px solid #3a3050;border-radius:6px;font-family:monospace;font-size:11px;background:rgba(255,255,255,.05);color:var(--ink)">'+escHTML(JSON.stringify(json,null,2))+'</textarea></div>';
+    h+='<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--ink-light)">确认无误后点击下方按钮保存</div>';
+    h+='<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">';
+    h+='<button class="btn btn-secondary" onclick="edDoSave(\'local\')">保存到本地</button>';
+    h+='<button class="btn btn-primary" onclick="edDoSave(\'server\')">保存到服务器</button>';
+    h+='<button class="btn btn-gold" onclick="edDoSave(\'cloud\')">上传云端</button></div>';
+  }
+  c.innerHTML=h
+}
+function edField(id,label,val,ph){return '<div class="ed-row"><label>'+label+'</label><input type="text" id="'+id+'" value="'+escHTML(val||'')+'" placeholder="'+(ph||'')+'"></div>'}
+function edCardGroup(type,list,fields,labels,title){
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-weight:700;font-size:13px;color:var(--blood)">'+title+'设定</span>';
+  h+='<button class="btn btn-sm btn-gold" onclick="edAddCard(\''+type+'\')">+ 新增'+title+'</button></div>';
+  if(!list||!list.length)list=[{}];
+  for(var i=0;i<list.length;i++){
+    var card=list[i];
+    h+='<div class="ed-card" id="ed-card-'+type+'-'+i+'"><div class="ed-del" onclick="edDelCard(\''+type+'\','+i+')">×</div><h5>'+title+' #'+(i+1)+'</h5>';
+    for(var j=0;j<fields.length;j++){
+      var f=fields[j],lb=labels[f]||f;
+      if(f==='isPlayer')h+='<div class="ed-row"><label><input type="checkbox" id="ed-'+type+'-'+i+'-'+f+'" '+(card[f]?'checked':'')+'> '+lb+'</label></div>';
+      else h+=edField('ed-'+type+'-'+i+'-'+f,lb,card[f]||'');
+    }
+    h+='</div>';
+  }
+  return h
+}
+function edAddCard(type){
+  edCollectData();
+  var arr=_editData[type+'s']||_editData[type]||[];arr.push({});
+  if(type==='map')_editData.maps=arr;else if(type==='rule')_editData.rules=arr;else if(type==='char')_editData.chars=arr;else if(type==='item')_editData.items=arr;else if(type==='wb')_editData.worldBook=arr;
+  edRender(_editStep)
+}
+function edDelCard(type,idx){
+  edCollectData();
+  var arr=_editData[type+'s']||_editData[type]||[];arr.splice(idx,1);
+  if(type==='map')_editData.maps=arr;else if(type==='rule')_editData.rules=arr;else if(type==='char')_editData.chars=arr;else if(type==='item')_editData.items=arr;else if(type==='wb')_editData.worldBook=arr;
+  edRender(_editStep)
+}
+function edBuildJSON(){
+  edCollectData();
+  var tags=[],name=_editData.name||'未命名',desc=_editData.desc||'';
+  // World tag
+  var w=_editData.world;
+  if(w.name)tags.push({category:'world',tag_name:w.name,tag_hint:w.surface||w.name,tag_detail:{表面介绍:w.surface||'',隐藏真相:w.hidden||'',通关条件:w.clear||'',开场白:w.opening||''}});
+  // Maps
+  (_editData.maps||[]).forEach(function(m){if(m.name)tags.push({category:'map',tag_name:m.name,tag_hint:m.desc||m.name,tag_detail:{描述:m.desc||'',隐藏信息:m.hidden||'',相连区域:m.connected||'',危险等级:m.danger||''}})});
+  // Rules
+  (_editData.rules||[]).forEach(function(r){if(r.name)tags.push({category:'rule',tag_name:r.name,tag_hint:r.surface||r.name,tag_detail:{表面规则:r.surface||'',真实规则:r.real||'',触发条件:r.trigger||'',违反后果:r.consequence||''}})});
+  // Chars
+  (_editData.chars||[]).forEach(function(ch){if(ch.name){var td={血量:ch.hp||'',理智:ch.sanity||'',外貌:ch.appearance||'',是否玩家:ch.isPlayer||false,持有物品:ch.items||''};
+    // 可选字段：仅非空时加入
+    if(ch.portrait)td['立绘']=ch.portrait;
+    if(ch.themeColor)td['主题色']=ch.themeColor;
+    if(ch.tags){var tgs=ch.tags.split(',').map(function(s){return s.trim()}).filter(Boolean);if(tgs.length)td['角色标签']=tgs}
+    if(ch.speakingStyle)td['说话风格']=ch.speakingStyle;
+    if(ch.attitudeToPlayer)td['对玩家的态度']={'态度描述':ch.attitudeToPlayer};
+    if(ch.relations){var rels={};ch.relations.split(',').forEach(function(r){var parts=r.split(':');if(parts.length>=2)rels[parts[0].trim()]=parts.slice(1).join(':').trim()});if(Object.keys(rels).length)td['对其他角色的态度']=rels}
+    tags.push({category:'character',tag_name:ch.name,tag_hint:(ch.appearance||ch.name).substring(0,30),tag_detail:td})}});
+  // Items
+  (_editData.items||[]).forEach(function(it){if(it.name)tags.push({category:'item',tag_name:it.name,tag_hint:it.desc||it.name,tag_detail:{描述:it.desc||'',效果:it.effect||'',数量:it.quantity||''}})});
+  // World book entries
+  var wbEntries=[];
+  (_editData.worldBook||[]).forEach(function(wbe){if(wbe.content&&wbe.keys){wbEntries.push({id:'wb'+(wbEntries.length+1),title:wbe.title||'',keys:(wbe.keys||'').split(',').map(function(s){return s.trim()}).filter(Boolean),content:wbe.content||'',constant:wbe.constant||false,priority:parseInt(wbe.priority)||100,enabled:true})}});
+  return {name:name,desc:desc,tags:tags,world_book:wbEntries,hooks:_editData.hooks||[]}
+}
+function edFinish(){edCollectData();edSetStep(9)}
+function edDoSave(target){
+  var data=edBuildJSON();
+  if(!data.name||data.name==='未命名'){showAlert('请先填写模板名称');edSetStep(1);return}
+  if(!data.tags||!data.tags.length){showAlert('至少需要填写一个设定条目（世界/地图/规则等）');return}
+  // Also fill the advanced mode textarea so savePreset can read it
+  var ta=document.getElementById('editor-json');if(ta)ta.value=JSON.stringify(data,null,2);
+  var nm=document.getElementById('editor-name');if(nm)nm.value=data.name;
+  savePreset(target,data)
+}
+function edImportJSON(){
+  var raw=document.getElementById('editor-json').value.trim();
+  if(!raw){showToast('请先在高级模式文本区粘贴JSON','error');return}
+  var data;try{data=JSON.parse(raw)}catch(e){showToast('JSON格式错误: '+e.message,'error');return}
+  _editData.name=data.name||'';
+  _editData.desc=data.desc||'';
+  _editData.world={};_editData.maps=[];_editData.rules=[];_editData.chars=[];_editData.items=[];_editData.worldBook=[];_editData.hooks=data.hooks||[];
+  (data.tags||[]).forEach(function(t){
+    var cat=t.category||'',d=t.tag_detail||{};
+    if(cat==='world'){_editData.world={name:t.tag_name||'',surface:d['表面介绍']||d.surface_intro||'',hidden:d['隐藏真相']||d.hidden_truth||'',clear:d['通关条件']||d.clear_condition||'',opening:d['开场白']||d.opening_monologue||''}}
+    else if(cat==='map'){_editData.maps.push({name:t.tag_name||'',desc:d['描述']||d.description||'',hidden:d['隐藏信息']||d.hidden_info||'',connected:d['相连区域']||d.connected_areas||'',danger:d['危险等级']||d.danger_level||''})}
+    else if(cat==='rule'){_editData.rules.push({name:t.tag_name||'',surface:d['表面规则']||d.surface_rule||'',real:d['真实规则']||d.real_rule||'',trigger:d['触发条件']||d.trigger_condition||'',consequence:d['违反后果']||d.consequence||''})}
+    else if(cat==='character'){var att=d['对玩家的态度']||{};var rels=d['对其他角色的态度']||{};var relStr=Object.keys(rels).map(function(k){return k+':'+rels[k]}).join(',');_editData.chars.push({name:t.tag_name||'',hp:d['血量']||d.health||'',sanity:d['理智']||d.sanity||'',appearance:d['外貌']||d.appearance||'',isPlayer:d['是否玩家']||d.is_player||false,items:d['持有物品']||d.items||'',portrait:d['立绘']||'',themeColor:d['主题色']||'',tags:(d['角色标签']||[]).join(','),speakingStyle:d['说话风格']||'',attitudeToPlayer:att['态度描述']||'',relations:relStr})}
+    else if(cat==='item'){_editData.items.push({name:t.tag_name||'',desc:d['描述']||d.description||'',effect:d['效果']||d.effect||'',quantity:d['数量']||d.quantity||''})}
+  });
+  // 导入世界书
+  (data.world_book||[]).forEach(function(wbe){_editData.worldBook.push({title:wbe.title||'',keys:(wbe.keys||[]).join(','),content:wbe.content||'',constant:wbe.constant||false,priority:wbe.priority||100})});
+  var nm=document.getElementById('editor-name');if(nm)nm.value=data.name||'';
+  showToast('JSON已导入，请在引导表单中修改','success');
+  edSetStep(1)
+}
+
+// ── Hook编辑器函数 ──────────────────────────────────
+function edAddHook(ev){ if(ev)ev.stopPropagation(); edCollectHooks(); if(!_editData.hooks)_editData.hooks=[]; _editData.hooks.push({id:'hook_'+Date.now(),trigger:{type:'keyword',words:'',source:'both'},effects:[],once:true,priority:_editData.hooks.length,delay_turns:0}); edRender(8); var idx=_editData.hooks.length-1; setTimeout(function(){ edToggleHook(idx); },100); }
+function edDelHook(idx){ edCollectHooks(); _editData.hooks.splice(idx,1); edRender(8); }
+function edMoveHook(idx,dir){ edCollectHooks(); var arr=_editData.hooks,ni=idx+dir; if(ni<0||ni>=arr.length)return; var tmp=arr[idx];arr[idx]=arr[ni];arr[ni]=tmp; edRender(8); setTimeout(function(){ edToggleHook(ni); },100); }
+function edToggleHook(idx,ev){ if(ev){ var t=ev.target; if(t&&(t.tagName==='BUTTON'||t.tagName==='SELECT'||t.tagName==='INPUT'||t.tagName==='TEXTAREA'))return; } var card=document.getElementById('hook-card-'+idx); if(!card)return; var wasExpanded=card.classList.contains('expanded'); document.querySelectorAll('.hook-card.expanded').forEach(function(c){c.classList.remove('expanded')}); if(!wasExpanded){ card.classList.add('expanded'); edRenderHookBody(idx); } }
+function edRenderHookBody(idx){
+  var body=document.getElementById('hook-body-'+idx); if(!body)return;
+  var hk=_editData.hooks[idx]; if(!hk)return;
+  var trig=hk.trigger||{},effs=hk.effects||[];
+  var h='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">';
+  h+='<label style="font-size:11px;color:var(--ink-light)">触发方式:</label>';
+  h+='<select onchange="edHookSetTrigger('+idx+',this.value)" style="padding:3px 6px;border:1.5px solid #3a3050;border-radius:4px;font-size:11px;background:rgba(255,255,255,.06);color:var(--ink)"><option value="keyword"'+((trig.type||'keyword')==='keyword'?' selected':'')+'>关键词触发</option><option value="state"'+(trig.type==='state'?' selected':'')+'>状态触发</option></select>';
+  h+='<label style="font-size:11px;margin-left:8px"><input type="checkbox" '+(hk.once!==false?'checked':'')+' onchange="edHookSetOnce('+idx+',this.checked)"> 仅触发一次</label>';
+  h+='<label style="font-size:11px">优先级:<input type="number" value="'+(hk.priority||0)+'" onchange="edHookSetPriority('+idx+',this.value)" style="width:50px;padding:2px 4px;border:1.5px solid #3a3050;border-radius:4px;font-size:11px;background:rgba(255,255,255,.06);color:var(--ink);margin-left:4px"></label>';
+  h+='<label style="font-size:11px">延迟回合:<input type="number" value="'+(hk.delay_turns||0)+'" onchange="edHookSetDelay('+idx+',this.value)" style="width:50px;padding:2px 4px;border:1.5px solid #3a3050;border-radius:4px;font-size:11px;background:rgba(255,255,255,.06);color:var(--ink);margin-left:4px"></label>';
+  h+='</div>';
+  // Trigger config
+  h+='<div style="background:rgba(180,120,180,.06);padding:8px;border-radius:6px;margin-bottom:8px"><b style="font-size:11px;color:var(--blood)">触发条件</b>';
+  if(trig.type==='state'){
+    var conds=trig.conditions||[];
+    h+='<div style="margin:6px 0"><label style="font-size:10px;color:var(--ink-light)">逻辑:</label><select onchange="edHookSetLogic('+idx+',this.value)" style="margin-left:4px;padding:2px 6px;border:1.5px solid #3a3050;border-radius:3px;font-size:10px;background:rgba(255,255,255,.06);color:var(--ink)"><option value="and"'+(trig.logic==='and'?' selected':'')+'>且(AND)</option><option value="or"'+(trig.logic==='or'?' selected':'')+'>或(OR)</option></select></div>';
+    for(var ci=0;ci<conds.length;ci++){
+      var cd=conds[ci];
+      h+='<div class="hook-condition-row">';
+      h+='<select onchange="edHookSetCond('+idx+','+ci+',\'field\',this.value)">'+edStateFieldOpts(cd.field)+'</select>';
+      h+=edCondOpSelect(idx,ci,cd);
+      h+='<input type="text" value="'+escHTML(cd.value||'')+'" onchange="edHookSetCond('+idx+','+ci+',\'value\',this.value)" placeholder="值">';
+      h+='<button class="btn btn-sm btn-secondary" onclick="edHookDelCond('+idx+','+ci+')" style="padding:1px 6px;font-size:10px">×</button>';
+      h+='</div>';
+    }
+    h+='<button class="btn btn-sm btn-secondary" onclick="edHookAddCond('+idx+')" style="font-size:10px;margin-top:4px">+ 添加条件</button>';
+  }else{
+    h+='<div class="hook-condition-row"><label style="font-size:10px">关键词(空格分隔):</label><input type="text" value="'+escHTML(trig.words||'')+'" onchange="edHookSetKW('+idx+',this.value)" placeholder="例如: 发现 真相 镜子" style="width:250px"></div>';
+    h+='<div class="hook-condition-row"><label style="font-size:10px">检查来源:</label><select onchange="edHookSetKWSource('+idx+',this.value)" style="padding:2px 6px;border:1.5px solid #3a3050;border-radius:3px;font-size:10px;background:rgba(255,255,255,.06);color:var(--ink)"><option value="ai_reply"'+(trig.source==='ai_reply'?' selected':'')+'>AI回复</option><option value="new_tags"'+(trig.source==='new_tags'?' selected':'')+'>新标签</option><option value="both"'+(!trig.source||trig.source==='both'?' selected':'')+'>两者</option></select></div>';
+  }
+  h+='</div>';
+  // Effects
+  h+='<div style="background:rgba(200,160,60,.06);padding:8px;border-radius:6px;margin-bottom:8px"><b style="font-size:11px;color:var(--gold)">效果列表</b>';
+  if(effs.length===0)h+='<div style="font-size:10px;color:#888;margin:4px 0">暂无效果，点击下方按钮添加</div>';
+  for(var ei=0;ei<effs.length;ei++){
+    var ef=effs[ei];
+    h+='<div class="hook-effect-item"><div class="ef-del" onclick="edHookDelEffect('+idx+','+ei+')">×</div>';
+    h+='<label>效果类型</label><select onchange="edHookSetEffectType('+idx+','+ei+',this.value)">'+edEffectTypeOpts(ef.type)+'</select>';
+    h+=edEffectParamsForm(idx,ei,ef);
+    h+='</div>';
+  }
+  h+='<button class="btn btn-sm btn-gold" onclick="edHookAddEffect('+idx+')" style="font-size:10px;margin-top:4px">+ 添加效果</button>';
+  h+='</div>';
+  h+='<div style="text-align:right"><button class="btn btn-sm btn-primary" onclick="edCollectHooks();edRender(8);setTimeout(function(){edToggleHook('+idx+')},100)">完成编辑</button></div>';
+  body.innerHTML=h;
+}
+function edStateFieldOpts(cur){ var fields=[{v:'hp',l:'血量'},{v:'sanity',l:'理智值'},{v:'turns',l:'回合数'},{v:'has_item',l:'拥有物品'},{v:'has_tag',l:'拥有标签'},{v:'mem_count',l:'记忆碎片数'},{v:'npc_fav',l:'NPC好感度'},{v:'visited_map',l:'去过地图'},{v:'rule_triggered',l:'规则触发过'},{v:'rule_broken',l:'规则违反过'}]; return fields.map(function(f){return'<option value="'+f.v+'"'+(cur===f.v?' selected':'')+'>'+f.l+'</option>'}).join(''); }
+function edCondOpSelect(idx,ci,cd){ var field=cd.field||'hp',needOp=(['hp','sanity','turns','mem_count','npc_fav'].indexOf(field)>=0),ops=[{v:'eq',l:'等于'},{v:'gte',l:'≥'},{v:'lte',l:'≤'}]; if(!needOp)return ''; return '<select onchange="edHookSetCond('+idx+','+ci+',\'op\',this.value)" style="min-width:55px">'+ops.map(function(o){return'<option value="'+o.v+'"'+(cd.op===o.v||(!cd.op&&o.v==='eq')?' selected':'')+'>'+o.l+'</option>'}).join('')+'</select>'; }
+function edEffectTypeOpts(cur){ var cats={heal:{label:'治愈/温暖',effects:['golden_glow','petal_fall','heartbeat_warm','npc_comfort','warm_flashback','sunlight','music_box']},horror:{label:'恐怖/紧张',effects:['flash_red','screen_shake','vignette_pulse','glitch_text','screen_blur','blood_edge','sudden_silence']},narrative:{label:'剧情/叙事',effects:['typewriter','rule_reveal','scene_transition','fullscreen_text','diary_flip','chapter_title']},character:{label:'角色互动',effects:['portrait_popup','expression_change','fav_animation','npc_enter','npc_exit','npc_chat']},ui:{label:'UI变化',effects:['border_color','chat_bg','status_flash','input_lock','button_morph']},popup:{label:'弹窗/图片',effects:['clue_image','scene_illustration','note_card','binary_choice','fullscreen_text_popup','dialogue_bubble','ending_card']},mechanic:{label:'机制/局内',effects:['reveal_tag','give_item','attr_change','point_reward','local_flag']},atmos:{label:'沉浸/氛围',effects:['bg_music','sound_fx','color_tone','particles','breathing']},ach:{label:'成就',effects:['ach_clear','ach_collect','ach_fav','ach_explore','ach_custom']}}; var h='<option value="">--选择效果--</option>'; for(var ck in cats){ var cat=cats[ck]; h+='<optgroup label="'+cat.label+'">'; cat.effects.forEach(function(ef){h+='<option value="'+ef+'"'+(cur===ef?' selected':'')+'>'+ef+'</option>'}); h+='</optgroup>'; } return h; }
+function edEffectParamsForm(idx,ei,ef){
+  var type=ef.type||'',params=ef.params||{},h='';
+  // Common params for many effects
+  if(['flash_red','vignette_pulse','screen_blur','blood_edge','golden_glow','heartbeat_warm','breathing','glitch_text','status_flash','border_color','button_morph'].indexOf(type)>=0){
+    h+='<label>时长(秒)</label><input type="number" value="'+escHTML(params.duration||'')+'" placeholder="默认3" onchange="edHookSetParam('+idx+','+ei+',\'duration\',this.value)" step="0.1" min="0">';
+  }
+  if(type==='screen_shake'){h+='<label>强度</label><select onchange="edHookSetParam('+idx+','+ei+',\'intensity\',this.value)"><option value="light"'+(params.intensity==='light'?' selected':'')+'>轻微</option><option value="medium"'+(!params.intensity||params.intensity==='medium'?' selected':'')+'>中等</option><option value="heavy"'+(params.intensity==='heavy'?' selected':'')+'>剧烈</option></select>';}
+  if(type==='flash_red'){h+='<label>闪烁次数</label><input type="number" value="'+escHTML(params.count||'3')+'" onchange="edHookSetParam('+idx+','+ei+',\'count\',this.value)" min="1" max="10">';}
+  if(type==='typewriter'||type==='fullscreen_text'||type==='fullscreen_text_popup'||type==='warm_flashback'){h+='<label>文本内容</label><textarea onchange="edHookSetParam('+idx+','+ei+',\'text\',this.value)">'+escHTML(params.text||'')+'</textarea>';}
+  if(type==='fullscreen_text'||type==='fullscreen_text_popup'){h+='<label>风格</label><select onchange="edHookSetParam('+idx+','+ei+',\'style\',this.value)"><option value="normal"'+(params.style==='normal'?' selected':'')+'>普通</option><option value="blood"'+(params.style==='blood'?' selected':'')+'>血色</option><option value="gold"'+(params.style==='gold'?' selected':'')+'>金色</option></select>';}
+  if(type==='chapter_title'){h+='<label>标题</label><input type="text" value="'+escHTML(params.text||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'text\',this.value)">';h+='<label>副标题(可选)</label><input type="text" value="'+escHTML(params.subtitle||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'subtitle\',this.value)">';}
+  if(type==='scene_transition'){h+='<label>过渡文字</label><input type="text" value="'+escHTML(params.text||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'text\',this.value)" placeholder="—— 三天后 ——">';}
+  if(type==='diary_flip'){h+='<label>标题</label><input type="text" value="'+escHTML(params.title||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'title\',this.value)">';h+='<label>内容</label><textarea onchange="edHookSetParam('+idx+','+ei+',\'content\',this.value)">'+escHTML(params.content||'')+'</textarea>';h+='<label>图片URL(可选)</label><input type="text" value="'+escHTML(params.image||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'image\',this.value)">';}
+  if(type==='portrait_popup'||type==='npc_comfort'||type==='npc_chat'||type==='npc_enter'||type==='npc_exit'||type==='dialogue_bubble'||type==='fav_animation'||type==='expression_change'){
+    h+='<label>NPC名称</label><select onchange="edHookSetParam('+idx+','+ei+',\'npc_name\',this.value)"><option value="">--选择--</option>'+edNPCSelectOpts(params.npc_name)+'<option value="__custom__">手动输入</option></select>';
+    if(params.npc_name==='__custom__'||(params.npc_name&&!edNPCOpts().includes(params.npc_name)))h+='<input type="text" value="'+(params.npc_name==='__custom__'?'':escHTML(params.npc_name||''))+'" onchange="edHookSetParam('+idx+','+ei+',\'npc_name\',this.value)" placeholder="NPC名称">';
+  }
+  if(type==='portrait_popup'||type==='npc_comfort'||type==='npc_chat'||type==='dialogue_bubble'||type==='npc_enter'){h+='<label>台词/内容</label><textarea onchange="edHookSetParam('+idx+','+ei+',\'line\',this.value)">'+escHTML(params.line||params.content||'')+'</textarea>';}
+  if(type==='portrait_popup'||type==='expression_change'){h+='<label>表情(可选)</label><select onchange="edHookSetParam('+idx+','+ei+',\'expression\',this.value)"><option value="">默认</option><option value="笑"'+(params.expression==='笑'?' selected':'')+'>笑</option><option value="悲"'+(params.expression==='悲'?' selected':'')+'>悲</option><option value="怒"'+(params.expression==='怒'?' selected':'')+'>怒</option><option value="惧"'+(params.expression==='惧'?' selected':'')+'>惧</option><option value="惊讶"'+(params.expression==='惊讶'?' selected':'')+'>惊讶</option></select>';}
+  if(type==='npc_exit'){h+='<label>退场方式</label><select onchange="edHookSetParam('+idx+','+ei+',\'style\',this.value)"><option value="fade">淡出</option><option value="shatter">碎裂</option></select>';}
+  if(type==='fav_animation'||type==='attr_change'){h+='<label>变化量</label><input type="text" value="'+escHTML(params.amount||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'amount\',this.value)" placeholder="+5 或 -3">';}
+  if(type==='attr_change'){h+='<label>属性</label><select onchange="edHookSetParam('+idx+','+ei+',\'field\',this.value)"><option value="hp"'+(params.field==='hp'?' selected':'')+'>血量</option><option value="sanity"'+(params.field==='sanity'?' selected':'')+'>理智</option></select>';}
+  if(type==='clue_image'||type==='scene_illustration'){h+='<label>图片URL</label><div style="display:flex;gap:4px"><input type="text" value="'+escHTML(params.image_url||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'image_url\',this.value)" style="flex:1" id="ed-img-url-'+idx+'-'+ei+'"><button class="btn btn-sm btn-secondary" onclick="edUploadImage(\'ed-img-url-'+idx+'-'+ei+'\',event)">上传</button></div>';h+='<label>说明(可选)</label><input type="text" value="'+escHTML(params.caption||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'caption\',this.value)">';}
+  if(type==='note_card'){h+='<label>标题</label><input type="text" value="'+escHTML(params.title||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'title\',this.value)">';h+='<label>内容</label><textarea onchange="edHookSetParam('+idx+','+ei+',\'content\',this.value)">'+escHTML(params.content||'')+'</textarea>';h+='<label>风格</label><select onchange="edHookSetParam('+idx+','+ei+',\'style\',this.value)"><option value="parchment"'+(params.style==='parchment'?' selected':'')+'>羊皮纸</option><option value="medical"'+(params.style==='medical'?' selected':'')+'>医疗档案</option><option value="diary"'+(params.style==='diary'?' selected':'')+'>日记</option></select>';h+='<label>图片URL(可选)</label><div style="display:flex;gap:4px"><input type="text" value="'+escHTML(params.image||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'image\',this.value)" style="flex:1" id="ed-img-note-'+idx+'-'+ei+'"><button class="btn btn-sm btn-secondary" onclick="edUploadImage(\'ed-img-note-'+idx+'-'+ei+'\',event)">上传</button></div>';}
+  if(type==='ending_card'){h+='<label>结局标题</label><input type="text" value="'+escHTML(params.title||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'title\',this.value)">';h+='<label>结局描述</label><textarea onchange="edHookSetParam('+idx+','+ei+',\'desc\',this.value)">'+escHTML(params.desc||'')+'</textarea>';h+='<label>图标(emoji)</label><input type="text" value="'+escHTML(params.icon||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'icon\',this.value)" placeholder="🌕">';h+='<label>背景图URL(可选)</label><input type="text" value="'+escHTML(params.background_image||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'background_image\',this.value)">';}
+  if(type==='binary_choice'){h+='<label>选项A</label><input type="text" value="'+escHTML(params.option_a||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'option_a\',this.value)">';h+='<label>结果A</label><input type="text" value="'+escHTML(params.result_a||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'result_a\',this.value)">';h+='<label>选项B</label><input type="text" value="'+escHTML(params.option_b||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'option_b\',this.value)">';h+='<label>结果B</label><input type="text" value="'+escHTML(params.result_b||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'result_b\',this.value)">';}
+  if(type==='reveal_tag'){h+='<label>标签名称</label><select onchange="edHookSetParam('+idx+','+ei+',\'tag_name\',this.value)"><option value="">--选择--</option>'+edAllTagOpts(params.tag_name)+'</select>';}
+  if(type==='give_item'){h+='<label>物品名称</label><select onchange="edHookSetParam('+idx+','+ei+',\'item_name\',this.value)"><option value="">--选择--</option>'+edItemSelectOpts(params.item_name)+'<option value="__custom__">手动输入</option></select>';h+='<label>物品描述(可选)</label><input type="text" value="'+escHTML(params.item_desc||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'item_desc\',this.value)">';}
+  if(type==='rule_reveal'){h+='<label>规则名称</label><select onchange="edHookSetParam('+idx+','+ei+',\'rule_name\',this.value)"><option value="">--选择--</option>'+edRuleSelectOpts(params.rule_name)+'</select>';h+='<label>规则内容</label><textarea onchange="edHookSetParam('+idx+','+ei+',\'rule_text\',this.value)">'+escHTML(params.rule_text||'')+'</textarea>';}
+  if(type==='point_reward'||type==='petal_fall'||type==='sunlight'||type==='music_box'||type==='breathing'||type==='scene_illustration'){if(type==='point_reward'){h+='<label>积分数量</label><input type="number" value="'+escHTML(params.amount||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'amount\',this.value)">';}}
+  if(type==='bg_music'){h+='<label>音轨</label><select onchange="edHookSetParam('+idx+','+ei+',\'track\',this.value)"><option value="tense">紧张</option><option value="sad">悲伤</option><option value="peaceful">宁静</option><option value="horror">恐怖</option><option value="warm">温暖</option></select>';}
+  if(type==='sound_fx'){h+='<label>音效</label><select onchange="edHookSetParam('+idx+','+ei+',\'fx\',this.value)"><option value="heartbeat">心跳</option><option value="door">门声</option><option value="creak">吱呀</option><option value="scream">尖叫</option><option value="bell">铃声</option><option value="rain">雨声</option><option value="page">翻页</option></select>';}
+  if(type==='color_tone'){h+='<label>色调</label><select onchange="edHookSetParam('+idx+','+ei+',\'tone\',this.value)"><option value="cold">冷色</option><option value="warm">暖色</option><option value="red">红色</option><option value="desaturated">去饱和</option></select>';}
+  if(type==='particles'){h+='<label>粒子类型</label><select onchange="edHookSetParam('+idx+','+ei+',\'type\',this.value)"><option value="rain">雨</option><option value="snow">雪</option><option value="ash">灰烬</option><option value="firefly">萤火虫</option><option value="petal">花瓣</option></select>';}
+  if(type==='petal_fall'){h+='<label>风格</label><select onchange="edHookSetParam('+idx+','+ei+',\'style\',this.value)"><option value="sakura">樱花</option><option value="light">光点</option><option value="gold">金色</option></select>';}
+  if(type==='input_lock'){h+='<label>锁定提示文字</label><input type="text" value="'+escHTML(params.text||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'text\',this.value)" placeholder="例如: 你被恐惧攫住...">';h+='<label>解锁方式</label><select onchange="edHookSetParam('+idx+','+ei+',\'unlock_method\',this.value)"><option value="timeout">超时解锁</option><option value="manual">手动×按钮</option><option value="input">输入关键字</option></select>';h+='<label>超时秒数(最长15)</label><input type="number" value="'+escHTML(params.timeout_seconds||'10')+'" onchange="edHookSetParam('+idx+','+ei+',\'timeout_seconds\',this.value)" max="15">';if(params.unlock_method==='input')h+='<label>解锁关键字</label><input type="text" value="'+escHTML(params.unlock_keyword||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'unlock_keyword\',this.value)">';}
+  if(type==='border_color'){h+='<label>颜色</label><select onchange="edHookSetParam('+idx+','+ei+',\'color\',this.value)"><option value="#b84a5c">血红</option><option value="#4a3a5a">暗紫</option><option value="#d4a574">暖金</option><option value="#4a7aaa">冷蓝</option><option value="#ffffff">纯白</option></select>';}
+  if(type==='status_flash'){h+='<label>颜色</label><select onchange="edHookSetParam('+idx+','+ei+',\'color\',this.value)"><option value="rgba(180,74,92,.3)">血红</option><option value="rgba(212,165,116,.3)">暖金</option><option value="rgba(74,122,170,.3)">冷蓝</option></select>';}
+  if(type==='chat_bg'){h+='<label>背景图URL</label><div style="display:flex;gap:4px"><input type="text" value="'+escHTML(params.image_url||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'image_url\',this.value)" style="flex:1" id="ed-img-bg-'+idx+'-'+ei+'"><button class="btn btn-sm btn-secondary" onclick="edUploadImage(\'ed-img-bg-'+idx+'-'+ei+'\',event)">上传</button></div>';}
+  if(type==='local_flag'){h+='<label>标记名称</label><input type="text" value="'+escHTML(params.flag_name||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'flag_name\',this.value)">';}
+  if(type==='ach_clear'||type==='ach_collect'||type==='ach_fav'||type==='ach_explore'||type==='ach_custom'){
+    h+='<label>成就名称</label><input type="text" value="'+escHTML(params.name||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'name\',this.value)">';
+    h+='<label>图标(emoji)</label><input type="text" value="'+escHTML(params.icon||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'icon\',this.value)" placeholder="⭐">';
+    if(type==='ach_fav')h+='<label>NPC名称</label><input type="text" value="'+escHTML(params.npc_name||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'npc_name\',this.value)">';
+    if(type==='ach_fav')h+='<label>好感阈值</label><input type="number" value="'+escHTML(params.threshold||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'threshold\',this.value)">';
+    if(type==='ach_collect')h+='<label>目标数量</label><input type="number" value="'+escHTML(params.target_count||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'target_count\',this.value)">';
+    if(type==='ach_explore')h+='<label>地图名称</label><input type="text" value="'+escHTML(params.map_name||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'map_name\',this.value)">';
+    if(type==='ach_custom')h+='<label>描述</label><input type="text" value="'+escHTML(params.desc||'')+'" onchange="edHookSetParam('+idx+','+ei+',\'desc\',this.value)">';
+  }
+  return h;
+}
+// Data helper functions for dropdowns
+function edNPCOpts(){ var names=[]; (_editData.chars||[]).forEach(function(ch){if(ch.name&&!ch.isPlayer)names.push(ch.name)}); return names; }
+function edNPCSelectOpts(cur){ var names=edNPCOpts(); return names.map(function(n){return'<option value="'+escHTML(n)+'"'+(cur===n?' selected':'')+'>'+escHTML(n)+'</option>'}).join(''); }
+function edItemSelectOpts(cur){ var names=[]; (_editData.items||[]).forEach(function(it){if(it.name)names.push(it.name)}); return names.map(function(n){return'<option value="'+escHTML(n)+'"'+(cur===n?' selected':'')+'>'+escHTML(n)+'</option>'}).join(''); }
+function edRuleSelectOpts(cur){ var names=[]; (_editData.rules||[]).forEach(function(r){if(r.name)names.push(r.name)}); return names.map(function(n){return'<option value="'+escHTML(n)+'"'+(cur===n?' selected':'')+'>'+escHTML(n)+'</option>'}).join(''); }
+function edAllTagOpts(cur){ var names=[]; ['chars','items','maps','rules'].forEach(function(k){var arr=_editData[k]||[]; arr.forEach(function(x){if(x.name)names.push(x.name)})}); return names.map(function(n){return'<option value="'+escHTML(n)+'"'+(cur===n?' selected':'')+'>'+escHTML(n)+'</option>'}).join(''); }
+// Hook data setters
+function edCollectHooks(){
+  if(_editStep!==8)return;
+  var hooks=_editData.hooks||[],cards=document.querySelectorAll('.hook-card');
+  for(var i=0;i<cards.length;i++){
+    var body=cards[i].querySelector('.hook-body'); if(!body)continue;
+    var trigType=body.querySelector('select[onchange*="edHookSetTrigger"]'); if(trigType)hooks[i].trigger.type=trigType.value;
+    var onceCb=body.querySelector('input[type=checkbox][onchange*="edHookSetOnce"]'); if(onceCb)hooks[i].once=onceCb.checked;
+    var prio=body.querySelector('input[type=number][onchange*="edHookSetPriority"]'); if(prio)hooks[i].priority=parseInt(prio.value)||0;
+    var delay=body.querySelector('input[type=number][onchange*="edHookSetDelay"]'); if(delay)hooks[i].delay_turns=parseInt(delay.value)||0;
+  }
+}
+function edHookSetTrigger(idx,val){ var hk=_editData.hooks[idx]; hk.trigger={type:val}; if(val==='keyword'){hk.trigger.words='';hk.trigger.source='both'}else{hk.trigger.conditions=[];hk.trigger.logic='and'} edRenderHookBody(idx); }
+function edHookSetOnce(idx,val){ _editData.hooks[idx].once=val; }
+function edHookSetPriority(idx,val){ _editData.hooks[idx].priority=parseInt(val)||0; }
+function edHookSetDelay(idx,val){ _editData.hooks[idx].delay_turns=parseInt(val)||0; }
+function edHookSetKW(idx,val){ _editData.hooks[idx].trigger.words=val; }
+function edHookSetKWSource(idx,val){ _editData.hooks[idx].trigger.source=val; }
+function edHookSetLogic(idx,val){ _editData.hooks[idx].trigger.logic=val; }
+function edHookAddCond(idx){ var trig=_editData.hooks[idx].trigger; if(!trig.conditions)trig.conditions=[]; trig.conditions.push({field:'hp',op:'lte',value:''}); edRenderHookBody(idx); }
+function edHookDelCond(idx,ci){ _editData.hooks[idx].trigger.conditions.splice(ci,1); edRenderHookBody(idx); }
+function edHookSetCond(idx,ci,key,val){ var cond=_editData.hooks[idx].trigger.conditions[ci]; if(!cond)return; cond[key]=val; if(key==='field'&&['hp','sanity','turns','mem_count'].indexOf(val)>=0&&!cond.op)cond.op='lte'; }
+function edHookAddEffect(idx){ var hk=_editData.hooks[idx]; if(!hk.effects)hk.effects=[]; hk.effects.push({type:'',params:{}}); edRenderHookBody(idx); }
+function edHookDelEffect(idx,ei){ _editData.hooks[idx].effects.splice(ei,1); edRenderHookBody(idx); }
+function edHookSetEffectType(idx,ei,val){ _editData.hooks[idx].effects[ei].type=val; _editData.hooks[idx].effects[ei].params={}; edRenderHookBody(idx); }
+function edHookSetParam(idx,ei,key,val){ var ef=_editData.hooks[idx].effects[ei]; if(!ef.params)ef.params={}; ef.params[key]=val; }
+
+// Image upload helper
+function edUploadImage(targetId,ev){
+  if(ev)ev.stopPropagation();
+  var inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    var f=inp.files[0];if(!f)return;
+    if(f.size>2*1024*1024){showToast('图片不能超过2MB','error');return}
+    var fd=new FormData();fd.append('file',f);
+    showToast('上传中...','loading');
+    fetch('/api/upload/image',{method:'POST',headers:{'Authorization':'Bearer '+_auth()},body:fd}).then(function(r){return r.json()}).then(function(d){
+      if(d.url){var el=document.getElementById(targetId);if(el){el.value=d.url;el.dispatchEvent(new Event('change'));}showToast('上传成功','success')}else showToast(d.error||'上传失败','error')
+    }).catch(function(e){showToast('上传失败: '+e.message,'error')})
+  };
+  inp.click();
+}
+
+window._cp='page-login';
+// 诊断工具：捕获资源加载错误并定位来源
+window.addEventListener('error',function(e){
+  var t=e.target;
+  if(t&&t!==window&&(t.tagName==='IMG'||t.tagName==='LINK'||t.tagName==='SCRIPT')){
+    var attr=t.src||t.href||'';
+    if(attr.indexOf('undefined')>=0||attr.indexOf('/undefined')>=0)
+      console.warn('[ResourceErr]',t.tagName,'src/href:',attr,'parent:',(t.parentElement||{}).id||(t.parentElement||{}).className||'?');
+  }
+},true);
+</script></body></html>

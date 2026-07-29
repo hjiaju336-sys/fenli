@@ -1,0 +1,12 @@
+/* 粉色可爱主题 */
+:root {
+  --bg: #3a1828; --surface: #fff0f5; --parchment: #ffe4ec; --parchment-dark: #f5d0dc;
+  --blood: #d4648a; --blood-light: #e884a8; --gold: #e8a0b4; --gold-light: #f0c0d4;
+  --ink: #4a2030; --ink-light: #6a4050; --shadow: rgba(60,10,30,.25);
+  --border: #c090a0; --radius: 10px;
+  --font: "KaiTi","STKaiti","Microsoft YaHei",serif;
+}
+/* 圆体风格 */
+* { font-weight: 400 !important; }
+.btn { border-radius: 20px !important; }
+.popup, .container { border-radius: 16px !important; }
