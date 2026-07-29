@@ -5,6 +5,7 @@ import time, asyncio
 from db import TagDAO, MemoryDAO
 from ai_provider import AIProvider, create_provider
 from hard_sync import format_pass2_context
+from pass1 import run_pass1
 from pass2 import run_pass2
 from worldbook import scan_and_inject
 
@@ -58,6 +59,7 @@ async def process_turn_async(
     if not api_key_large:
         api_key_large = api_key_small
     provider = create_provider(api_key_large)
+    pass1_provider = create_provider(api_key_small)
     log = {
         "turn_id": int(time.time()), "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "player_id": player_id, "user_input": user_input,
@@ -69,17 +71,51 @@ async def process_turn_async(
     all_tags = tag_dao.all_hints()
     all_memories = mem_dao.all_hints()
 
-    # Step 1: 关键词召回（不用AI）
+    # Step 1: AI 标签召回（主路径）或关键词 fallback
     t0 = time.time()
-    keep_tags, fetch_tags, drop_tags, keep_mems, fetch_mems = _keyword_recall(
-        user_input, all_tags, all_memories, hot_tag_names)
-    log["pass1"] = {
-        "input_tokens": 0, "output_tokens": 0, "latency_ms": 0,
-        "output": {"keepTags": keep_tags, "fetchTags": fetch_tags,
-                   "dropTags": drop_tags, "keepMemories": keep_mems,
-                   "fetchMemories": fetch_mems, "dropMemories": []},
-        "raw_output": "keyword_recall"
-    }
+    try:
+        if not model_small:
+            raise ValueError("no small model configured")
+        pass1_result = await run_pass1(
+            provider=pass1_provider,
+            api_key=api_key_small,
+            user_input=user_input,
+            hot_tag_names=hot_tag_names,
+            all_tags=all_tags,
+            all_memories=all_memories,
+            recent_context=recent_context,
+            model_name=model_small,
+        )
+        keep_tags = pass1_result["keepTags"]
+        fetch_tags = pass1_result["fetchTags"]
+        drop_tags = pass1_result["dropTags"]
+        keep_mems = pass1_result["keepMemories"]
+        fetch_mems = pass1_result["fetchMemories"]
+        log["pass1"] = {
+            "method": "ai",
+            "input_tokens": pass1_result["input_tokens"],
+            "output_tokens": pass1_result["output_tokens"],
+            "latency_ms": pass1_result["latency_ms"],
+            "output": {"keepTags": keep_tags, "fetchTags": fetch_tags,
+                       "dropTags": drop_tags, "keepMemories": keep_mems,
+                       "fetchMemories": fetch_mems, "dropMemories": []},
+            "raw_output": pass1_result.get("raw_output", ""),
+        }
+        await pass1_provider.close()
+    except Exception as e:
+        await pass1_provider.close()
+        # Fallback: 关键词匹配（免费，不做 AI 调用）
+        keep_tags, fetch_tags, drop_tags, keep_mems, fetch_mems = _keyword_recall(
+            user_input, all_tags, all_memories, hot_tag_names)
+        log["pass1"] = {
+            "method": "keyword_fallback",
+            "error": str(e)[:200],
+            "input_tokens": 0, "output_tokens": 0, "latency_ms": (time.time() - t0) * 1000,
+            "output": {"keepTags": keep_tags, "fetchTags": fetch_tags,
+                       "dropTags": drop_tags, "keepMemories": keep_mems,
+                       "fetchMemories": fetch_mems, "dropMemories": []},
+            "raw_output": "keyword_recall_fallback",
+        }
 
     # Step 2: 硬同步
     t_sync = time.time()

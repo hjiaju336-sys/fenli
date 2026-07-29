@@ -47,6 +47,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .vars-content h3{font-size:11px;color:var(--blood);margin:4px 0 2px;border-bottom:1px solid rgba(180,120,180,.3)}
 .vars-content .v-item{margin:2px 0;padding:2px 4px;font-size:10px;border-left:2px solid var(--gold);cursor:pointer}
 .vars-content .v-item.spoiler{border-left-color:var(--blood);background:rgba(200,0,0,.08)}
+.v-item.spoiler{opacity:0;max-height:0;overflow:hidden;transition:opacity 0.3s ease,max-height 0.3s ease}
+.v-item.spoiler.visible{opacity:1;max-height:200px}
 .vars-footer{flex-shrink:0;font-size:10px;padding-top:4px;border-top:1px solid rgba(180,120,180,.2)}
 .status-card{padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.3);font-size:11px}.status-card .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blood);margin-right:5px}
 .sidebar-stats{font-size:10px;color:#7b68ae;margin-top:auto;padding-top:4px;border-top:1px solid rgba(180,120,180,.2)}
@@ -166,7 +168,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <button class="btn btn-primary" style="width:100%" onclick="doLogin()">确认登录</button>
 <div style="text-align:center;margin-top:8px"><span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="doRegister()">没有账号？点击注册</span></div>
 <div class="notice-box" id="login-notice">新玩家请直接注册，已有账号请登录</div>
-<div class="bottom-announce" style="margin-top:20px;padding:8px;text-align:center;font-size:11px;color:#7b68ae;border-top:1px solid #4a3a5a">v0.5.2 — 无限流规则怪谈</div>
+<div class="bottom-announce" style="margin-top:20px;padding:8px;text-align:center;font-size:11px;color:#7b68ae;border-top:1px solid #4a3a5a">v0.5.3 — 无限流规则怪谈</div>
 </div></div>
 
 <div id="page-home" class="page">
@@ -493,6 +495,33 @@ function setNValue(v){_nValue=parseInt(v)||10;ST.setS('nvalue',_nValue);showToas
 function leaveGame(){if(_busy)cancelMsg();clearAllHookEffects();navTo('page-home')}
 function _auth(){return _token||ST.getS('token','')}
 
+// 全局 fetch 包装：统一 401 + 网络异常 + JSON 解析
+async function _fetch(url, opts) {
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  if (!opts.headers['Authorization']) {
+    opts.headers['Authorization'] = 'Bearer ' + _auth();
+  }
+  try {
+    var resp = await fetch(url, opts);
+    if (resp.status === 401) {
+      ST.remove('token');
+      _token = '';
+      showToast('登录已过期，请重新登录', 'error');
+      setTimeout(function() { navTo('page-login'); }, 1500);
+      throw new Error('Unauthorized');
+    }
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+  } catch (e) {
+    if (e.message !== 'Unauthorized') {
+      showToast('网络错误: ' + e.message, 'error');
+    }
+    throw e;
+  }
+}
+
 // Toast 通知
 function showToast(msg,type){
   type=type||'info';
@@ -516,8 +545,15 @@ function _fetchOk(url,opts,okMsg,errMsg,cb){
   }).catch(function(e){showToast((errMsg||'网络错误')+': '+e.message,'error');if(cb)cb(null,true)})
 }
 
-function showAlert(msg,cb){var o=document.createElement('div');o.className='popup-overlay active';o.innerHTML='<div class=\"popup\" style=\"text-align:center\"><div style=\"margin-bottom:14px\">'+escHTML(msg)+'</div><button class=\"btn btn-primary\" id=\"_aok\">确定</button></div>';document.body.appendChild(o);o.querySelector('#_aok').onclick=function(){o.remove();if(cb)cb()}}
-function showConfirm(msg,cb){var o=document.createElement('div');o.className='popup-overlay active';o.innerHTML='<div class=\"popup\" style=\"text-align:center\"><div style=\"margin-bottom:14px\">'+escHTML(msg)+'</div><div style=\"display:flex;gap:10px;justify-content:center\"><button class=\"btn btn-primary\" id=\"_cyes\">确认</button><button class=\"btn btn-secondary\" id=\"_cno\">取消</button></div></div>';document.body.appendChild(o);o.querySelector('#_cyes').onclick=function(){o.remove();cb()};o.querySelector('#_cno').onclick=function(){o.remove()}}
+function _cleanPopups(){
+  document.querySelectorAll('.popup-overlay').forEach(function(el) {
+    if (el.id !== 'popup-api' && el.id !== 'popup-saves' && el.id !== 'popup-ending') {
+      el.remove();
+    }
+  });
+}
+function showAlert(msg,cb){_cleanPopups();var o=document.createElement('div');o.className='popup-overlay active';o.innerHTML='<div class=\"popup\" style=\"text-align:center\"><div style=\"margin-bottom:14px\">'+escHTML(msg)+'</div><button class=\"btn btn-primary\" id=\"_aok\">确定</button></div>';document.body.appendChild(o);o.querySelector('#_aok').onclick=function(){o.remove();if(cb)cb()}}
+function showConfirm(msg,cb){_cleanPopups();var o=document.createElement('div');o.className='popup-overlay active';o.innerHTML='<div class=\"popup\" style=\"text-align:center\"><div style=\"margin-bottom:14px\">'+escHTML(msg)+'</div><div style=\"display:flex;gap:10px;justify-content:center\"><button class=\"btn btn-primary\" id=\"_cyes\">确认</button><button class=\"btn btn-secondary\" id=\"_cno\">取消</button></div></div>';document.body.appendChild(o);o.querySelector('#_cyes').onclick=function(){o.remove();cb()};o.querySelector('#_cno').onclick=function(){o.remove()}}
 
 // ── 引号高亮 ──
 function highlightQuotes(text){
@@ -541,12 +577,8 @@ function toggleSpoiler(){
       _spoilerOn=true;cb.checked=true;renderVars();
       showToast('剧透模式已开启','info');
     });
-    // 取消时重置
-    setTimeout(function(){if(!_spoilerOn)cb.checked=false;},600);
   } else {
-    _spoilerOn=false;cb.checked=false;
-    document.querySelectorAll('.spoiler').forEach(function(e){e.style.display='none'});
-    renderVars();
+    _spoilerOn=false;cb.checked=false;renderVars();
   }
 }
 
@@ -562,8 +594,7 @@ function renderVars(){
     for(var i=0;i<list.length;i++){
       var t=list[i],name=t.tag_name||'',hint=t.tag_hint||'',detail=t.tag_detail||{},isSpoiler=false,spoilerKeys=[];
       for(var k in detail){if(detail.hasOwnProperty(k)&&isSpoilerField(k)){isSpoiler=true;spoilerKeys.push(k)}}
-      if(isSpoiler&&!_spoilerOn)continue;
-      var cls='v-item'+(isSpoiler?' spoiler':'');
+      var cls='v-item'+(isSpoiler?' spoiler':'')+(_spoilerOn&&isSpoiler?' visible':'');
       // ── 角色卡片增强显示 ──
       if(ck==='character'&&!detail['是否玩家']){
         var portrait=detail['立绘']||detail['立绘表情']||'';
@@ -1206,8 +1237,8 @@ function rollbackToMessage(chatMsgEl){
     }).catch(function(e){showToast('回滚失败: '+e.message,'error')})
   });
 }
-function doSave(){var msgs=[];var children=document.getElementById('chat-msgs').children;for(var i=0;i<children.length;i++){var c=children[i];var role=c.classList.contains('chat-msg-user')?'user':(c.classList.contains('chat-msg-ai')?'ai':'system');msgs.push({role:role,content:c.textContent.substring(0,500)})};fetch('/api/saves',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({slot_name:'存档 '+new Date().toLocaleTimeString(),turn_number:_turnCount,recent_messages:msgs})}).then(function(r){return r.json()}).then(function(d){if(d.ok){showToast('已保存，共'+d.count+'个存档','success')}else showToast('保存失败','error')}).catch(function(e){showToast('保存失败: '+e.message,'error')})}
-function loadSaves(){fetch('/api/saves',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){var list=d.saves||[],html='';if(!list.length)html='暂无存档';else list.forEach(function(s){html+='<div style=\"padding:6px;border-bottom:1px solid #4a3a5a;display:flex;justify-content:space-between;align-items:center\"><span>'+escHTML(s.slot_name)+' <small style=color:#888>回合'+s.turn_number+' '+escHTML(s.created_at)+'</small></span><span><button class=\"btn btn-sm btn-primary\" onclick=\"loadSave('+s.id+')\">加载</button> <button class=\"btn btn-sm btn-secondary\" onclick=\"delSave('+s.id+')\">删</button></span></div>'});document.getElementById('saves-list').innerHTML=html}).catch(function(e){showToast('加载存档失败','error')})}
+function doSave(){var msgs=[];var children=document.getElementById('chat-msgs').children;for(var i=0;i<children.length;i++){var c=children[i];var role=c.classList.contains('chat-msg-user')?'user':(c.classList.contains('chat-msg-ai')?'ai':'system');msgs.push({role:role,content:c.textContent.substring(0,500)})};_fetch('/api/saves',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slot_name:'存档 '+new Date().toLocaleTimeString(),turn_number:_turnCount,recent_messages:msgs})}).then(function(d){if(d.ok){showToast('已保存，共'+d.count+'个存档','success')}else showToast('保存失败','error')}).catch(function(e){showToast('保存失败: '+e.message,'error')})}
+function loadSaves(){_fetch('/api/saves').then(function(d){var list=d.saves||[],html='';if(!list.length)html='暂无存档';else list.forEach(function(s){html+='<div style=\"padding:6px;border-bottom:1px solid #4a3a5a;display:flex;justify-content:space-between;align-items:center\"><span>'+escHTML(s.slot_name)+' <small style=color:#888>回合'+s.turn_number+' '+escHTML(s.created_at)+'</small></span><span><button class=\"btn btn-sm btn-primary\" onclick=\"loadSave('+s.id+')\">加载</button> <button class=\"btn btn-sm btn-secondary\" onclick=\"delSave('+s.id+')\">删</button></span></div>'});document.getElementById('saves-list').innerHTML=html}).catch(function(e){showToast('加载存档失败','error')})}
 function loadSave(id){showConfirm('加载存档将覆盖当前进度，确定吗？',function(){showToast('加载存档中...','loading');fetch('/api/saves/'+id,{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){if(d.save){window._savedMessages=d.save.recent_messages||[];fetch('/api/saves/upload',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({slot_name:'loaded',save_data:d.save})}).then(function(r){return r.json()}).then(function(){showToast('存档加载成功','success');navTo('page-game')}).catch(function(e){showToast('加载失败: '+e.message,'error')})}else showToast('存档无效','error')}).catch(function(e){showToast('读取失败: '+e.message,'error')})})}
 function delSave(id){showConfirm('确定删除此存档？',function(){_fetchOk('/api/saves/'+id,{method:'DELETE'},'已删除','删除失败',function(){loadSaves()})})}
 function uploadSave(file){var r=new FileReader();r.onload=function(e){try{var d=JSON.parse(e.target.result),sd=d.tags?d:(d.save||d);showToast('导入中...','loading');_fetchOk('/api/saves/upload',{method:'POST',body:JSON.stringify({slot_name:file.name.replace('.json',''),save_data:sd})},'导入成功','导入失败',function(dd,err){if(!err)loadSaves()})}catch(ex){showToast('文件格式错误: '+ex.message,'error')}};r.readAsText(file)}

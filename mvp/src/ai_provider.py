@@ -66,7 +66,7 @@ class StreamResult:
         """消费整个流，返回完整结果"""
         chunks = []
         async for chunk in self._stream:
-            if chunk is not None:  # 过滤 None 防止 join 崩溃
+            if chunk is not None and chunk != "":  # 过滤 None/空串 防止 join 崩溃
                 chunks.append(chunk)
         self._full_text = "".join(chunks)
         return AIResult(self._full_text, self.input_tokens, self.output_tokens, self.latency_ms)
@@ -174,7 +174,9 @@ class AnthropicProvider(AIProvider):
                 if line.startswith("data: "):
                     data = json.loads(line[6:])
                     if data.get("type") == "content_block_delta":
-                        yield data.get("delta", {}).get("text", "")
+                        text = data.get("delta", {}).get("text", "")
+                        if text:
+                            yield text
                     elif data.get("type") == "message_start":
                         input_tokens = data.get("message", {}).get("usage", {}).get("input_tokens", 0)
                     elif data.get("type") == "message_delta":
@@ -233,8 +235,8 @@ class DeepSeekProvider(AIProvider):
                         break
                     data = json.loads(ds)
                     delta = data.get("choices", [{}])[0].get("delta", {})
-                    if "content" in delta:
-                        yield delta["content"] or ""
+                    if "content" in delta and delta["content"]:
+                        yield delta["content"]
                     elif "reasoning_content" in delta and delta["reasoning_content"]:
                         yield delta["reasoning_content"]
         return StreamResult(event_stream())

@@ -326,6 +326,33 @@ window.addEventListener('offline',function(){var b=document.getElementById('offl
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function _getMyWorldBook(){try{return JSON.parse(localStorage.getItem('mvp_my_worldbook')||'[]')}catch(e){return[]}}
 function _auth(){return _token||LG.getS('token','')}
+
+// 全局 fetch 包装：统一 401 + 网络异常 + JSON 解析
+async function _fetch(url, opts) {
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  if (!opts.headers['Authorization']) {
+    opts.headers['Authorization'] = 'Bearer ' + _auth();
+  }
+  try {
+    var resp = await fetch(url, opts);
+    if (resp.status === 401) {
+      LG.remove('token');
+      _token = '';
+      toast('登录已过期，请重新登录','error');
+      setTimeout(function() { navigateTo('pg-login'); }, 1500);
+      throw new Error('Unauthorized');
+    }
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+  } catch (e) {
+    if (e.message !== 'Unauthorized') {
+      toast('网络错误: ' + e.message, 'error');
+    }
+    throw e;
+  }
+}
 function toast(msg,type){var t=document.createElement('div');t.className='toast toast-'+(type||'info');t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},2500)}
 function showConfirm(msg,cb){document.getElementById('confirm-msg').textContent=msg;document.getElementById('confirm-yes').onclick=function(){closeModal('modal-confirm');cb()};document.getElementById('modal-confirm').classList.add('active')}
 function showModal(id){document.getElementById(id).classList.add('active');if(id==='modal-api'){var k1=document.getElementById('cfg-key1'),k2=document.getElementById('cfg-key2');if(!k1.value)k1.value=_apikey1||LG.getS('apikey1','');if(!k2.value)k2.value=_apikey2||LG.getS('apikey2','')}}
@@ -701,10 +728,10 @@ function doSave(){
     var role=c.classList.contains('user')?'user':(c.classList.contains('ai')?'ai':'system');
     msgs.push({role:role,content:c.querySelector('.bubble')?c.querySelector('.bubble').textContent:c.textContent})
   });
-  fetch('/api/saves',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({slot_name:'存档 '+new Date().toLocaleTimeString(),turn_number:_turnCount,recent_messages:msgs})}).then(function(r){return r.json()}).then(function(d){if(d.ok)toast('已保存','success')})
+  _fetch('/api/saves',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slot_name:'存档 '+new Date().toLocaleTimeString(),turn_number:_turnCount,recent_messages:msgs})}).then(function(d){if(d.ok)toast('已保存','success')})
 }
 function loadSaves(){
-  fetch('/api/saves',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+  _fetch('/api/saves').then(function(d){
     var html='';(d.saves||[]).forEach(function(s){html+='<div class="list-item" onclick="loadSave('+s.id+')"><div><div class="li-title">'+esc(s.slot_name)+'</div><div class="li-sub">回合'+s.turn_number+' · '+esc(s.created_at||'')+'</div></div><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();delSave('+s.id+')">删</button></div>'});
     document.getElementById('saves-list').innerHTML=html||'<div class="loading">暂无存档</div>'
   })
