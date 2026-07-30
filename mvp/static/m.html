@@ -361,7 +361,19 @@ var LG={get:function(k,d){try{var v=localStorage.getItem('m_'+k);return v?JSON.p
   document.getElementById('lg-pass').value='';
   var theme=LG.getS('theme','dark');setTheme(theme,true);
   var nv=document.getElementById('chat-nval');if(nv)nv.value=_nValue;
-  if(_token){navigateTo('pg-home');checkAdmin()}
+  if(_token){
+    fetch('/api/user/profile',{headers:{'Authorization':'Bearer '+_token}})
+      .then(function(r){
+        if(r.status===200) return r.json().then(function(d){
+          _user=d.username||_user; LG.setS('user',_user);
+          navigateTo('pg-home'); checkAdmin();
+        });
+        // token 无效
+        LG.remove('token'); _token='';
+        LG.remove('user'); _user='';
+      })
+      .catch(function(){});
+  }
   loadMComfortUI();
 })();
 
@@ -407,6 +419,14 @@ function closeModal(id){document.getElementById(id).classList.remove('active')}
 
 // ═══ 导航 ═══
 function navigateTo(pgId){
+  // 鉴权守卫
+  var publicPages=['pg-login'];
+  if(publicPages.indexOf(pgId)===-1&&!_auth()){
+    toast('请先登录','error');
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+    document.getElementById('pg-login').classList.add('active');
+    return;
+  }
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
   document.querySelectorAll('.drawer').forEach(function(d){d.classList.remove('open')});
   var el=document.getElementById(pgId);if(el)el.classList.add('active');
@@ -548,7 +568,7 @@ function startFromDetail(){
     var url=_detailType==='preset'?'/api/presets/'+encodeURIComponent(_detailId)+'/load':'/api/copies/'+_detailId+'/load';
     // 关闭旧连接，确保加载新预设后重新获取init_state
     if(_ws){try{_ws.close()}catch(e){}}
-    fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+    _fetch(url,{method:'POST'}).then(function(d){
       if(d.ok||!d.error){navigateTo('pg-chat')}else toast(d.error||'加载失败','error')
     })
   })

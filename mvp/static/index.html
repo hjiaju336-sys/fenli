@@ -524,7 +524,15 @@ function _trailTick(){
   ctx.globalAlpha=1;_trailRAF=requestAnimationFrame(_trailTick)
 }
 
-function navTo(id){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});document.querySelectorAll('.popup-overlay').forEach(function(e){e.classList.remove('active');if(e.id!=='popup-api'&&e.id!=='popup-saves'&&e.id!=='popup-ending')e.remove()});var el=document.getElementById(id);if(!el)return;el.classList.add('active');window._cp=id;if(id==='page-template')loadTemplates();if(id==='page-debug')loadDebug();if(id==='page-game')connectWS();if(id==='page-profile')loadProfile();if(id==='page-suggestions')loadMySuggestions();if(id==='page-admin')adminTab('users');if(id==='page-editor')edInit()}
+function navTo(id){
+  // 鉴权守卫：非登录页需要有效 token
+  if(id!=='page-login'&&!_auth()){
+    showToast('请先登录','error');
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+    document.getElementById('page-login').classList.add('active');
+    return;
+  }
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});document.querySelectorAll('.popup-overlay').forEach(function(e){e.classList.remove('active');if(e.id!=='popup-api'&&e.id!=='popup-saves'&&e.id!=='popup-ending')e.remove()});var el=document.getElementById(id);if(!el)return;el.classList.add('active');window._cp=id;if(id==='page-template')loadTemplates();if(id==='page-debug')loadDebug();if(id==='page-game')connectWS();if(id==='page-profile')loadProfile();if(id==='page-suggestions')loadMySuggestions();if(id==='page-admin')adminTab('users');if(id==='page-editor')edInit()}
 function openPopup(id){document.getElementById(id).classList.add('active')}
 function closePopup(id){document.getElementById(id).classList.remove('active')}
 function toggleKey(fieldId,btnId){var e=document.getElementById(fieldId),b=document.getElementById(btnId);if(e.type==='password'){e.type='text';b.textContent='隐藏'}else{e.type='password';b.textContent='显示'}}
