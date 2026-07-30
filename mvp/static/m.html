@@ -40,7 +40,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 
 /* 输入栏 */
 .input-bar{display:flex;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;align-items:flex-end}
-.input-bar textarea{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--card);color:var(--text);font-family:var(--font);font-size:15px;resize:none;max-height:100px;min-height:42px;outline:none;line-height:1.4}.input-bar textarea:focus{border-color:var(--gold)}
+.input-bar textarea{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--card);color:var(--text);font-family:var(--font);font-size:15px;resize:none;min-height:40px;max-height:120px;overflow-y:auto;outline:none;line-height:1.4}.input-bar textarea:focus{border-color:var(--gold)}
 .input-bar .btn-send{width:42px;height:42px;border-radius:50%;border:none;background:var(--gold);color:var(--bg);font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700}
 .input-bar .btn-send:disabled{opacity:.4}
 
@@ -116,6 +116,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 @keyframes skPulse{0%,100%{opacity:.5}50%{opacity:1}}
 /* 离线提示 */
 .offline-banner{display:none;background:#c62828;color:#fff;text-align:center;padding:6px 12px;font-size:12px;flex-shrink:0}.offline-banner.show{display:block}
+/* ── 思考动画三点跳动 ── */
+.thinking-dots{display:inline-flex;gap:3px;vertical-align:middle;align-items:center;margin-left:4px}
+.thinking-dots span{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite}
+.thinking-dots span:nth-child(1){animation-delay:0s}.thinking-dots span:nth-child(2){animation-delay:.2s}.thinking-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotBounce{0%,80%,100%{transform:translateY(0);opacity:.3}40%{transform:translateY(-6px);opacity:1}}
 /* 内联错误+重试 */
 .msg-error{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:8px 0;background:rgba(198,40,40,.12);border:1px solid rgba(198,40,40,.25);border-radius:8px;font-size:12px;color:#e88}.msg-error button{flex-shrink:0;padding:4px 12px;border:1px solid #e88;border-radius:12px;background:transparent;color:#e88;font-size:11px;cursor:pointer}
 /* 引号高亮 */
@@ -488,6 +493,8 @@ function connectWS(){
 
 function highlightMQ(text){
   var safe=esc(text);
+  // \n → <br> 换行渲染（在 esc 之后，保证 XSS 安全）
+  safe=safe.replace(/\n/g,'<br>');
   safe=safe.replace(/&quot;(.*?)&quot;/g,'<span class="quote-hl">"$1"</span>');
   safe=safe.replace(/「(.*?)」/g,'<span class="quote-hl">「$1」</span>');
   return safe;
@@ -519,6 +526,7 @@ function handleWS(d){
   }else if(d.type==='narrative_chunk'){
     var msgs=document.getElementById('chat-msgs'),last=msgs.lastElementChild;
     if(!last||!last.classList.contains('chat-msg')||!last.classList.contains('ai')){last=document.createElement('div');last.className='chat-msg ai';last.innerHTML='<div class="avatar">🤖</div><div class="bubble"></div>';msgs.appendChild(last)}
+    // 流式阶段用 textContent 避免换行闪烁，完整渲染在 turn_complete 处理
     var skEl=document.getElementById('chat-msgs').querySelector('.skeleton');if(skEl)skEl.remove();last.querySelector('.bubble').textContent+=d.text;scrollChat()
   }else if(d.type==='turn_complete'){
     var skEl2=document.getElementById('chat-msgs').querySelector('.skeleton');if(skEl2)skEl2.remove();_busy=false;_turnCount++;document.getElementById('btn-send').style.display='flex';document.getElementById('btn-stop').style.display='none';
@@ -533,14 +541,14 @@ function handleWS(d){
       d.effects.sort(function(a,b){return(b.priority||0)-(a.priority||0)});
       renderMHookEffects(d.effects,0);
     }
-  }else if(d.type==='error'){var skEl3=document.getElementById('chat-msgs').querySelector('.skeleton');if(skEl3)skEl3.remove();_busy=false;document.getElementById('btn-send').style.display='flex';document.getElementById('btn-stop').style.display='none';document.getElementById('chat-status').textContent='错误';var errDiv=document.createElement('div');errDiv.className='msg-error';errDiv.innerHTML='⚠ '+esc((d.message||'AI调用失败'))+' <button onclick="this.parentElement.remove();sendMsg()">🔄 重试</button>';document.getElementById('chat-msgs').appendChild(errDiv);scrollChat();toast(d.message,'error')}
+  }else if(d.type==='error'){var skEl3=document.getElementById('chat-msgs').querySelector('.skeleton');if(skEl3)skEl3.remove();_busy=false;document.getElementById('btn-send').style.display='flex';document.getElementById('btn-stop').style.display='none';document.getElementById('chat-status').textContent='错误';var errDiv=document.createElement('div');errDiv.className='msg-error';errDiv.innerHTML='<span>⚠ '+esc((d.message||'AI调用失败'))+'</span> <button onclick="this.parentElement.remove();mRetrySend()">点击重试</button>';document.getElementById('chat-msgs').appendChild(errDiv);scrollChat();toast(d.message,'error')}
   else if(d.type==='cancelled'){var skEl4=document.getElementById('chat-msgs').querySelector('.skeleton');if(skEl4)skEl4.remove();_busy=false;document.getElementById('btn-send').style.display='flex';document.getElementById('btn-stop').style.display='none';document.getElementById('chat-status').textContent='已取消';toast('生成已取消','info')}
 }
 function renderMsg(role,content,turn){
   var avatar=role==='user'?'👤':(role==='ai'?'🤖':'🌙');
   var html='<div class="chat-msg '+role+'"'+(turn!=null?' data-turn="'+turn+'"':'')+'>';
   if(role!=='system')html+='<div class="avatar">'+avatar+'</div>';
-  html+='<div class="bubble">'+esc(content);
+  html+='<div class="bubble">'+(role==='ai'?highlightMQ(content):esc(content));
   if(role==='user')html+='<div class="msg-actions"><button class="msg-act" onclick="editMsg(this)">✎</button><button class="msg-act" onclick="rollbackMsg(this)">↩</button></div>';
   html+='</div></div>';
   return html
@@ -551,16 +559,17 @@ function sendMsg(){
   var ak1=_apikey1||LG.getS('apikey1','');if(!ak1){toast('请先设置API Key','error');return}
   var ak2=_apikey2||LG.getS('apikey2','');if(!ak2)ak2=ak1;
   if(!_ws||_ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(function(){sendMsg()},800);return}
-  inp.value='';_busy=true;document.getElementById('btn-send').style.display='none';document.getElementById('btn-stop').style.display='flex';
+  inp.value='';inp.style.height='auto';_busy=true;window._lastUserInput=msg;document.getElementById('btn-send').style.display='none';document.getElementById('btn-stop').style.display='flex';
   document.getElementById('chat-msgs').innerHTML+=renderMsg('user',msg,_turnCount);scrollChat();
   var m1=LG.getS('model1','deepseek-v4-flash'),m2=LG.getS('model2','deepseek-v4-pro');
   // 显示骨架动画
   var sk=document.createElement('div');sk.className='skeleton';sk.innerHTML='<div class="sk-avatar"></div><div class="sk-lines"><div class="sk-line"></div><div class="sk-line short"></div></div>';
   document.getElementById('chat-msgs').appendChild(sk);scrollChat();
   _ws.send(JSON.stringify({type:'user_turn',userInput:msg,apiKey1:ak1,apiKey2:ak2,modelSmall:m1,modelLarge:m2,nValue:_nValue,myWorldBook:_getMyWorldBook()}));
-  document.getElementById('chat-status').textContent='AI思考中...'
+  var cs=document.getElementById('chat-status');if(cs)cs.innerHTML='AI思考中<span class=\"thinking-dots\"><span></span><span></span><span></span></span>'
 }
 function scrollChat(){var c=document.getElementById('chat-msgs');setTimeout(function(){c.scrollTop=c.scrollHeight},50)}
+function mRetrySend(){var last=window._lastUserInput||'';if(last){document.getElementById('chat-input').value=last;sendMsg()}else{toast('无上一轮输入可重试','info')}}
 function cancelMsg(){
   if(!_ws||_ws.readyState!==WebSocket.OPEN)return;
   _ws.send(JSON.stringify({type:'cancel'}));
@@ -803,8 +812,9 @@ function sendEditedMsg(text){
   var sk=document.createElement('div');sk.className='skeleton';sk.innerHTML='<div class="sk-avatar"></div><div class="sk-lines"><div class="sk-line"></div><div class="sk-line short"></div></div>';
   document.getElementById('chat-msgs').appendChild(sk);scrollChat();
   var m1=LG.getS('model1','deepseek-v4-flash'),m2=LG.getS('model2','deepseek-v4-pro'),ak1=_apikey1||LG.getS('apikey1',''),ak2=_apikey2||LG.getS('apikey2','');if(!ak2)ak2=ak1;
+  window._lastUserInput=text;
   _ws.send(JSON.stringify({type:'user_turn',userInput:text,apiKey1:ak1,apiKey2:ak2,modelSmall:m1,modelLarge:m2,nValue:_nValue,myWorldBook:_getMyWorldBook()}));
-  document.getElementById('chat-status').textContent='AI思考中...'
+  var cs2=document.getElementById('chat-status');if(cs2)cs2.innerHTML='AI思考中<span class=\"thinking-dots\"><span></span><span></span><span></span></span>'
 }
 function rollbackMsg(btn){showConfirm('回滚到此消息之前？该消息之后的所有进度将丢失。',function(){var turn=btn.closest('.chat-msg').getAttribute('data-turn')||_turnCount;fetch('/api/rollback/'+turn,{method:'POST',headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){if(d.ok){toast('已回滚','info');navigateTo('pg-home');setTimeout(function(){navigateTo('pg-chat')},500)}else toast(d.error||'回滚失败','error')})})}
 

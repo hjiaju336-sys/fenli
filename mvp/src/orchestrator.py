@@ -158,6 +158,7 @@ async def process_turn_async(
                 "narrative": pass2_result["narrative"],
                 "data_ops": pass2_result["data_ops"],
                 "ai_triggers": pass2_result.get("ai_triggers", []),
+                "raw_output": pass2_result.get("raw_output", ""),
             }
 
             # 持久化 data_ops（如果有）

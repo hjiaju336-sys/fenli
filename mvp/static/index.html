@@ -63,11 +63,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .avatar-upload{display:flex;align-items:center;gap:8px;margin-top:6px}.avatar-upload img{width:48px;height:48px;border-radius:50%;border:2px solid var(--gold);object-fit:cover}
 .bg-picker{position:fixed;top:10px;right:10px;z-index:50;font-size:18px;cursor:pointer;background:rgba(0,0,0,.3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
 .chat-msg-system{color:var(--blood);margin:6px 0;font-size:12px;text-align:center}
+.msg-error{display:flex;align-items:center;gap:8px;padding:8px 14px;margin:6px 0;background:rgba(200,40,40,.08);border:1px solid rgba(200,40,40,.2);border-radius:6px;font-size:12px;color:#e07070;cursor:pointer;text-align:center;justify-content:center}
+.msg-error button{flex-shrink:0;padding:4px 14px;border:1px solid #e07070;border-radius:14px;background:transparent;color:#e07070;font-size:11px;cursor:pointer;font-family:var(--font)}
+.msg-error:hover{background:rgba(200,40,40,.12)}
 .quote-highlight{color:var(--blood);font-weight:700}
 
 .chat-messages{flex:1;overflow-y:auto;padding:8px;font-size:13px;line-height:1.7}
 .chat-input-bar{display:flex;gap:6px;align-items:center;flex-shrink:0;padding-top:6px;border-top:1px solid rgba(180,120,180,.15)}
-.chat-input-bar textarea{flex:1;padding:8px 12px;border:2px solid #3a3050;border-radius:6px;background:rgba(255,255,255,.05);color:var(--ink);font-family:var(--font);font-size:14px;resize:none;max-height:80px;min-height:38px}.chat-input-bar textarea:focus{outline:none;border-color:var(--blood)}
+.chat-input-bar textarea{flex:1;padding:8px 12px;border:2px solid #3a3050;border-radius:6px;background:rgba(255,255,255,.05);color:var(--ink);font-family:var(--font);font-size:14px;resize:none;min-height:40px;max-height:120px;overflow-y:auto}.chat-input-bar textarea:focus{outline:none;border-color:var(--blood)}
 
 /* ── 汉堡菜单 ── */
 .hamburger{display:none!important;position:fixed;top:8px;left:8px;z-index:110;background:var(--gold);border:none;border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
@@ -152,6 +155,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .comfort-section{margin-top:8px;border-top:1px solid #4a3a5a;padding-top:8px}.comfort-section h5{font-size:12px;color:var(--blood);margin-bottom:6px;text-align:center}.comfort-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:11px;color:var(--ink-light)}.comfort-toggle{position:relative;width:40px;height:22px;flex-shrink:0}.comfort-toggle input{opacity:0;width:0;height:0}.comfort-toggle .slider{position:absolute;cursor:pointer;inset:0;background:#3a3050;border-radius:22px;transition:.3s}.comfort-toggle .slider::before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:var(--ink-light);border-radius:50%;transition:.3s}.comfort-toggle input:checked+.slider{background:var(--blood)}.comfort-toggle input:checked+.slider::before{transform:translateX(18px);background:#fce8d0}
 /* ── 降级提示 ── */
 .degrade-notice{position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:300;background:rgba(60,30,30,.9);color:#f0c0a0;padding:6px 16px;border-radius:16px;font-size:11px;animation:fadeIn .3s ease;pointer-events:none;white-space:nowrap;border:1px solid rgba(200,100,80,.4)}
+/* ── 思考动画三点跳动 ── */
+.thinking-dots{display:inline-flex;gap:3px;vertical-align:middle;align-items:center;margin-left:4px}
+.thinking-dots span{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite}
+.thinking-dots span:nth-child(1){animation-delay:0s}.thinking-dots span:nth-child(2){animation-delay:.2s}.thinking-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotBounce{0%,80%,100%{transform:translateY(0);opacity:.3}40%{transform:translateY(-6px);opacity:1}}
 /* ── 粒子效果 ── */
 .particle{position:fixed;pointer-events:none;z-index:240;animation:floatUp 4s ease-out forwards}
 /* ── 好感度动画 ── */
@@ -311,7 +319,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
   <div class="chat-messages" id="chat-msgs"><div class="chat-msg-system">加载中...</div></div>
   <div class="chat-input-bar">
    <select id="nvalue-select" onchange="setNValue(this.value)" style="width:52px;padding:2px;font-size:11px;border:1.5px solid var(--border);border-radius:4px;background:rgba(255,255,255,.4);font-family:var(--font)" title="上下文窗口轮数（影响AI记忆/回滚范围/总结频率）"><option value="3">N3</option><option value="5" selected>N5</option><option value="7">N7</option><option value="10">N10</option><option value="15">N15</option><option value="20">N20</option></select><button class="btn btn-secondary btn-sm" onclick="doSave()">存</button>
-   <textarea id="game-input" placeholder="你要做什么？" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+   <textarea id="game-input" placeholder="你要做什么？" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
    <button class="circle-btn" id="btn-send" onclick="sendMsg()">发</button>
    <button class="circle-btn" id="btn-cancel" style="background:var(--blood-light);color:#fce8d0;display:none" onclick="cancelMsg()">停</button>
    <button class="btn btn-secondary btn-sm" onclick="doRollback()">回滚</button>
@@ -539,10 +547,19 @@ function _fetchOk(url,opts,okMsg,errMsg,cb){
   opts.headers=opts.headers||{};
   if(!opts.headers['Content-Type']&&b)opts.headers['Content-Type']='application/json';
   if(!opts.headers['Authorization'])opts.headers['Authorization']='Bearer '+_auth();
-  return fetch(url,opts).then(function(r){return r.json()}).then(function(d){
+  return fetch(url,opts).then(function(r){
+    if(r.status===401){
+      ST.remove('token');_token='';
+      showToast('登录已过期，请重新登录','error');
+      setTimeout(function(){navTo('page-login')},1500);
+      if(cb)cb(null,true);
+      throw new Error('Unauthorized');
+    }
+    return r.json();
+  }).then(function(d){
     if(d.error){showToast((errMsg||'操作失败')+': '+d.error,'error');if(cb)cb(d,true)}
     else{showToast(okMsg||'操作成功','success');if(cb)cb(d,false)}
-  }).catch(function(e){showToast((errMsg||'网络错误')+': '+e.message,'error');if(cb)cb(null,true)})
+  }).catch(function(e){if(e.message!=='Unauthorized'){showToast((errMsg||'网络错误')+': '+e.message,'error');if(cb)cb(null,true)}})
 }
 
 function _cleanPopups(){
@@ -558,8 +575,10 @@ function showConfirm(msg,cb){_cleanPopups();var o=document.createElement('div');
 // ── 引号高亮 ──
 function highlightQuotes(text){
   var safe=escHTML(text);
+  // \n → <br> 换行渲染（在 escHTML 之后，保证 XSS 安全）
+  safe=safe.replace(/\n/g,'<br>');
   // 西文引号: escHTML 将 " 转为 &quot;，用惰性匹配 .*?
-  safe=safe.replace(/&quot;(.*?)&quot;/g,'<span class="quote-highlight">“$1”</span>');
+  safe=safe.replace(/&quot;(.*?)&quot;/g,'<span class="quote-highlight">"$1"</span>');
   // 日文引号: escHTML 不转义
   safe=safe.replace(/「(.*?)」/g,'<span class="quote-highlight">「$1」</span>');
   return safe;
@@ -583,14 +602,18 @@ function toggleSpoiler(){
 }
 
 // ── 变量面板渲染 ──
+var _varsCollapsed={};
 function renderVars(){
   var c=document.getElementById('vars-content'),html='';
   if(!window._lastTagsByCat){c.innerHTML='<p style=\"font-size:11px;color:#888\">等待游戏数据...</p>';return}
-  var tags=window._lastTagsByCat||{},cats={world:'当前副本',map:'地图',rule:'规则',character:'角色',item:'物品'};
+  var tags=window._lastTagsByCat||{};
+  var cats={world:{label:'世界',icon:'🌍'},map:{label:'地图',icon:'🗺️'},rule:{label:'规则',icon:'📜'},character:{label:'角色',icon:'👤'},item:{label:'物品',icon:'🎒'},memory:{label:'记忆',icon:'💭'}};
   var charIndex=0;
   for(var ck in cats){
-    var list=tags[ck]||[];if(!list.length)continue;
-    html+='<h3>'+cats[ck]+'</h3>';
+    var cat=cats[ck],list=tags[ck]||[];if(!list.length)continue;
+    var collapsed=_varsCollapsed[ck]||false;
+    html+='<h3 style=\"cursor:pointer;display:flex;align-items:center;gap:4px\" onclick=\"_toggleVarCat(\''+ck+'\')\"><span style=\"font-size:10px\">'+(collapsed?'▶':'▼')+'</span> '+cat.icon+' '+cat.label+' <small style=\"color:#888;font-weight:400\">('+list.length+')</small></h3>';
+    html+='<div class=\"vars-cat-body\" id=\"vcat-'+ck+'\" style=\"'+(collapsed?'display:none':'')+'\">';
     for(var i=0;i<list.length;i++){
       var t=list[i],name=t.tag_name||'',hint=t.tag_hint||'',detail=t.tag_detail||{},isSpoiler=false,spoilerKeys=[];
       for(var k in detail){if(detail.hasOwnProperty(k)&&isSpoilerField(k)){isSpoiler=true;spoilerKeys.push(k)}}
@@ -599,17 +622,22 @@ function renderVars(){
       if(ck==='character'&&!detail['是否玩家']){
         var portrait=detail['立绘']||detail['立绘表情']||'';
         if(portrait&&typeof portrait==='object')portrait=portrait['默认']||Object.values(portrait)[0]||'';
-        var theme=detail['主题色']||'var(--gold)';
+        var theme=detail['主题色']||'#d4708a';
         var charTags=detail['角色标签']||[];
         var rels=detail['对其他角色的态度']||{};
         var att=detail['对玩家的态度']||{};var fav=parseInt(att['好感度'])||0,trust=parseInt(att['信任度'])||0;
-        html+='<div class=\"'+cls+' char-card\" style=\"border-left:3px solid '+theme+';margin:4px 0;padding:6px 8px;background:rgba(255,255,255,.04);border-radius:0 6px 6px 0;box-shadow:0 0 6px '+theme+'22\">';
+        html+='<div class=\"'+cls+' char-card\" style=\"border-left:3px solid '+theme+';margin:4px 0;padding:6px 8px;background:rgba(255,255,255,.04);border-radius:0 6px 6px 0;box-shadow:0 0 10px '+theme+'44,0 0 20px '+theme+'18\">';
         html+='<div style=\"display:flex;align-items:center;gap:5px\">';
-        if(portrait)html+='<img class=\"char-portrait\" src=\"'+escHTML(portrait)+'\" onerror=\"this.remove()\" style=\"width:32px;height:32px;border-radius:50%;border:2px solid '+theme+';object-fit:cover;flex-shrink:0;box-shadow:0 0 8px '+theme+'44\">';
+        if(portrait)html+='<img class=\"char-portrait\" src=\"'+escHTML(portrait)+'\" onerror=\"this.remove()\" style=\"width:32px;height:32px;border-radius:50%;border:2px solid '+theme+';object-fit:cover;flex-shrink:0;box-shadow:0 0 10px '+theme+'66\">';
         html+='<div style=\"flex:1;min-width:0\"><b style=\"font-size:11px;color:'+theme+'\">'+escHTML(name)+'</b>';
         if(charTags.length)html+='<br><span style=\"font-size:9px;color:#888\">'+escHTML(charTags.join(' · '))+'</span>';
         html+='</div></div>';
-        // 好感度（仅剧透模式显示数值）
+        // 好感度 hearts 显示
+        var favHearts='';
+        if(fav>0){var heartCount=Math.min(Math.ceil(fav/20),5);for(var hi=0;hi<heartCount;hi++)favHearts+='❤';for(var he=heartCount;he<5;he++)favHearts+='♡';}
+        else{favHearts='♡♡♡♡♡'}
+        html+='<div style=\"font-size:10px;margin-top:3px;color:'+theme+';opacity:.85\">'+favHearts+'</div>';
+        // 好感度数值（剧透模式）
         if(_spoilerOn&&(att['好感度']!=null||att['信任度']!=null)){
           html+='<div style=\"font-size:9px;margin-top:2px;color:#888\">';
           if(att['好感度']!=null)html+='好感 '+att['好感度']+'/100 ';
@@ -634,7 +662,8 @@ function renderVars(){
         html+='</div>';
       }
     }
-  }
+    html+='</div>';
+    }
   // ── 模板世界书（后端注入） ──
   var wb=window._worldBook||[];
   if(wb.length){
@@ -670,6 +699,7 @@ function renderVars(){
     document.getElementById('player-cards').innerHTML=cards||'<div class=\"status-card\">无数据</div>';
   }
 }
+function _toggleVarCat(ck){_varsCollapsed[ck]=!_varsCollapsed[ck];renderVars()}
 
 // ── 面板折叠 + 汉堡菜单 ──
 function toggleVars(){var vv=document.getElementById('game-vars'),b=document.getElementById('btn-collapse-vars');vv.classList.toggle('collapsed');if(b)b.textContent=vv.classList.contains('collapsed')?'▶':'◀'}
@@ -1009,16 +1039,21 @@ function handleWS(d){
   }else if(d.type==='narrative_chunk'){
     var msgs=document.getElementById('chat-msgs'),last=msgs.lastElementChild;
     if(!last||!last.classList.contains('chat-msg-ai')){last=document.createElement('div');last.className='chat-msg-ai';var aiImg=document.createElement('img');aiImg.className='chat-avatar';aiImg.src=getAIAvatar();aiImg.setAttribute('onerror',"this.src='"+_DEF_AVATAR_AI+"'");last.appendChild(aiImg);var bubble=document.createElement('div');bubble.className='bubble';last.appendChild(bubble);msgs.appendChild(last)}
+    // 流式阶段用 textContent 避免换行闪烁，完整渲染在 turn_complete 处理
     var bub=last.querySelector('.bubble');bub.textContent+=d.text;bub.setAttribute('data-raw',bub.textContent);msgs.scrollTop=msgs.scrollHeight
   }else if(d.type==='hook_effects'){
     if(d.effects&&d.effects.length){
       d.effects.sort(function(a,b){return(b.priority||0)-(a.priority||0)});
       renderHookEffects(d.effects,0);
     }
-  }else if(d.type==='error'){_busy=false;setBtns(false);showAlert(d.message)}
+  }else if(d.type==='error'){_busy=false;setBtns(false);_insertErrorMsg(d.message)}
   else if(d.type==='cancelled'){_busy=false;setBtns(false)}
 }
 function setBtns(b){_busy=b;document.getElementById('btn-send').style.display=b?'none':'';document.getElementById('btn-cancel').style.display=b?'':'none'}
+function showThinking(){var s=document.getElementById('game-status');if(s)s.innerHTML='AI思考中<span class=\"thinking-dots\"><span></span><span></span><span></span></span>'}
+function showStatus(text,color){var s=document.getElementById('game-status');if(s){s.textContent=text;s.style.color=color||'var(--ink-light)'}}
+function _insertErrorMsg(msg){var d=document.createElement('div');d.className='msg-error';d.innerHTML='<span>'+escHTML(msg)+'</span> <button onclick=\"retryLastInput();this.parentElement.remove()\">点击重试</button>';document.getElementById('chat-msgs').appendChild(d);var msgs=document.getElementById('chat-msgs');msgs.scrollTop=msgs.scrollHeight}
+function retryLastInput(){var inp=document.getElementById('game-input'),last=window._lastUserInput||'';if(last){inp.value=last;sendMsg()}else{showToast('无上一轮输入可重试','info')}}
 
 // ═══ 舒适度开关 ═══════════════════════════════════
 function getComfort(){ try{ return JSON.parse(localStorage.getItem('mvp_comfort')||'{"flash":true,"audio":true,"distort":true,"jumpscare":true,"lock":true}') }catch(e){ return {flash:true,audio:true,distort:true,jumpscare:true,lock:true} } }
@@ -1187,7 +1222,7 @@ function renderEffect_attr_change(p,next){ var msgs=document.getElementById('cha
 function renderEffect_point_reward(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var div=document.createElement('div');div.className='chat-msg-system';div.textContent='⭐ 积分 +'+(p.amount||0);msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;next();}
 function renderEffect_local_flag(p,next){ next(); }
 function renderEffect_diary_flip(p,next){ var ov=document.createElement('div');ov.className='hook-popup-overlay';ov.style.zIndex='270'; ov.innerHTML='<div class="hook-note-card diary"><h3>'+escHTML(p.title||'')+'</h3>'+(p.image?'<img src="'+escHTML(p.image)+'" style="max-width:100%;max-height:200px;object-fit:contain;margin:6px 0;border-radius:4px" onerror="this.remove()">':'')+'<p>'+escHTML(p.content||'')+'</p><button class="btn btn-sm" style="margin-top:8px;background:#888;color:#fff" id="_dfclose">关闭</button></div>'; document.body.appendChild(ov); ov.querySelector('#_dfclose').onclick=function(){ov.remove();next()}; ov.onclick=function(e){if(e.target===ov){ov.remove();next()}}; }
-function sendMsg(){var inp=document.getElementById('game-input'),msg=inp.value.trim();if(!msg||_busy)return;var ak1=_apikey1||ST.getS('apikey1','');if(!ak1){showToast('请先在系统设置中填写API Key','error');return}var ak2=_apikey2||ST.getS('apikey2','');if(!ak2)ak2=ak1;if(!_ws||_ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(function(){sendMsg()},800);return}inp.value='';inp.style.height='auto';setBtns(true);var div=document.createElement('div');div.className='chat-msg-user';div.setAttribute('data-turn',_turnCount);var img=document.createElement('img');img.className='chat-avatar';img.src=getPlayerAvatar();img.setAttribute('onerror','this.remove()');div.appendChild(img);var bub=document.createElement('div');bub.className='bubble';bub.innerHTML='<b>你:</b> '+escHTML(msg);div.appendChild(bub);document.getElementById('chat-msgs').appendChild(div);addEditButton(div);var m1=ST.getS('model1','deepseek-v4-flash'),m2=ST.getS('model2','deepseek-v4-pro');_ws.send(JSON.stringify({type:'user_turn',userInput:msg,apiKey1:ak1,apiKey2:ak2,modelSmall:m1,modelLarge:m2,nValue:_nValue,myWorldBook:_getMyWorldBook()}));document.getElementById('game-status').textContent='AI思考中...'}
+function sendMsg(){var inp=document.getElementById('game-input'),msg=inp.value.trim();if(!msg||_busy)return;var ak1=_apikey1||ST.getS('apikey1','');if(!ak1){showToast('请先在系统设置中填写API Key','error');return}var ak2=_apikey2||ST.getS('apikey2','');if(!ak2)ak2=ak1;if(!_ws||_ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(function(){sendMsg()},800);return}inp.value='';inp.style.height='auto';setBtns(true);window._lastUserInput=msg;var div=document.createElement('div');div.className='chat-msg-user';div.setAttribute('data-turn',_turnCount);var img=document.createElement('img');img.className='chat-avatar';img.src=getPlayerAvatar();img.setAttribute('onerror','this.remove()');div.appendChild(img);var bub=document.createElement('div');bub.className='bubble';bub.innerHTML='<b>你:</b> '+escHTML(msg);div.appendChild(bub);document.getElementById('chat-msgs').appendChild(div);addEditButton(div);var m1=ST.getS('model1','deepseek-v4-flash'),m2=ST.getS('model2','deepseek-v4-pro');_ws.send(JSON.stringify({type:'user_turn',userInput:msg,apiKey1:ak1,apiKey2:ak2,modelSmall:m1,modelLarge:m2,nValue:_nValue,myWorldBook:_getMyWorldBook()}));showThinking()}
 function cancelMsg(){if(_ws&&_busy)_ws.send(JSON.stringify({type:'cancel'}))}
 function doRollback(){showConfirm('回滚将丢弃当前未存档的进度，确定吗？',function(){if(_busy)cancelMsg();setTimeout(function(){location.reload()},500)})}
 
@@ -1215,8 +1250,9 @@ function editMessage(chatMsgEl){
     if(_ws&&_ws.readyState===WebSocket.OPEN&&!_busy){
       setBtns(true);
       var m1=ST.getS('model1','deepseek-v4-flash'),m2=ST.getS('model2','deepseek-v4-pro');
+      window._lastUserInput=newText;
       _ws.send(JSON.stringify({type:'user_turn',userInput:newText,apiKey1:_apikey1,apiKey2:_apikey2||_apikey1,modelSmall:m1,modelLarge:m2,nValue:_nValue,myWorldBook:_getMyWorldBook()}));
-      document.getElementById('game-status').textContent='AI思考中...';
+      showThinking();
     }
   };
   cancelBtn.onclick=function(){

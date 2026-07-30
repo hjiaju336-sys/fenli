@@ -608,6 +608,7 @@ async def ws_handler(ws: WebSocket):
                     for h in hints:
                         detail = TagDAO(session, pid).get_detail(cat, h["tag_name"])
                         all_tags_cat2[cat].append({"tag_name": h["tag_name"], "tag_hint": h["tag_hint"], "tag_detail": detail or {}})
+                raw_pass2 = log["pass2"].get("raw_output","")
                 await ws.send_json({
                     "type":"turn_complete","hotTags":hot_tags,"hotMemories":hot_memories,
                     "pass1_tokens":log["pass1"].get("input_tokens",0)+log["pass1"].get("output_tokens",0),
@@ -616,6 +617,7 @@ async def ws_handler(ws: WebSocket):
                     "player_detail":pd,"created":p.get("created",0),"updated":p.get("updated",0),"dropped":p.get("dropped",0),
                     "ending_type": ending_type,
                     "all_tags_by_category": all_tags_cat2,
+                    "raw_output_pass2": raw_pass2[:500] if raw_pass2 else "",
                 })
                 print_turn_summary(log)
                 # 积分消耗：每轮对话 -5 积分

@@ -235,10 +235,10 @@ class DeepSeekProvider(AIProvider):
                         break
                     data = json.loads(ds)
                     delta = data.get("choices", [{}])[0].get("delta", {})
+                    # Skip reasoning_content - it consumes token budget but is not useful for JSON parsing.
+                    # Only yield actual content (the final answer).
                     if "content" in delta and delta["content"]:
                         yield delta["content"]
-                    elif "reasoning_content" in delta and delta["reasoning_content"]:
-                        yield delta["reasoning_content"]
         return StreamResult(event_stream())
 
 
@@ -315,7 +315,7 @@ class OpenAIProvider(DeepSeekProvider):
                     data = json.loads(data_str)
                     choice = data.get("choices", [{}])[0]
                     delta = choice.get("delta", {})
-                    if "content" in delta:
+                    if "content" in delta and delta["content"]:
                         yield delta["content"]
                     if "usage" in data and data["usage"]:
                         input_tokens = data["usage"].get("prompt_tokens", 0)
