@@ -1125,6 +1125,7 @@ function connectWS(){if(_ws&&_ws.readyState===WebSocket.OPEN)return;var tok=_tok
 _ws.onopen=function(){var s=document.getElementById('game-status');if(s){s.textContent='已连接';s.style.color='#4a4'};hideWSOverlay();if(_wsEverConnected)showToast('已重连','success');_wsEverConnected=true;clearTimeout(_wsFailTimer);_wsFailTimer=null};
 _ws.onclose=function(){_busy=false;setBtns(false);if(window._cp==='page-game'){var s=document.getElementById('game-status');if(s){s.textContent='断开,重连中...';s.style.color='#a44'};showWSOverlay();clearTimeout(window._reconnectTimer);window._reconnectTimer=setTimeout(connectWS,3000);if(!_wsFailTimer)_wsFailTimer=setTimeout(wsReconnectFailed,30000)}};
 _ws.onmessage=function(ev){try{handleWS(JSON.parse(ev.data))}catch(e){console.error('WS parse error:',e)}}
+}
 function handleWS(d){
   if(d.type==='init_state'||d.type==='turn_complete'){
     // 侧栏: 角色卡片（XSS修复）
@@ -1155,6 +1156,7 @@ function handleWS(d){
     if(et!=='none')showEnding(et,d.ending_desc||'');
     // N1: 检测规则触发——红色边框闪烁+震动
     if(d.hook_effects&&Array.isArray(d.hook_effects)){for(var _n1i=0;_n1i<d.hook_effects.length;_n1i++){var _n1ef=d.hook_effects[_n1i];if(_n1ef&&(_n1ef.type==='rule_reveal'||_n1ef.type==='flash_red'||_n1ef.type==='blood_edge')){document.body.classList.add('rule-triggered');if(window.navigator&&navigator.vibrate)navigator.vibrate(200);setTimeout(function(){document.body.classList.remove('rule-triggered')},1300);break}}
+    }
     // 重新渲染最近AI气泡（引号高亮）
     var msgs=document.getElementById('chat-msgs'),aiBubbles=msgs.querySelectorAll('.chat-msg-ai .bubble');
     for(var bi=aiBubbles.length-1;bi>=0;bi--){var raw=aiBubbles[bi].getAttribute('data-raw');if(raw){var _hq=highlightQuotes(raw);_hq=highlightNPCs(_hq);aiBubbles[bi].innerHTML=_hq;break}}
