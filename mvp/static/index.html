@@ -209,7 +209,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <button class="btn btn-primary" style="width:100%" onclick="doLogin()">确认登录</button>
 <div style="text-align:center;margin-top:8px"><span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="doRegister()">没有账号？点击注册</span></div>
 <div class="notice-box" id="login-notice">新玩家请直接注册，已有账号请登录</div>
-<div class="bottom-announce" style="margin-top:20px;padding:8px;text-align:center;font-size:11px;color:var(--purple);border-top:1px solid var(--border-light)">v0.6.1 — 无限流规则怪谈</div>
+<div class="bottom-announce" style="margin-top:20px;padding:8px;text-align:center;font-size:11px;color:var(--purple);border-top:1px solid var(--border-light)">v0.7.0 — 无限流规则怪谈</div>
 </div></div>
 
 <div id="page-home" class="page">
@@ -1124,7 +1124,7 @@ function wsReconnectFailed(){document.getElementById('ws-text').textContent='重
 function connectWS(){if(_ws&&_ws.readyState===WebSocket.OPEN)return;var tok=_token||ST.getS('token','');_ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/ws?token='+encodeURIComponent(tok));
 _ws.onopen=function(){var s=document.getElementById('game-status');if(s){s.textContent='已连接';s.style.color='#4a4'};hideWSOverlay();if(_wsEverConnected)showToast('已重连','success');_wsEverConnected=true;clearTimeout(_wsFailTimer);_wsFailTimer=null};
 _ws.onclose=function(){_busy=false;setBtns(false);if(window._cp==='page-game'){var s=document.getElementById('game-status');if(s){s.textContent='断开,重连中...';s.style.color='#a44'};showWSOverlay();clearTimeout(window._reconnectTimer);window._reconnectTimer=setTimeout(connectWS,3000);if(!_wsFailTimer)_wsFailTimer=setTimeout(wsReconnectFailed,30000)}};
-_ws.onmessage=function(ev){try{handleWS(JSON.parse(ev.data))}catch(e){console.error('WS parse error:',e)}}}
+_ws.onmessage=function(ev){try{handleWS(JSON.parse(ev.data))}catch(e){console.error('WS parse error:',e)}}
 function handleWS(d){
   if(d.type==='init_state'||d.type==='turn_complete'){
     // 侧栏: 角色卡片（XSS修复）
