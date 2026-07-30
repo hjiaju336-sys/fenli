@@ -7,10 +7,18 @@
 <link rel="manifest" href="/static/manifest.json">
 <title>规则怪谈</title>
 <style>
-:root{--bg:#0d0d1a;--surface:#14142a;--card:#1a1a30;--text:#e0d8c8;--text2:#908878;--accent:#c0392b;--gold:#d4a040;--gold2:#b08030;--border:rgba(200,160,60,.15);--bubble-user:rgba(200,160,60,.12);--bubble-ai:rgba(20,20,40,.8);--font:"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;--safe-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#0d0d1a;--surface:#14142a;--card:#1a1a30;--text:#e8d5c8;--text2:#b8a898;--accent:#b84a5c;--accent-light:#d4708a;--gold:#d4a574;--gold-light:#e8c4a0;--purple:#7b68ae;--border:rgba(180,120,180,.1);--bubble-user:rgba(180,120,180,.12);--bubble-ai:rgba(20,20,40,.8);--font:"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;user-select:none;-webkit-user-select:none}
 #app{display:flex;flex-direction:column;height:100dvh;width:100%;max-width:100%;position:relative;overflow:hidden}@media(min-width:481px){#app{max-width:480px;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border)}}
+
+/* ── D6: 侧栏抽屉 ── */
+.side-drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:105;opacity:0;pointer-events:none;transition:opacity .3s ease}.side-drawer-overlay.open{opacity:1;pointer-events:auto}
+.side-drawer{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:80vw;background:var(--surface);z-index:106;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(0,0,0,.5);border-right:1.5px solid var(--border)}.side-drawer.open{transform:translateX(0)}
+.side-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);font-size:15px;font-weight:700;color:var(--gold);flex-shrink:0}
+.side-drawer-body{flex:1;overflow-y:auto;padding:12px 16px;font-size:13px}
+.side-drawer-body .sd-item{padding:10px 12px;margin:4px 0;background:var(--card);border-radius:8px;font-size:12px;border-left:3px solid var(--gold);cursor:pointer}.side-drawer-body .sd-item:active{background:rgba(255,255,255,.05)}
+.side-drawer-body h4{font-size:11px;color:var(--accent);margin:8px 0 4px;text-transform:uppercase;letter-spacing:1px}
 
 /* 页面容器 */
 .page{display:none;flex-direction:column;flex:1;overflow:hidden;width:100%}.page.active{display:flex}
@@ -65,7 +73,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 /* 按钮 */
 .btn{padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);transition:all .2s}
 .btn-primary{background:linear-gradient(135deg,var(--accent),#e04040);color:#fff}.btn-primary:active{opacity:.8}
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg)}.btn-gold:active{opacity:.8}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--bg)}.btn-gold:active{opacity:.8}
 .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-outline:active{background:rgba(255,255,255,.05)}
 .btn-sm{padding:6px 14px;font-size:12px;border-radius:14px}
 .btn-block{display:block;width:100%;text-align:center;margin:8px 0}
@@ -91,6 +99,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 @keyframes bloodEdge{0%{box-shadow:inset 0 0 0px rgba(180,74,92,0)}100%{box-shadow:inset 0 0 50px rgba(180,74,92,.5)}}
 @keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes endingCardIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
 .hook-flash-red{animation:flashRed .3s ease-in-out 3}
 .hook-screen-shake{animation:screenShake .4s ease-in-out}
 .hook-golden-glow{animation:goldenGlow 3s ease-in-out}
@@ -121,6 +130,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 .thinking-dots span{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite}
 .thinking-dots span:nth-child(1){animation-delay:0s}.thinking-dots span:nth-child(2){animation-delay:.2s}.thinking-dots span:nth-child(3){animation-delay:.4s}
 @keyframes dotBounce{0%,80%,100%{transform:translateY(0);opacity:.3}40%{transform:translateY(-6px);opacity:1}}
+/* ── N1: 规则触发闪烁 ── */
+@keyframes ruleFlash{0%,100%{box-shadow:inset 0 0 0 transparent}25%,75%{box-shadow:inset 0 0 100px rgba(220,40,40,.65)}}body.rule-triggered{animation:ruleFlash .6s ease-in-out 2;pointer-events:none}
 /* 内联错误+重试 */
 .msg-error{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:8px 0;background:rgba(198,40,40,.12);border:1px solid rgba(198,40,40,.25);border-radius:8px;font-size:12px;color:#e88}.msg-error button{flex-shrink:0;padding:4px 12px;border:1px solid #e88;border-radius:12px;background:transparent;color:#e88;font-size:11px;cursor:pointer}
 /* 引号高亮 */
@@ -136,8 +147,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 
 /* 滚动条 */
 ::-webkit-scrollbar{width:0}
+/* ── M4: 网络断开遮罩 ── */
+.ws-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.78);align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.ws-overlay.active{display:flex}
+.ws-overlay .ws-text{color:var(--text);font-size:15px;font-family:var(--font);text-align:center;line-height:1.6;padding:0 20px}
+.ws-overlay .ws-spinner{width:36px;height:36px;border:3px solid rgba(212,160,64,.25);border-top-color:var(--gold);border-radius:50%;animation:wsSpin .8s linear infinite}
+.ws-overlay .ws-text.clickable{cursor:pointer;text-decoration:underline;color:var(--gold);transition:color .2s}
+.ws-overlay .ws-text.clickable:active{color:#fff}
+@keyframes wsSpin{to{transform:rotate(360deg)}}
+/* ── M5: 加载更多提示 ── */
+.load-more-hint{text-align:center;padding:14px;font-size:12px;color:var(--text2);user-select:none}
+.load-more-hint:active{color:var(--gold)}
 </style></head>
 <body>
+<!-- M4: 网络断开遮罩 -->
+<div class="ws-overlay" id="ws-overlay"><div class="ws-spinner"></div><div class="ws-text" id="ws-text">网络已断开，正在重连...</div></div>
 <div id="app">
  <!-- 登录页 -->
  <div class="page active" id="pg-login">
@@ -200,7 +224,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
  <!-- 聊天页（核心） -->
  <div class="page" id="pg-chat">
   <div class="topbar">
-   <button class="btn-icon" onclick="confirmLeave()">←</button>
+   <button class="btn-icon" onclick="toggleSideDrawer()">☰</button>
    <div style="text-align:center">
     <div id="chat-world" style="font-size:15px;font-weight:700;color:var(--gold)">加载中...</div>
     <div style="display:flex;gap:6px;justify-content:center;align-items:center"><span id="chat-status" style="font-size:11px;color:var(--text2)">未连接</span><span id="chat-pdetail" style="font-size:11px;color:var(--gold);display:none"></span></div>
@@ -273,6 +297,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
  <div class="drawer-body" id="wb-content"></div>
 </div>
 
+<!-- D6: 侧栏抽屉 -->
+<div class="side-drawer-overlay" id="side-drawer-overlay" onclick="closeSideDrawer()"></div>
+<div class="side-drawer" id="side-drawer">
+ <div class="side-drawer-header">副本导航 <button class="btn-icon" style="font-size:16px" onclick="closeSideDrawer()">✕</button></div>
+ <div class="side-drawer-body" id="side-drawer-body">
+  <div style="padding:12px;background:var(--card);border-radius:8px;margin-bottom:8px;text-align:center">
+   <div style="font-size:13px;font-weight:700;color:var(--gold)" id="sd-world-name">--</div>
+   <div style="font-size:10px;color:var(--text2)" id="sd-world-desc">--</div>
+  </div>
+  <div id="sd-player-cards"></div>
+  <div id="sd-vars-section"></div>
+ </div>
+</div>
+
 <!-- 设置弹窗 -->
 <div class="modal-overlay" id="modal-settings"><div class="modal">
  <h3>系统设置</h3>
@@ -310,13 +348,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 // ═══ 全局状态 ═══
 var _token='',_user='',_apikey1='',_apikey2='',_ws=null,_busy=false,_turnCount=0,_nValue=5;
 var _curPage='pg-login',_detailType='',_detailId='',_worldBook=[],_lastTags={};
+/* ── M4: WS重连管理 ── */
+var _wsFailTimer=null,_wsEverConnected=false;
+/* ── M5: 消息分页 ── */
+var _allMsgs=[],_msgsShown=0,_msgsPageSize=20;
 var LG={get:function(k,d){try{var v=localStorage.getItem('m_'+k);return v?JSON.parse(v):d}catch(e){return d}},set:function(k,v){localStorage.setItem('m_'+k,JSON.stringify(v))},getS:function(k,d){return localStorage.getItem('m_'+k)||d},setS:function(k,v){localStorage.setItem('m_'+k,v)}};
 (function(){
   _token=LG.getS('token','');_user=LG.getS('user','');
   _apikey1=LG.getS('apikey1','');_apikey2=LG.getS('apikey2','');
   _nValue=parseInt(LG.getS('nvalue','5'))||5;
   document.getElementById('lg-user').value=LG.getS('last_user','');
-  document.getElementById('lg-pass').value=LG.getS('last_pass','');
+  document.getElementById('lg-pass').value='';
   var theme=LG.getS('theme','dark');setTheme(theme,true);
   var nv=document.getElementById('chat-nval');if(nv)nv.value=_nValue;
   if(_token){navigateTo('pg-home');checkAdmin()}
@@ -390,17 +432,59 @@ function doLogin(){
   var u=document.getElementById('lg-user').value.trim(),p=document.getElementById('lg-pass').value.trim();
   if(!u||!p){toast('请填写用户名和密码','error');return}
   fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})}).then(function(r){return r.json()}).then(function(d){
-    if(d.token){_token=d.token;_user=d.username;LG.setS('token',d.token);LG.setS('user',d.username);LG.setS('last_user',u);LG.setS('last_pass',p);toast('登录成功','success');navigateTo('pg-home');checkAdmin()}else toast(d.error||'登录失败','error')
+    if(d.token){_token=d.token;_user=d.username;LG.setS('token',d.token);LG.setS('user',d.username);LG.setS('last_user',u);toast('登录成功','success');navigateTo('pg-home');checkAdmin()}else toast(d.error||'登录失败','error')
   }).catch(function(e){toast('网络错误','error')})
 }
 function doRegister(){
   var u=document.getElementById('lg-user').value.trim(),p=document.getElementById('lg-pass').value.trim();
   if(!u||!p){toast('请填写用户名和密码','error');return}
   fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})}).then(function(r){return r.json()}).then(function(d){
-    if(d.token){_token=d.token;_user=d.username;LG.setS('token',d.token);LG.setS('user',d.username);LG.setS('last_user',u);LG.setS('last_pass',p);toast('注册成功','success');navigateTo('pg-home')}else toast(d.error||'注册失败','error')
+    if(d.token){_token=d.token;_user=d.username;LG.setS('token',d.token);LG.setS('user',d.username);LG.setS('last_user',u);toast('注册成功','success');navigateTo('pg-home')}else toast(d.error||'注册失败','error')
   }).catch(function(e){toast('网络错误','error')})
 }
 function checkAdmin(){fetch('/api/user/profile',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){var b=document.getElementById('btn-admin-home');if(b)b.style.display=d.is_admin?'block':'none'})}
+
+// ═══ D6: 侧栏抽屉 ═══
+function openSideDrawer(){
+  document.getElementById('side-drawer').classList.add('open');
+  document.getElementById('side-drawer-overlay').classList.add('open');
+  renderSideDrawer();
+  var sd=document.getElementById('side-drawer');
+  sd._touchStartX=null;sd._touchStartY=null;
+  sd.addEventListener('touchstart',_sdTouchStart,{passive:true});
+  sd.addEventListener('touchend',_sdTouchEnd,{passive:true});
+}
+function closeSideDrawer(){
+  document.getElementById('side-drawer').classList.remove('open');
+  document.getElementById('side-drawer-overlay').classList.remove('open');
+  var sd=document.getElementById('side-drawer');
+  sd.removeEventListener('touchstart',_sdTouchStart);
+  sd.removeEventListener('touchend',_sdTouchEnd);
+}
+function toggleSideDrawer(){
+  var sd=document.getElementById('side-drawer');
+  sd.classList.contains('open')?closeSideDrawer():openSideDrawer();
+}
+function _sdTouchStart(e){var sd=document.getElementById('side-drawer');sd._touchStartX=e.touches[0].clientX;sd._touchStartY=e.touches[0].clientY}
+function _sdTouchEnd(e){
+  var sd=document.getElementById('side-drawer');if(sd._touchStartX==null)return;
+  var dx=e.changedTouches[0].clientX-sd._touchStartX,dy=e.changedTouches[0].clientY-sd._touchStartY;
+  if(dx<-80&&Math.abs(dx)>Math.abs(dy))closeSideDrawer();
+  sd._touchStartX=null;sd._touchStartY=null;
+}
+function renderSideDrawer(){
+  var el=document.getElementById('sd-player-cards');if(!el)return;
+  var pd=window._lastPlayerDetail||{};var html='';
+  var skip=['是否玩家','is_player','外貌','appearance','扩展信息','头像','avatar'];
+  for(var k in pd){if(!pd.hasOwnProperty(k)||skip.indexOf(k)>=0)continue;var v=pd[k];if(Array.isArray(v))v=v.join(', ');else if(typeof v==='object'&&v!==null)v=JSON.stringify(v).substring(0,50);v=esc(String(v));if(v.length>40)v=v.substring(0,40)+'...';html+='<div class=\"sd-item\">'+esc(k)+': <b>'+v+'</b></div>'}
+  el.innerHTML=html||'<div class=\"sd-item\">暂无数据</div>';
+  // 变量面板
+  var vEl=document.getElementById('sd-vars-section');if(!vEl)return;
+  var tags=window._lastTags||{};var vhtml='';
+  var cats={world:'当前副本',map:'地图',rule:'规则',character:'角色',item:'物品'};
+  for(var ck in cats){var list=tags[ck]||[];if(!list.length)continue;vhtml+='<h4>'+cats[ck]+'</h4>';for(var i=0;i<list.length;i++){var t=list[i];vhtml+='<div class=\"sd-item\" style=\"border-left-color:var(--accent);font-size:11px\">'+esc(t.tag_name||'')+'<br><span style=\"color:var(--text2);font-size:10px\">'+esc((t.tag_hint||'').substring(0,40))+'</span></div>'}}
+  vEl.innerHTML=vhtml||'';
+}
 
 // ═══ 设置 ═══
 function setTheme(name,silent){
@@ -483,11 +567,15 @@ function postCmt(){var c=document.getElementById('cmt-input').value.trim();if(!c
 function likeCmt(cid){fetch('/api/comments/like/'+cid,{method:'POST',headers:{'Authorization':'Bearer '+_auth()}}).then(function(){loadComments(1)})}
 
 // ═══ WebSocket聊天 ═══
+/* ── M4: WS重连管理 ── */
+function showWSOverlay(){document.getElementById('ws-overlay').classList.add('active');document.getElementById('ws-text').textContent='网络已断开，正在重连...';document.getElementById('ws-text').classList.remove('clickable');document.getElementById('ws-text').onclick=null}
+function hideWSOverlay(){document.getElementById('ws-overlay').classList.remove('active');clearTimeout(_wsFailTimer);_wsFailTimer=null}
+function wsReconnectFailed(){document.getElementById('ws-text').textContent='重连失败，点击刷新';document.getElementById('ws-text').classList.add('clickable');document.getElementById('ws-text').onclick=function(){location.reload()}}
 function connectWS(){
   if(_ws&&_ws.readyState===WebSocket.OPEN)return;
   var tok=_token||LG.getS('token','');_ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/ws?token='+encodeURIComponent(tok));
-  _ws.onopen=function(){document.getElementById('chat-status').textContent='已连接';document.getElementById('chat-status').style.color='#4a4'};
-  _ws.onclose=function(){_busy=false;if(_curPage==='pg-chat'){document.getElementById('chat-status').textContent='断开,重连中...';document.getElementById('chat-status').style.color='#a44';setTimeout(connectWS,3000)}};
+  _ws.onopen=function(){document.getElementById('chat-status').textContent='已连接';document.getElementById('chat-status').style.color='#4a4';hideWSOverlay();if(_wsEverConnected)toast('已重连','success');_wsEverConnected=true;clearTimeout(_wsFailTimer);_wsFailTimer=null};
+  _ws.onclose=function(){_busy=false;if(_curPage==='pg-chat'){document.getElementById('chat-status').textContent='断开,重连中...';document.getElementById('chat-status').style.color='#a44';showWSOverlay();setTimeout(connectWS,3000);if(!_wsFailTimer)_wsFailTimer=setTimeout(wsReconnectFailed,30000)}};
   _ws.onmessage=function(ev){try{handleWS(JSON.parse(ev.data))}catch(e){console.error('WS parse error:',e)}}
 }
 
@@ -499,14 +587,38 @@ function highlightMQ(text){
   safe=safe.replace(/「(.*?)」/g,'<span class="quote-hl">「$1」</span>');
   return safe;
 }
+// ── N4: NPC名字高亮 ──
+function highlightMNPCs(html){
+  var chars=window._lastTags&&window._lastTags.character||[];
+  if(!chars.length)return html;
+  var names=[],seen={};
+  var npcColors=['#d4a574','#b84a5c','#7b68ae','#6a9aca','#68ae8a','#ca9a6a','#ae688a','#8aae68'];
+  for(var i=0;i<chars.length;i++){
+    var n=chars[i].tag_name||'';
+    if(n&&!seen[n]&&n.length>=2&&n!=='玩家'&&n!=='你'&&n!=='自己'){seen[n]=true;names.push(n)}
+  }
+  if(!names.length)return html;
+  names.sort(function(a,b){return b.length-a.length});
+  for(var j=0;j<names.length;j++){
+    var nm=names[j],color=npcColors[j%npcColors.length];
+    var escapedName=nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    var re=new RegExp('('+escapedName+')','g');
+    html=html.replace(re,'<span style="color:'+color+';font-weight:700;text-shadow:0 0 6px '+color+'44">$1</span>');
+  }
+  return html;
+}
 function showEnding(endingType,desc){
-  var icons={victory:'🏆',death:'💀',escape:'🏃'};
-  var titles={victory:'胜利通关',death:'你死了',escape:'逃出生天'};
-  var icon=icons[endingType]||'🌕',title=titles[endingType]||'结局';
-  var ov=document.createElement('div');ov.className='hook-popup-overlay';ov.style.zIndex='300';
-  ov.innerHTML='<div class="hook-ending-card"><div class="end-icon">'+icon+'</div><div class="end-title">'+esc(title)+'</div><div class="end-desc">'+esc(desc||'')+'</div><button class="btn btn-primary" id="_shendok">返回首页</button></div>';
+  var cfg={victory:{icon:'🏆',title:'恭喜通关！',titleEn:'SURVIVED',border:'var(--gold)',bg:'rgba(212,165,116,.08)',desc:'你成功完成了这个副本的挑战。'},death:{icon:'💀',title:'你已迷失...',titleEn:'LOST',border:'var(--accent)',bg:'rgba(180,74,92,.1)',desc:'在这个规则怪谈中，你没能活到最后...'},escape:{icon:'🏃',title:'侥幸逃脱',titleEn:'ESCAPED',border:'#8a9ab5',bg:'rgba(130,150,180,.08)',desc:'你使用了特殊手段逃离了这里。'}};
+  var c=cfg[endingType]||cfg.death;var descFinal=desc||c.desc;
+  var ex=document.querySelector('.ending-card-overlay');if(ex)ex.remove();
+  var ov=document.createElement('div');ov.className='hook-popup-overlay ending-card-overlay';ov.style.zIndex='300';
+  ov.innerHTML='<div style=\"border:3px solid '+c.border+';background:linear-gradient(175deg,var(--surface),var(--card));animation:endingCardIn .5s ease;max-width:380px;width:92%;padding:28px 20px;text-align:center;border-radius:14px;box-shadow:0 0 40px '+c.border+'33\"><div style=\"font-size:48px;margin-bottom:6px\">'+c.icon+'</div><div style=\"font-size:22px;font-weight:700;color:var(--accent);margin-bottom:2px\">'+c.title+'</div><div style=\"font-size:10px;color:var(--text2);letter-spacing:4px;margin-bottom:10px\">「 '+c.titleEn+' 」</div><div style=\"font-size:14px;color:var(--text);line-height:1.7;margin-bottom:18px\">'+esc(descFinal)+'</div><div style=\"display:flex;gap:8px;justify-content:center;flex-wrap:wrap\"><button class=\"btn btn-primary\" id=\"_shendok\">返回首页</button><button class=\"btn btn-gold\" id=\"_shendshare\">📋 分享结局</button></div></div>';
   document.body.appendChild(ov);
   ov.querySelector('#_shendok').onclick=function(){ov.remove();navigateTo('pg-home')};
+  ov.querySelector('#_shendshare').onclick=function(){
+    var shareText='【无限流规则怪谈】'+c.title+' - '+c.titleEn+'\n'+descFinal+'\n—— 来自 规则怪谈 AI叙事';
+    if(navigator.clipboard){navigator.clipboard.writeText(shareText).then(function(){toast('结局已复制到剪贴板','success')}).catch(function(){toast('复制失败，请手动复制','error')})}else{var ta=document.createElement('textarea');ta.value=shareText;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('结局已复制到剪贴板','success')}
+  };
   ov.onclick=function(e){if(e.target===ov){ov.remove();navigateTo('pg-home')}};
 }
 function handleWS(d){
@@ -514,6 +626,10 @@ function handleWS(d){
     document.getElementById('chat-world').textContent=d.world_name||'未知副本';
     if(d.world_book)_worldBook=d.world_book;
     if(d.all_tags_by_category)_lastTags=d.all_tags_by_category;
+    // D6: 更新侧栏抽屉
+    if(d.world_name){var sn=document.getElementById('sd-world-name');if(sn)sn.textContent=d.world_name}
+    if(d.world_desc){var sd2=document.getElementById('sd-world-desc');if(sd2)sd2.textContent=d.world_desc}
+    window._lastPlayerDetail=d.player_detail||{};
     if(d.player_detail){var pd=d.player_detail;var pdEl=document.getElementById('chat-pdetail');if(pdEl){pdEl.style.display='inline';pdEl.textContent='❤️ '+(pd.hp!=null?pd.hp:'?')+'/'+(pd.max_hp!=null?pd.max_hp:'?')+' | 🧠 '+(pd.sanity!=null?pd.sanity:'?')+'/'+(pd.max_sanity!=null?pd.max_sanity:'?')}}
     var msgs=document.getElementById('chat-msgs'),html='';
     var saved=window._savedMessages||[];
@@ -523,6 +639,7 @@ function handleWS(d){
     }else if(d.world_intro){html+=renderMsg('system',d.world_intro)}
     if(d.opening_monologue&&!saved.length)html+=renderMsg('ai',d.opening_monologue);
     msgs.innerHTML=html;scrollChat();
+    _setupMsgPagination();_initMsgBuffer();
   }else if(d.type==='narrative_chunk'){
     var msgs=document.getElementById('chat-msgs'),last=msgs.lastElementChild;
     if(!last||!last.classList.contains('chat-msg')||!last.classList.contains('ai')){last=document.createElement('div');last.className='chat-msg ai';last.innerHTML='<div class="avatar">🤖</div><div class="bubble"></div>';msgs.appendChild(last)}
@@ -534,10 +651,12 @@ function handleWS(d){
     document.getElementById('chat-status').style.color='#4a4';
     if(d.all_tags_by_category)_lastTags=d.all_tags_by_category;
     var lastBubble=document.getElementById('chat-msgs').querySelector('.chat-msg.ai:last-child .bubble');
-    if(lastBubble)lastBubble.innerHTML=highlightMQ(lastBubble.textContent);
+    if(lastBubble){var _mhq=highlightMQ(lastBubble.textContent);_mhq=highlightMNPCs(_mhq);lastBubble.innerHTML=_mhq;_allMsgs.push({role:'ai',content:lastBubble.textContent,turn:_turnCount});_msgsShown++}
     if(d.ending_type&&d.ending_type!=='none')showEnding(d.ending_type,d.ending_desc||'')
   }else if(d.type==='hook_effects'){
     if(d.effects&&d.effects.length){
+      // N1: 规则触发检测——红色边框闪烁+震动
+      for(var _n1i=0;_n1i<d.effects.length;_n1i++){var _ef2=d.effects[_n1i];if(_ef2&&(_ef2.type==='rule_reveal'||_ef2.type==='flash_red'||_ef2.type==='blood_edge')){document.body.classList.add('rule-triggered');if(window.navigator&&navigator.vibrate)navigator.vibrate(200);setTimeout(function(){document.body.classList.remove('rule-triggered')},1300);break}}
       d.effects.sort(function(a,b){return(b.priority||0)-(a.priority||0)});
       renderMHookEffects(d.effects,0);
     }
@@ -553,6 +672,66 @@ function renderMsg(role,content,turn){
   html+='</div></div>';
   return html
 }
+/* ── M5: 历史消息上拉加载分页 ── */
+function _setupMsgPagination(){
+  var chatEl=document.getElementById('chat-msgs');if(!chatEl)return;
+  chatEl.addEventListener('scroll',function(){
+    if(chatEl.scrollTop<50&&_allMsgs.length>_msgsShown&&!_msgLoadingMore)loadMoreMsgs();
+  });
+}
+var _msgLoadingMore=false;
+function _scrollChatBottom(){var c=document.getElementById('chat-msgs');if(c)c.scrollTop=c.scrollHeight}
+function loadMoreMsgs(){
+  if(_msgLoadingMore)return;_msgLoadingMore=true;
+  var chatEl=document.getElementById('chat-msgs');if(!chatEl){_msgLoadingMore=false;return}
+  var newShown=Math.min(_allMsgs.length,_msgsShown+_msgsPageSize);
+  if(newShown<=_msgsShown){_msgLoadingMore=false;return}
+  var oldH=chatEl.scrollHeight;
+  var start=_allMsgs.length-newShown,end=_allMsgs.length-_msgsShown;
+  var frag='';
+  for(var i=start;i<end;i++){
+    var m=_allMsgs[i];
+    frag+=renderMsg(m.role,m.content,m.turn);
+  }
+  var hint=chatEl.querySelector('.load-more-hint');if(hint)hint.remove();
+  chatEl.insertAdjacentHTML('afterbegin',frag);
+  chatEl.scrollTop=chatEl.scrollHeight-oldH;
+  _msgsShown=newShown;
+  if(_msgsShown>=_allMsgs.length){
+    chatEl.insertAdjacentHTML('afterbegin','<div class="load-more-hint" style="color:var(--text2)">—— 没有更多消息了 ——</div>');
+  }else{
+    chatEl.insertAdjacentHTML('afterbegin','<div class="load-more-hint" onclick="loadMoreMsgs()">↑ 加载更早的消息 ('+(_allMsgs.length-_msgsShown)+'条)</div>');
+  }
+  _msgLoadingMore=false;
+}
+function _initMsgBuffer(){
+  var chatEl=document.getElementById('chat-msgs');if(!chatEl)return;
+  _allMsgs=[];
+  var children=chatEl.children;
+  for(var i=0;i<children.length;i++){
+    var c=children[i];
+    if(c.classList.contains('chat-msg')&&c.classList.contains('user')){
+      _allMsgs.push({role:'user',content:c.querySelector('.bubble')?c.querySelector('.bubble').textContent:'',turn:parseInt(c.getAttribute('data-turn'))||0});
+    }else if(c.classList.contains('chat-msg')&&c.classList.contains('ai')){
+      _allMsgs.push({role:'ai',content:c.querySelector('.bubble')?c.querySelector('.bubble').textContent:'',turn:0});
+    }else if(c.classList.contains('chat-msg')&&c.classList.contains('system')){
+      _allMsgs.push({role:'system',content:c.querySelector('.bubble')?c.querySelector('.bubble').textContent:c.textContent,turn:0});
+    }
+  }
+  if(_allMsgs.length>_msgsPageSize){
+    _msgsShown=_msgsPageSize;
+    chatEl.innerHTML='';
+    var start=_allMsgs.length-_msgsShown;
+    for(var j=start;j<_allMsgs.length;j++){
+      var m2=_allMsgs[j];chatEl.innerHTML+=renderMsg(m2.role,m2.content,m2.turn);
+    }
+    chatEl.insertAdjacentHTML('afterbegin','<div class="load-more-hint" onclick="loadMoreMsgs()">↑ 加载更早的消息 ('+(_allMsgs.length-_msgsShown)+'条)</div>');
+  }else{
+    _msgsShown=_allMsgs.length;
+    chatEl.insertAdjacentHTML('afterbegin','<div class="load-more-hint" style="color:var(--text2)">—— 没有更多消息了 ——</div>');
+  }
+  _scrollChatBottom();
+}
 function sendMsg(){
   var inp=document.getElementById('chat-input'),msg=inp.value.trim();
   if(!msg||_busy)return;
@@ -561,6 +740,7 @@ function sendMsg(){
   if(!_ws||_ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(function(){sendMsg()},800);return}
   inp.value='';inp.style.height='auto';_busy=true;window._lastUserInput=msg;document.getElementById('btn-send').style.display='none';document.getElementById('btn-stop').style.display='flex';
   document.getElementById('chat-msgs').innerHTML+=renderMsg('user',msg,_turnCount);scrollChat();
+  _allMsgs.push({role:'user',content:msg,turn:_turnCount});_msgsShown++;
   var m1=LG.getS('model1','deepseek-v4-flash'),m2=LG.getS('model2','deepseek-v4-pro');
   // 显示骨架动画
   var sk=document.createElement('div');sk.className='skeleton';sk.innerHTML='<div class="sk-avatar"></div><div class="sk-lines"><div class="sk-line"></div><div class="sk-line short"></div></div>';
@@ -575,7 +755,7 @@ function cancelMsg(){
   _ws.send(JSON.stringify({type:'cancel'}));
   toast('已请求停止生成','info');
 }
-function confirmLeave(){showConfirm('确定离开游戏？',function(){navigateTo('pg-home')})}
+function confirmLeave(){showConfirm('确定离开游戏？',function(){closeSideDrawer();navigateTo('pg-home')})}
 
 // ═══ 舒适度开关（移动端） ═══
 function getMComfort(){ try{ return JSON.parse(localStorage.getItem('mvp_comfort')||'{"flash":true,"audio":true,"distort":true,"jumpscare":true,"lock":true}') }catch(e){ return {flash:true,audio:true,distort:true,jumpscare:true,lock:true} } }

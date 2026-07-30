@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
+import os
 import websockets
 import time
 import sys
@@ -11,11 +12,15 @@ if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
-TOKEN = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJwaWQiOiAidTAwMSIsICJuYW1lIjogImFkbWluIiwgImV4cCI6IDE3ODc5MjI0MzZ9.mCl5PfIm9hMzRAKJQEkjJWdNJhiHiaBxEB_ta7TmCn0"
-API_KEY = "sk-6faaf8d1366b4e979339dc1fbeb4fdc6"
-MODEL_SMALL = "deepseek-v4-flash"
-MODEL_LARGE = "deepseek-v4-flash"
-WS_URL = "ws://localhost:8777/ws"
+TOKEN = os.environ.get("TEST_TOKEN")
+if not TOKEN:
+    raise RuntimeError("TEST_TOKEN 环境变量未设置")
+API_KEY = os.environ.get("TEST_API_KEY")
+if not API_KEY:
+    raise RuntimeError("TEST_API_KEY 环境变量未设置")
+MODEL_SMALL = os.environ.get("TEST_MODEL_SMALL", "deepseek-v4-flash")
+MODEL_LARGE = os.environ.get("TEST_MODEL_LARGE", "deepseek-v4-flash")
+WS_URL = os.environ.get("TEST_WS_URL", "ws://localhost:8777/ws")
 
 test_inputs = [
     "我睁开眼睛，观察周围的环境",

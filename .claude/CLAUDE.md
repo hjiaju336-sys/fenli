@@ -50,8 +50,8 @@
 - **技术栈**: Python FastAPI + MySQL + 原生 JS/CSS（桌面端 index.html + 移动端 m.html）
 - **当前版本**: v0.6.1
 - **当前阶段**: Hook系统 + AI召回恢复 + 前端稳定性修复（流式空内容/Token过期/弹窗叠加/CSS transition）；移动端已适配；orchestrator双Pass架构（Pass1 AI召回+Pass2叙事+keyword fallback）
-- **项目目录**: D:\project\fenli\mvp
-- **启动方式**: cd mvp && MYSQL_PASS=root python server.py
+- **项目目录**: D:\project\规则怪谈\fenli\mvp
+- **启动方式**: 复制 .env.example 为 .env，填入所需变量后 source .env && cd mvp && python server.py
 - **测试地址**: http://localhost:8777
-- **测试账号**: admin / 123456
-- **API Key**: sk-6faaf8d1366b4e979339dc1fbeb4fdc6
+- **测试账号**: 通过 ADMIN_PASSWORD 环境变量设置管理员密码
+- **API Key**: 通过 API_KEY 环境变量设置，详见 .env.example

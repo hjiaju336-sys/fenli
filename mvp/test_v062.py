@@ -3,19 +3,24 @@ v0.6.2 10轮连贯对话验收测试脚本
 """
 import asyncio
 import json
+import os
 import sys
 import time
 import re
 import httpx
 import websockets
 
-BASE_URL = "http://localhost:8777"
-WS_URL = "ws://localhost:8777/ws"
-USERNAME = "admin"
-PASSWORD = "123456"
-API_KEY = "sk-6faaf8d1366b4e979339dc1fbeb4fdc6"
-MODEL_SMALL = "deepseek-v4-flash"
-MODEL_LARGE = "deepseek-v4-flash"  # Using flash for both due to reasoning model issues
+BASE_URL = os.environ.get("TEST_BASE_URL", "http://localhost:8777")
+WS_URL = os.environ.get("TEST_WS_URL", "ws://localhost:8777/ws")
+USERNAME = os.environ.get("TEST_USERNAME", "admin")
+PASSWORD = os.environ.get("TEST_PASSWORD")
+if not PASSWORD:
+    raise RuntimeError("TEST_PASSWORD 环境变量未设置")
+API_KEY = os.environ.get("TEST_API_KEY")
+if not API_KEY:
+    raise RuntimeError("TEST_API_KEY 环境变量未设置")
+MODEL_SMALL = os.environ.get("TEST_MODEL_SMALL", "deepseek-v4-flash")
+MODEL_LARGE = os.environ.get("TEST_MODEL_LARGE", "deepseek-v4-flash")
 
 # 10轮输入
 INPUTS = [
@@ -239,8 +244,9 @@ async def run_test():
     # Step 5: Check server logs for pass1 method
     print("\n\n[4] 检查服务端日志中的 Pass1 method...")
     try:
-        import glob as gb
-        log_files = sorted(gb.glob("D:/project/规则怪谈/fenli/mvp/logs/turn_*.json"), reverse=True)[:10]
+        import pathlib
+        log_dir = pathlib.Path(__file__).parent / "logs"
+        log_files = sorted(log_dir.glob("turn_*.json"), reverse=True)[:10]
         pass1_methods = []
         for lf in log_files:
             try:

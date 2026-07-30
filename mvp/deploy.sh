@@ -40,7 +40,7 @@ WorkingDirectory=$(pwd)
 Environment="MYSQL_HOST=127.0.0.1"
 Environment="MYSQL_PORT=3306"
 Environment="MYSQL_USER=root"
-Environment="MYSQL_PASS=${MYSQL_PASS:-root}"
+Environment="MYSQL_PASS=${MYSQL_PASS:?必须设置 MYSQL_PASS}"
 Environment="MYSQL_DB=fenli"
 ExecStart=$(which python) server.py
 Restart=always

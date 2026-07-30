@@ -11,7 +11,7 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8777.*LISTENING"') do taskk
 ping -n 2 127.0.0.1 >nul
 
 echo [2/3] 启动服务器...
-set MYSQL_PASS=root
+if "%MYSQL_PASS%"=="" echo 请先设置 MYSQL_PASS 环境变量 && pause && exit /b 1
 set PYTHONIOENCODING=utf-8
 start "FenliServer" /MIN python server.py
 

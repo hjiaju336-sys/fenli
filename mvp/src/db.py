@@ -12,7 +12,9 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session, sess
 MYSQL_HOST = os.environ.get("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = os.environ.get("MYSQL_PORT", "3306")
 MYSQL_USER = os.environ.get("MYSQL_USER", "root")
-MYSQL_PASS = os.environ.get("MYSQL_PASS", "root")
+MYSQL_PASS = os.environ.get("MYSQL_PASS")
+if not MYSQL_PASS:
+    raise RuntimeError("MYSQL_PASS 环境变量未设置")
 MYSQL_DB   = os.environ.get("MYSQL_DB", "fenli")
 DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4"
 
@@ -205,3 +207,20 @@ class MemoryDAO:
     def create(self, mid, mh, md):
         self.s.execute(text("INSERT INTO memory_library (player_id,memory_id,memory_hint) VALUES (:pid,:mid,:mh) ON DUPLICATE KEY UPDATE memory_hint=VALUES(memory_hint)"), {"pid":self.pid,"mid":mid,"mh":mh})
         self.s.execute(text("INSERT INTO memory_detail_library (player_id,memory_id,memory_detail) VALUES (:pid,:mid,:md) ON DUPLICATE KEY UPDATE memory_detail=VALUES(memory_detail)"), {"pid":self.pid,"mid":mid,"md":_j(md)})
+
+# ── 速率限制工具 ─────────────────────────────────────────
+import time as _time
+_RATE_LIMIT_STORE = {}  # key -> list of timestamps
+
+def check_rate_limit(key: str, max_requests: int, window_seconds: int) -> bool:
+    """检查速率限制。返回 True 表示允许，False 表示超限"""
+    now = _time.time()
+    window_start = now - window_seconds
+    if key not in _RATE_LIMIT_STORE:
+        _RATE_LIMIT_STORE[key] = []
+    # 清理过期记录
+    _RATE_LIMIT_STORE[key] = [t for t in _RATE_LIMIT_STORE[key] if t > window_start]
+    if len(_RATE_LIMIT_STORE[key]) >= max_requests:
+        return False
+    _RATE_LIMIT_STORE[key].append(now)
+    return True

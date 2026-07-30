@@ -10,7 +10,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPExcept
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-from db import init_db, get_session, TagDAO, MemoryDAO, SaveDAO, CloudDAO, _ensure_hook_tables
+from db import init_db, get_session, TagDAO, MemoryDAO, SaveDAO, CloudDAO, _ensure_hook_tables, check_rate_limit
 from sqlalchemy import text
 from orchestrator import process_turn_async as process_turn, TurnError
 from logger import print_turn_summary
@@ -39,11 +39,13 @@ def _hash(pw): return _hl.sha256(pw.encode()).hexdigest()
 def _ensure_user_table():
     s = get_session()
     s.execute(text("CREATE TABLE IF NOT EXISTS users (player_id VARCHAR(255) PRIMARY KEY, username VARCHAR(255) UNIQUE, password_hash VARCHAR(255), created_at VARCHAR(50))"))
-    # 创建默认测试用户
-    existing = s.execute(text("SELECT 1 FROM users WHERE username='admin'")).fetchone()
-    if not existing:
-        s.execute(text("INSERT INTO users (player_id,username,password_hash,created_at) VALUES (:pid,:un,:pw,:ca)"),
-                  {"pid":"u001","un":"admin","pw":_hash("123456"),"ca":"2026-01-01"})
+    # 仅在 ADMIN_PASSWORD 环境变量存在时创建管理员
+    admin_pw = os.environ.get("ADMIN_PASSWORD", "")
+    if admin_pw:
+        existing = s.execute(text("SELECT 1 FROM users WHERE username='admin'")).fetchone()
+        if not existing:
+            s.execute(text("INSERT INTO users (player_id,username,password_hash,created_at) VALUES (:pid,:un,:pw,:ca)"),
+                      {"pid":"u001","un":"admin","pw":_hash(admin_pw),"ca":"2026-01-01"})
     s.commit(); s.close()
 
 def _ensure_phase3_tables():
@@ -146,13 +148,18 @@ def _ensure_phase3_tables():
     existing = s.execute(text("SELECT 1 FROM system_config WHERE key_name='register_bonus'")).fetchone()
     if not existing:
         s.execute(text("INSERT INTO system_config (key_name,value,updated_at) VALUES (:k,:v,:u)"),
-                  {"k":"register_bonus","v":"99999","u":"2026-01-01"})
+                  {"k":"register_bonus","v":"200","u":"2026-01-01"})
     # ALTER users 表加字段
     for col, typ in [("is_admin", "TINYINT DEFAULT 0"), ("avatar_url", "VARCHAR(500)"), ("is_banned", "TINYINT DEFAULT 0")]:
         try:
             s.execute(text(f"ALTER TABLE users ADD COLUMN {col} {typ}"))
         except Exception as e:
             print(f"[Phase3] ALTER users.{col} skipped: {e}")
+    # ALTER comment_reports 加唯一约束
+    try:
+        s.execute(text("ALTER TABLE comment_reports ADD UNIQUE KEY uk_report (comment_id, reporter_id)"))
+    except Exception as e:
+        print(f"[Phase3] ALTER comment_reports.uk_report skipped: {e}")
     # ALTER shared_copies 表加字段
     for col, typ in [("cover_image", "VARCHAR(500)"), ("opening_monologue", "TEXT"),
                       ("avg_rating", "FLOAT DEFAULT 0"), ("rating_count", "INT DEFAULT 0"), ("play_count", "INT DEFAULT 0")]:
@@ -176,7 +183,13 @@ def _admin_pid(request: Request):
 
 # ── 鉴权 API ──
 @app.post("/api/auth/register")
-def register(req: dict):
+def register(req: dict, request: Request):
+    # 速率限制
+    client_ip = request.client.host
+    if not check_rate_limit(f"register_ip:{client_ip}", 3, 3600):
+        return {"error": "注册过于频繁，请稍后再试"}
+    if not check_rate_limit("register_global", 10, 60):
+        return {"error": "系统繁忙，请稍后再试"}
     s = get_session()
     import uuid
     pid = f"u{uuid.uuid4().hex[:8]}"
@@ -192,7 +205,7 @@ def register(req: dict):
                   {"pid":pid,"un":un,"pw":_hash(pw),"ca":time.strftime("%Y-%m-%d %H:%M:%S")})
         # 注册赠送积分
         bonus_row = s.execute(text("SELECT value FROM system_config WHERE key_name='register_bonus'")).fetchone()
-        bonus = int(bonus_row[0]) if bonus_row else 99999
+        bonus = int(bonus_row[0]) if bonus_row else 200
         s.execute(text("INSERT INTO point_accounts (player_id, balance, total_earned, total_spent, sign_in_streak, created_at) VALUES (:pid, :bal, :te, 0, 0, :ca)"),
                   {"pid":pid,"bal":bonus,"te":bonus,"ca":time.strftime("%Y-%m-%d")})
         s.commit()
@@ -205,7 +218,11 @@ def register(req: dict):
     finally: s.close()
 
 @app.post("/api/auth/login")
-def login(req: dict):
+def login(req: dict, request: Request):
+    # 登录速率限制
+    client_ip = request.client.host
+    if not check_rate_limit(f"login:{client_ip}", 20, 60):
+        return {"error": "登录过于频繁，请稍后再试"}
     try:
         un = (req.get("username") or "").strip()
         pw = (req.get("password") or "").strip()
@@ -214,10 +231,14 @@ def login(req: dict):
     if not un or not pw:
         return {"error": "请提供用户名和密码"}
     s = get_session()
-    row = s.execute(text("SELECT player_id,username FROM users WHERE username=:un AND password_hash=:pw"),
+    row = s.execute(text("SELECT player_id,username,is_banned FROM users WHERE username=:un AND password_hash=:pw"),
                     {"un":un,"pw":_hash(pw)}).fetchone()
+    if row:
+        if row[2]:
+            s.close()
+            raise HTTPException(status_code=403, detail="账号已被封禁")
+        return {"token": create_token(row[0], row[1]), "player_id": row[0], "username": row[1]}
     s.close()
-    if row: return {"token": create_token(row[0], row[1]), "player_id": row[0], "username": row[1]}
     return {"error": "用户名或密码错误"}
 
 _STATIC_DIR = pathlib.Path(__file__).parent / "static"
@@ -237,6 +258,7 @@ async def mobile():
 
 HOT_INIT = {}
 HOOK_SESSION = {}  # pid -> {triggered_ids: set, pending: [...], turn_count: int}
+_WS_CONNECTIONS = {}  # client_ip -> list of WebSocket connections
 
 def get_initial_state(pid="u001"):
     if pid not in HOT_INIT:
@@ -380,6 +402,28 @@ async def ws_handler(ws: WebSocket):
         await ws.send_json({"type":"error","message":"请先登录"})
         await ws.close()
         return
+
+    # 检查封禁状态
+    s_banned = get_session()
+    banned_row = s_banned.execute(text("SELECT is_banned FROM users WHERE player_id=:pid"), {"pid": pid}).fetchone()
+    s_banned.close()
+    if banned_row and banned_row[0]:
+        await ws.send_json({"type":"error","message":"账号已被封禁"})
+        await ws.close()
+        return
+
+    # 检查并发连接数
+    client_ip = ws.client.host
+    ip_connections = [c for c in _WS_CONNECTIONS.get(client_ip, []) if not c.client_state.DISCONNECTED]
+    if len(ip_connections) >= 5:
+        await ws.send_json({"type":"error","message":"连接数过多，请稍后再试"})
+        await ws.close()
+        return
+    # 注册连接
+    if client_ip not in _WS_CONNECTIONS:
+        _WS_CONNECTIONS[client_ip] = []
+    _WS_CONNECTIONS[client_ip].append(ws)
+
     session = get_session()
     # 新用户自动初始化血月医院预设
     td_init = TagDAO(session, pid)
@@ -438,6 +482,11 @@ async def ws_handler(ws: WebSocket):
                 await ws.send_json({"type":"error","message":"API Key or input missing"}); continue
             if not ak2: ak2 = ak1       # 兼容单Key：Pass2 复用 Pass1
             if not model_large: model_large = model_small  # 兼容单模型
+
+            # 对话速率限制
+            if not check_rate_limit(f"turn:{pid}", 6, 60):
+                await ws.send_json({"type":"error","message":"请稍后再试（每分钟最多6轮对话）"})
+                continue
 
             # 积分检查（处理前）
             pts_row = session.execute(text("SELECT balance FROM point_accounts WHERE player_id=:pid"), {"pid": pid}).fetchone()
@@ -674,12 +723,24 @@ def _pid(request: Request) -> str:
     auth = request.headers.get("Authorization","")
     if auth.startswith("Bearer "):
         data = verify_token(auth[7:])
-        if data: return data["pid"]
+        if data:
+            s = get_session()
+            row = s.execute(text("SELECT is_banned FROM users WHERE player_id=:pid"), {"pid": data["pid"]}).fetchone()
+            s.close()
+            if row and row[0]:
+                raise HTTPException(status_code=403, detail="账号已被封禁")
+            return data["pid"]
     # Also check X-Token header for compatibility
     xtoken = request.headers.get("X-Token","")
     if xtoken:
         data = verify_token(xtoken)
-        if data: return data["pid"]
+        if data:
+            s = get_session()
+            row = s.execute(text("SELECT is_banned FROM users WHERE player_id=:pid"), {"pid": data["pid"]}).fetchone()
+            s.close()
+            if row and row[0]:
+                raise HTTPException(status_code=403, detail="账号已被封禁")
+            return data["pid"]
     raise HTTPException(status_code=401, detail="Invalid or missing authentication token")
 
 @app.get("/api/saves")
@@ -696,6 +757,9 @@ def get_save(sid: int, request: Request):
 @app.post("/api/saves")
 async def create_save(request: Request):
     body = await request.json()
+    body_size = len(json.dumps(body).encode('utf-8'))
+    if body_size > 500 * 1024:  # 500KB
+        return {"error": "数据过大，请精简内容"}
     pid = _pid(request); s = get_session(); dao = SaveDAO(s, pid)
     build = _build_save_data(s, pid, body.get("recent_messages"))
     dao.save(body.get("slot_name","存档"), body.get("turn_number",0), build, body.get("is_auto",False))
@@ -815,6 +879,9 @@ def get_copy(cid: int):
 @app.post("/api/copies/upload")
 async def upload_copy(request: Request):
     body = await request.json()
+    body_size = len(json.dumps(body).encode('utf-8'))
+    if body_size > 500 * 1024:  # 500KB
+        return {"error": "数据过大，请精简内容"}
     pid = _pid(request); s = get_session()
     CloudDAO(s).upload(pid, body.get("title",""), body.get("desc",""), body.get("tags",""), body.get("save_data",{}))
     s.commit(); s.close()
@@ -955,7 +1022,10 @@ async def report_comment(comment_id: int, request: Request):
         s.commit()
         return {"ok": True}
     except Exception as e:
-        return {"error": str(e)[:200]}
+        err_msg = str(e)
+        if "Duplicate" in err_msg or "duplicate" in err_msg.lower():
+            return {"error": "您已经举报过该评论"}
+        return {"error": err_msg[:200]}
     finally:
         s.close()
 
@@ -985,6 +1055,8 @@ def get_comments(target_type: str, target_id: str, request: Request, page: int =
 @app.post("/api/comments/{target_type}/{target_id}")
 async def create_comment(target_type: str, target_id: str, request: Request):
     pid = _pid(request)
+    if not check_rate_limit(f"comment:{pid}", 10, 3600):
+        return {"error": "评论过于频繁，请稍后再试"}
     body = await request.json()
     content = (body.get("content", "") or "").strip()
     if not content:
@@ -1196,6 +1268,8 @@ async def exchange_points(request: Request):
 @app.post("/api/suggestions")
 async def create_suggestion(request: Request):
     pid = _pid(request)
+    if not check_rate_limit(f"suggestion:{pid}", 5, 86400):
+        return {"error": "建议提交过于频繁，请明天再试"}
     body = await request.json()
     category = (body.get("category", "") or "").strip()
     content = (body.get("content", "") or "").strip()
@@ -1383,7 +1457,7 @@ async def admin_gen_codes(request: Request):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         codes = []
         for i in range(count):
-            code_raw = hmac.new(b"fenli_xchg_secret", f"{batch_id}:{i}:{time.time()}".encode(), _hl.sha256).digest()
+            code_raw = hmac.new(XCHG_SECRET, f"{batch_id}:{i}:{time.time()}".encode(), _hl.sha256).digest()
             code_b32 = base64.b32encode(code_raw).decode().rstrip("=").upper()[:12]
             while len(code_b32) < 12: code_b32 += "A"
             code = f"FL-{code_b32[:4]}-{code_b32[4:8]}-{code_b32[8:12]}"
@@ -1657,6 +1731,54 @@ def admin_stats(request: Request):
     finally:
         s.close()
 
+# 系统配置管理
+@app.get("/api/admin/config")
+def admin_get_config(request: Request):
+    pid, err = _admin_pid(request)
+    if err: return err
+    s = get_session()
+    try:
+        rows = s.execute(text("SELECT key_name, value FROM system_config")).fetchall()
+        config = {row[0]: row[1] for row in rows}
+        defaults = {
+            "register_bonus": "200",
+            "turn_cost": "5",
+            "sign_in_max": "100",
+            "rate_limit_user_per_min": "6",
+            "rate_limit_ws_per_ip": "5",
+            "rate_limit_register_per_hour": "3",
+            "save_max_size_kb": "500",
+            "ws_idle_timeout_min": "5",
+        }
+        for k, v in defaults.items():
+            if k not in config:
+                config[k] = v
+                s.execute(text("INSERT INTO system_config (key_name, value, updated_at) VALUES (:k,:v,:t) ON DUPLICATE KEY UPDATE key_name=key_name"),
+                           {"k": k, "v": v, "t": time.strftime("%Y-%m-%d %H:%M:%S")})
+        s.commit()
+        return {"config": config}
+    except Exception as e:
+        return {"error": str(e)[:200]}
+    finally:
+        s.close()
+
+@app.put("/api/admin/config")
+async def admin_update_config(request: Request):
+    pid, err = _admin_pid(request)
+    if err: return err
+    body = await request.json()
+    s = get_session()
+    try:
+        for k, v in body.items():
+            s.execute(text("INSERT INTO system_config (key_name, value, updated_at) VALUES (:k,:v,:t) ON DUPLICATE KEY UPDATE value=:v, updated_at=:t"),
+                      {"k": k, "v": str(v), "t": time.strftime("%Y-%m-%d %H:%M:%S")})
+        s.commit()
+        return {"ok": True}
+    except Exception as e:
+        return {"error": str(e)[:200]}
+    finally:
+        s.close()
+
 # ── 图片上传 API ──────────────────────────────────────
 
 _UPLOAD_DIR = pathlib.Path(__file__).parent / "static" / "uploads"
@@ -1770,14 +1892,17 @@ def delete_image(filename: str, request: Request):
 # ── 静态文件 ──────────────────────────────────────────
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+XCHG_SECRET = os.environ.get("XCHG_SECRET", "fenli_xchg_secret").encode()
+
 if __name__ == "__main__":
     import uvicorn
-    port = 8777
-    print(f"\n=== Infinite Flow MVP (MySQL) ===\n    http://localhost:{port}\n")
+    host = os.environ.get("HOST", "127.0.0.1")
+    port = int(os.environ.get("PORT", "8777"))
+    print(f"\n=== Infinite Flow MVP (MySQL) ===\n    http://{host}:{port}\n")
     init_db()
     _ensure_user_table()
     _ensure_phase3_tables()
     _ensure_hook_tables()
     os.makedirs("logs", exist_ok=True)
     os.makedirs("static/uploads", exist_ok=True)
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
+    uvicorn.run(app, host=host, port=port, log_level="warning")

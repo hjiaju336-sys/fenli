@@ -4,7 +4,7 @@
 <link rel="icon" href="data:,">
 <title>无限流规则怪谈</title>
 <style>
-:root{--bg:#0d0d1a;--parchment:#1a1a2e;--parchment-dark:#252540;--blood:#b84a5c;--blood-light:#d4708a;--gold:#d4a574;--gold-light:#e8c4a0;--ink:#e8d5c8;--ink-light:#b8a898;--shadow:rgba(0,0,0,.4);--border:#2a2a4a;--surface:#12122a;--radius:8px;--font:"PingFang SC","Microsoft YaHei","Noto Serif SC",sans-serif}
+:root{--bg:#0d0d1a;--parchment:#1a1a2e;--parchment-dark:#252540;--blood:#b84a5c;--blood-light:#d4708a;--gold:#d4a574;--gold-light:#e8c4a0;--ink:#e8d5c8;--ink-light:#b8a898;--purple:#7b68ae;--input-border:#3a3050;--border-light:#4a3a5a;--shadow:rgba(0,0,0,.4);--border:#2a2a4a;--surface:#12122a;--radius:8px;--font:"PingFang SC","Microsoft YaHei","Noto Serif SC",sans-serif}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center}
 .page{display:none;position:relative;z-index:1}.page.active{display:block;animation:fadeIn .35s ease}
@@ -51,7 +51,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .v-item.spoiler.visible{opacity:1;max-height:200px}
 .vars-footer{flex-shrink:0;font-size:10px;padding-top:4px;border-top:1px solid rgba(180,120,180,.2)}
 .status-card{padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.3);font-size:11px}.status-card .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blood);margin-right:5px}
-.sidebar-stats{font-size:10px;color:#7b68ae;margin-top:auto;padding-top:4px;border-top:1px solid rgba(180,120,180,.2)}
+.sidebar-stats{font-size:10px;color:var(--purple);margin-top:auto;padding-top:4px;border-top:1px solid rgba(180,120,180,.2)}
 
 /* ── 聊天气泡 ── */
 .chat-msg-user{text-align:right;margin:6px 0;display:flex;justify-content:flex-end;align-items:flex-start;gap:4px}
@@ -131,6 +131,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 @keyframes breathing{0%,100%{transform:scale(1)}50%{transform:scale(1.008)}}
 @keyframes glitchText{0%{transform:translate(0)}20%{transform:translate(-2px,1px);filter:hue-rotate(90deg)}40%{transform:translate(2px,-1px)}60%{transform:translate(-1px,-1px);filter:hue-rotate(-90deg)}80%{transform:translate(1px,1px)}100%{transform:translate(0);filter:hue-rotate(0)}}
 @keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-60px)}}
+@keyframes ruleFlash{0%,100%{box-shadow:inset 0 0 0 transparent}25%,75%{box-shadow:inset 0 0 100px rgba(220,40,40,.65)}}body.rule-triggered{animation:ruleFlash .6s ease-in-out 2;pointer-events:none}
+@keyframes endingCardIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
 .hook-flash-red{animation:flashRed .3s ease-in-out 3}
 .hook-screen-shake{animation:screenShake .4s ease-in-out}
 .hook-golden-glow{animation:goldenGlow 3s ease-in-out}
@@ -164,6 +166,37 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .particle{position:fixed;pointer-events:none;z-index:240;animation:floatUp 4s ease-out forwards}
 /* ── 好感度动画 ── */
 .fav-float{position:fixed;z-index:255;font-size:20px;font-weight:700;pointer-events:none;animation:floatUp 2s ease-out forwards}
+/* ── M4: 网络断开遮罩 ── */
+.ws-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);align-items:center;justify-content:center;flex-direction:column;gap:18px}
+.ws-overlay.active{display:flex}
+.ws-overlay .ws-text{color:#e8d5c8;font-size:16px;font-family:var(--font);text-align:center;line-height:1.6}
+.ws-overlay .ws-spinner{width:40px;height:40px;border:3px solid rgba(212,165,116,.25);border-top-color:var(--gold);border-radius:50%;animation:wsSpin .8s linear infinite}
+.ws-overlay .ws-text.clickable{cursor:pointer;text-decoration:underline;color:var(--gold);transition:color .2s}
+.ws-overlay .ws-text.clickable:hover{color:var(--gold-light)}
+@keyframes wsSpin{to{transform:rotate(360deg)}}
+/* ── M5: 加载更多提示 ── */
+.load-more-hint{text-align:center;padding:12px;font-size:11px;color:var(--ink-light);cursor:pointer;user-select:none}
+.load-more-hint:hover{color:var(--gold)}
+/* ── D1: 副本封面过渡动画 ── */
+#page-cover{display:none;position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#0d0d1a 0%,#1a1025 30%,#1a1a2e 60%,#0d0d1a 100%);align-items:center;justify-content:center;flex-direction:column;gap:24px}
+#page-cover.active{display:flex;animation:coverEnter 3.5s ease forwards}
+#page-cover .cover-title{font-size:28px;font-weight:700;color:var(--gold);letter-spacing:6px;text-shadow:0 0 30px rgba(212,165,116,.4);animation:coverFadeIn 1s ease .3s both}
+#page-cover .cover-meta{font-size:14px;color:var(--ink-light);letter-spacing:3px;animation:coverFadeIn .8s ease .8s both}
+#page-cover .cover-quote{font-size:15px;color:#b8a898;font-style:italic;max-width:500px;text-align:center;line-height:1.8;animation:coverFadeIn 1s ease 1.4s both}
+#page-cover .cover-sep{width:80px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:coverFadeIn .5s ease .6s both}
+@keyframes coverEnter{0%,85%{opacity:1}100%{opacity:0;pointer-events:none}}
+@keyframes coverFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* ── D4: 世界书卡片 ── */
+.wb-card{border:1.5px solid #4a3a5a;border-radius:var(--radius);padding:6px 8px;margin:3px 0;background:rgba(255,255,255,.03);font-size:10px;cursor:pointer;transition:all .2s;position:relative}
+.wb-card:hover{border-color:var(--gold);background:rgba(255,255,255,.06)}
+.wb-card.triggered{border-color:#4a8;box-shadow:0 0 10px rgba(68,170,136,.25),0 0 20px rgba(68,170,136,.08)}
+.wb-card .wb-card-header{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.wb-card .wb-keyword-tag{display:inline-block;padding:1px 5px;border-radius:8px;font-size:9px;background:rgba(74,122,170,.2);color:#6a9aca;white-space:nowrap}
+.wb-card .wb-keyword-tag.constant{background:rgba(100,170,255,.2);color:#4af}
+.wb-card .wb-summary{color:var(--ink-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wb-card .wb-full{display:none;margin-top:4px;padding-top:4px;border-top:1px solid #4a3a5a;color:var(--ink);line-height:1.5;white-space:pre-wrap}
+.wb-card.expanded .wb-full{display:block}
+.wb-card.expanded .wb-summary{white-space:normal}
 </style><link id="theme-css" rel="stylesheet" href="data:text/css," disabled></head>
 <body>
 <canvas id="mouse-trail" style="position:fixed;inset:0;z-index:9998;pointer-events:none;display:none"></canvas>
@@ -176,7 +209,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <button class="btn btn-primary" style="width:100%" onclick="doLogin()">确认登录</button>
 <div style="text-align:center;margin-top:8px"><span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="doRegister()">没有账号？点击注册</span></div>
 <div class="notice-box" id="login-notice">新玩家请直接注册，已有账号请登录</div>
-<div class="bottom-announce" style="margin-top:20px;padding:8px;text-align:center;font-size:11px;color:#7b68ae;border-top:1px solid #4a3a5a">v0.6.1 — 无限流规则怪谈</div>
+<div class="bottom-announce" style="margin-top:20px;padding:8px;text-align:center;font-size:11px;color:var(--purple);border-top:1px solid var(--border-light)">v0.6.1 — 无限流规则怪谈</div>
 </div></div>
 
 <div id="page-home" class="page">
@@ -292,6 +325,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 	<button class="btn btn-sm btn-secondary" onclick="adminTab('suggestions')" style="display:block;width:100%">建议列表</button>
 	<button class="btn btn-sm btn-secondary" onclick="adminTab('announce')" style="display:block;width:100%">系统公告</button>
 	<button class="btn btn-sm btn-secondary" onclick="adminTab('stats')" style="display:block;width:100%">系统统计</button>
+		<button class="btn btn-sm btn-secondary" onclick="adminTab('config')" style="display:block;width:100%">系统配置</button>
 	<button class="btn btn-sm btn-secondary" onclick="navTo('page-home')" style="display:block;width:100%;margin-top:auto">返回</button>
 	</div>
 	<div id="admin-content" style="flex:1;overflow-y:auto;font-size:12px;min-height:400px"></div>
@@ -333,6 +367,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
  </aside>
 </div>
 </div></div>
+
+<!-- M4: 网络断开遮罩 -->
+<div class="ws-overlay" id="ws-overlay"><div class="ws-spinner"></div><div class="ws-text" id="ws-text">网络已断开，正在重连...</div></div>
+<!-- D1: 副本封面过渡动画 -->
+<div id="page-cover" class="page"><div class="cover-title" id="cover-title">--</div><div class="cover-sep"></div><div class="cover-meta" id="cover-meta">存活率 --</div><div class="cover-quote" id="cover-quote">--</div></div>
 
 <div id="page-debug" class="page">
 <div class="container">
@@ -399,6 +438,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <script>
 var ST={get:function(k,d){try{var v=localStorage.getItem('mvp_'+k);return v?JSON.parse(v):d}catch(e){return d}},set:function(k,v){localStorage.setItem('mvp_'+k,JSON.stringify(v))},getS:function(k,d){return localStorage.getItem('mvp_'+k)||d},setS:function(k,v){localStorage.setItem('mvp_'+k,v)}};
 var _token=ST.getS('token',''),_user=ST.getS('user',''),_apikey1=ST.getS('apikey1',''),_apikey2=ST.getS('apikey2',''),_ws=null,_busy=false,_selFile='',_turnCount=0,_nValue=parseInt(ST.getS('nvalue','5'))||5;
+/* ── M5: 消息分页 ── */
+var _allMsgs=[],_msgsShown=0,_msgsPageSize=20;
 
 var _DEF_AVATAR_PLAYER='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#5a7a9a"/><circle cx="50" cy="38" r="16" fill="#c8d8e8"/><ellipse cx="50" cy="72" rx="24" ry="18" fill="#c8d8e8"/></svg>');
 var _DEF_AVATAR_AI='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#c9a050"/><rect x="28" y="20" width="44" height="30" rx="4" fill="#1a0c00"/><circle cx="40" cy="35" r="5" fill="#fce8d0"/><circle cx="60" cy="35" r="5" fill="#fce8d0"/><rect x="36" y="48" width="28" height="6" rx="2" fill="#1a0c00"/><rect x="32" y="60" width="36" height="8" rx="2" fill="#1a0c00"/><rect x="28" y="74" width="14" height="8" rx="2" fill="#1a0c00"/><rect x="58" y="74" width="14" height="8" rx="2" fill="#1a0c00"/></svg>');
@@ -584,6 +625,31 @@ function highlightQuotes(text){
   return safe;
 }
 
+// ── NPC名字高亮 ──
+function highlightNPCs(html){
+  // 从变量面板的角色列表中提取NPC名字
+  var chars=window._lastTagsByCat&&window._lastTagsByCat.character||[];
+  if(!chars.length)return html;
+  // 收集NPC名字，去重，按长度降序避免短名误匹配
+  var names=[],seen={};
+  var npcColors=['#d4a574','#b84a5c','#7b68ae','#6a9aca','#68ae8a','#ca9a6a','#ae688a','#8aae68'];
+  for(var i=0;i<chars.length;i++){
+    var n=chars[i].tag_name||'';
+    if(n&&!seen[n]&&n.length>=2&&n!=='玩家'&&n!=='你'&&n!=='自己'){seen[n]=true;names.push(n)}
+  }
+  if(!names.length)return html;
+  names.sort(function(a,b){return b.length-a.length});
+  // 用span包裹NPC名字（加粗+专属颜色，含日文跟引号场景）
+  for(var j=0;j<names.length;j++){
+    var nm=names[j],color=npcColors[j%npcColors.length];
+    var escapedName=nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    // 匹配「名字」或"名字"或名字单独出现（前后有空格/标点/换行/起止）
+    var re=new RegExp('('+escapedName+')','g');
+    html=html.replace(re,'<span style="color:'+color+';font-weight:700;text-shadow:0 0 6px '+color+'44">$1</span>');
+  }
+  return html;
+}
+
 // ── 剧透判定 ──
 function isSpoilerField(key){
   return key.startsWith('隐藏')||key.startsWith('_')||['真实规则','隐藏真相','隐藏区域','隐藏效果','真实身份'].indexOf(key)>=0;
@@ -664,29 +730,52 @@ function renderVars(){
     }
     html+='</div>';
     }
-  // ── 模板世界书（后端注入） ──
+  // ── D4: 模板世界书（卡片样式） ──
   var wb=window._worldBook||[];
   if(wb.length){
     html+='<h3>🌐 模板世界书 <small style=\"color:#888;font-weight:400\">('+wb.length+'条)</small></h3>';
     var activeWb=0;
+    // 检测最近一轮触发的关键词
+    var lastAIText='';var msgsEl=document.getElementById('chat-msgs');if(msgsEl){var lastAI=msgsEl.querySelector('.chat-msg-ai:last-child .bubble');if(lastAI)lastAIText=lastAI.textContent||''}
     for(var wi=0;wi<wb.length;wi++){
-      var entry=wb[wi];if(!entry.enabled&&entry.enabled!==undefined)continue;
-      if(entry.constant){html+='<div class=\"v-item\" style=\"border-left-color:#4af;font-size:10px\">🔵 '+escHTML(entry.content||'').substring(0,50)+'...</div>';activeWb++}
-      else{html+='<div class=\"v-item\" style=\"font-size:10px\" title=\"触发词: '+(entry.keys||[]).join(', ')+'\">🟢 ['+escHTML((entry.keys||[]).join(',')).substring(0,40)+'] '+escHTML(entry.content||'').substring(0,40)+'...</div>';activeWb++}
+      var entry=wb[wi];if(!entry.enabled&&entry.enabled!==undefined)continue;activeWb++;
+      var keys=entry.keys||[],content=entry.content||'',summary=content.substring(0,55)+(content.length>55?'...':'');
+      var triggered=false;
+      if(keys.length&&lastAIText){for(var ki=0;ki<keys.length;ki++){if(lastAIText.indexOf(keys[ki])>=0){triggered=true;break}}}
+      if(entry.constant)triggered=true;
+      html+='<div class=\"wb-card'+(triggered?' triggered':'')+'\" onclick=\"this.classList.toggle(\'expanded\')\">';
+      html+='<div class=\"wb-card-header\">';
+      if(entry.constant)html+='<span class=\"wb-keyword-tag constant\">常驻</span>';
+      else for(var ki2=0;ki2<Math.min(keys.length,3);ki2++)html+='<span class=\"wb-keyword-tag\">'+escHTML(keys[ki2])+'</span>';
+      if(keys.length>3)html+='<span style=\"font-size:9px;color:#888\">+'+ (keys.length-3) +'</span>';
+      html+='<span style=\"font-size:9px;color:var(--ink-light);margin-left:auto\">'+(entry.constant?'🔵':'🟢')+'</span>';
+      html+='</div><div class=\"wb-summary\">'+escHTML(summary)+'</div>';
+      html+='<div class=\"wb-full\">'+escHTML(content)+'</div></div>';
     }
-    if(!activeWb)html+='<div class=\"v-item\" style=\"color:#888;font-size:10px\">（无启用条目）</div>';
+    if(!activeWb)html+='<div style=\"color:#888;font-size:10px;padding:4px\">（无启用条目）</div>';
   }
-  // ── 我的世界书（本地编辑，不影响后端） ──
+  // ── D4: 我的世界书（卡片样式） ──
   var myWb=_getMyWorldBook();
-  html+='<h3 style=\"display:flex;justify-content:space-between\">📝 我的世界书 <button class=\"btn btn-sm btn-secondary\" onclick=\"openMyWbEditor()\" style=\"font-size:9px;padding:1px 6px\">+</button></h3>';
+  html+='<h3 style=\"display:flex;justify-content:space-between\">📝 我的世界书 <button class=\"btn btn-sm btn-secondary\" onclick=\"event.stopPropagation();openMyWbEditor()\" style=\"font-size:9px;padding:1px 6px\">+</button></h3>';
   if(myWb.length){
+    var hadMyWb=false;
     for(var mwi=0;mwi<myWb.length;mwi++){
-      var me=myWb[mwi];if(!me.enabled)continue;
-      html+='<div class=\"v-item\" style=\"font-size:10px;cursor:pointer\" title=\"点击编辑\" onclick=\"openMyWbEditor('+mwi+')\">';
-      if(me.constant)html+='🔵 ';else html+='🟢 ['+escHTML((me.keys||[]).join(',')).substring(0,30)+'] ';
-      html+=escHTML((me.content||'').substring(0,45))+'...</div>';
+      var me=myWb[mwi];if(!me.enabled)continue;hadMyWb=true;
+      var mkeys=me.keys||[],mcontent=me.content||'',msummary=mcontent.substring(0,55)+(mcontent.length>55?'...':'');
+      var mtriggered=false;
+      if(mkeys.length&&lastAIText){for(var mki=0;mki<mkeys.length;mki++){if(lastAIText.indexOf(mkeys[mki])>=0){mtriggered=true;break}}}
+      if(me.constant)mtriggered=true;
+      html+='<div class=\"wb-card'+(mtriggered?' triggered':'')+'\" onclick=\"var e=event;if(e.target.classList.contains(\'wb-card-header\')||e.target.classList.contains(\'wb-summary\')||e.target.tagName===\'SPAN\')this.classList.toggle(\'expanded\');else{this.classList.toggle(\'expanded\')}\" ondblclick=\"openMyWbEditor('+mwi+')\">';
+      html+='<div class=\"wb-card-header\">';
+      if(me.constant)html+='<span class=\"wb-keyword-tag constant\">常驻</span>';
+      else for(var mki2=0;mki2<Math.min(mkeys.length,3);mki2++)html+='<span class=\"wb-keyword-tag\">'+escHTML(mkeys[mki2])+'</span>';
+      if(mkeys.length>3)html+='<span style=\"font-size:9px;color:#888\">+'+ (mkeys.length-3) +'</span>';
+      html+='<span style=\"font-size:9px;color:var(--ink-light);margin-left:auto\" title=\"双击编辑\">'+(me.constant?'🔵':'🟢')+' ✎</span>';
+      html+='</div><div class=\"wb-summary\">'+escHTML(msummary)+'</div>';
+      html+='<div class=\"wb-full\">'+escHTML(mcontent)+'</div></div>';
     }
-  }else{html+='<div class=\"v-item\" style=\"color:#888;font-size:10px\">（空）点击+添加个人设定</div>';}
+    if(!hadMyWb)html+='<div style=\"color:#888;font-size:10px;padding:4px\">（无启用条目）</div>';
+  }else{html+='<div style=\"color:#888;font-size:10px;padding:4px\">（空）点击+添加个人设定</div>';}
   c.innerHTML=html||'<p style=\"font-size:11px;color:#888\">暂无变量</p>';
   // Update player cards with portrait
   var pd=window._lastPlayerDetail;
@@ -803,13 +892,20 @@ function shareEnding(){
   if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){showToast('结局已复制到剪贴板，分享给朋友吧！','success')})}
   else{showToast('分享文字已生成','info')}
 }
-function showEnding(type){
-  var cfg={victory:{icon:'🏆',title:'恭喜通关！',desc:'你成功完成了这个副本的挑战。'},death:{icon:'💀',title:'你已死亡',desc:'在这个规则怪谈中，你没能活到最后...'},escape:{icon:'🏃',title:'仓皇逃脱',desc:'你使用了特殊手段逃离了这里。'}};
-  var c=cfg[type]||cfg.death;
-  document.getElementById('ending-icon').textContent=c.icon;
-  document.getElementById('ending-title').textContent=c.title;
-  document.getElementById('ending-desc').textContent=c.desc;
-  document.getElementById('popup-ending').classList.add('active');
+function showEnding(type,desc){
+  var cfg={victory:{icon:'🏆',title:'恭喜通关！',titleEn:'SURVIVED',desc:'你成功完成了这个副本的挑战。',border:'var(--gold)',bg:'rgba(212,165,116,.08)'},death:{icon:'💀',title:'你已迷失...',titleEn:'LOST',desc:'在这个规则怪谈中，你没能活到最后...',border:'var(--blood)',bg:'rgba(180,74,92,.1)'},escape:{icon:'🏃',title:'侥幸逃脱',titleEn:'ESCAPED',desc:'你使用了特殊手段逃离了这里。',border:'#8a9ab5',bg:'rgba(130,150,180,.08)'}};
+  var c=cfg[type]||cfg.death;var descFinal=desc||c.desc;
+  // 清理已有弹窗
+  var ex=document.querySelector('.ending-card-overlay');if(ex)ex.remove();
+  var ov=document.createElement('div');ov.className='popup-overlay ending-card-overlay active';
+  ov.innerHTML='<div class=\"ending-card\" style=\"border:3px solid '+c.border+';background:linear-gradient(175deg,var(--surface),var(--parchment));animation:endingCardIn .5s ease;max-width:420px;width:90%;padding:32px 24px;text-align:center;border-radius:12px;box-shadow:0 0 40px '+c.border+'33\"><div style=\"font-size:56px;margin-bottom:8px\">'+c.icon+'</div><div style=\"font-size:24px;font-weight:700;color:var(--blood);margin-bottom:2px\">'+c.title+'</div><div style=\"font-size:11px;color:var(--ink-light);letter-spacing:4px;margin-bottom:12px\">「 '+c.titleEn+' 」</div><div style=\"font-size:14px;color:var(--ink);line-height:1.7;margin-bottom:20px\">'+escHTML(descFinal)+'</div><div style=\"display:flex;gap:10px;justify-content:center;flex-wrap:wrap\"><button class=\"btn btn-primary\" id=\"_end-home\">返回主菜单</button><button class=\"btn btn-gold\" id=\"_end-share\">📋 分享结局</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#_end-home').onclick=function(){ov.remove();closePopup('popup-ending');navTo('page-home')};
+  ov.querySelector('#_end-share').onclick=function(){
+    var shareText='【无限流规则怪谈】'+c.title+' - '+c.titleEn+'\n'+descFinal+'\n—— 来自 规则怪谈 AI叙事';
+    if(navigator.clipboard){navigator.clipboard.writeText(shareText).then(function(){showToast('结局已复制到剪贴板','success')})}else{showToast('分享文本: '+shareText.substring(0,40)+'...','info')}
+  };
+  ov.onclick=function(e){if(e.target===ov){ov.remove();navTo('page-home')}};
 }
 
 function doLogin(){var u=document.getElementById('login-user').value.trim(),p=document.getElementById('login-pass').value.trim();if(!u){showToast('请输入用户名','error');document.getElementById('login-user').focus();return;}if(!p){showToast('请输入密码','error');document.getElementById('login-pass').focus();return;}showToast('登录中...','loading');fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})}).then(function(r){return r.json()}).then(function(d){if(d.token){_token=d.token;_user=d.username;ST.setS('token',d.token);ST.setS('user',d.username);ST.setS('last_user',u);ST.setS('last_pass',p);showToast('登录成功','success');navTo('page-home');checkAdmin()}else showToast(d.error||'登录失败','error')}).catch(function(e){showToast('网络错误: '+e.message,'error')})}
@@ -849,10 +945,12 @@ function selectTemplate(type, id, name, desc, rank, evt) {
   _selType = type;
   _selFile = id;
   _selFileName = name;
+  _selRank = rank||'';
   var label = name + (rank ? ' (' + rank + '级)' : '') + (desc ? ' - ' + desc : '');
   document.getElementById('template-selected-name').textContent = label;
   document.getElementById('template-confirm').style.display = 'block';
 }
+var _selRank='';
 function confirmTemplate() {
   if (!_selFile) { showToast('请先在模板区域点击选择一个模板','error'); return; }
   if (_selType !== 'preset') { showToast('请选择标准模板','error'); return; }
@@ -860,7 +958,7 @@ function confirmTemplate() {
     showToast('加载中...','loading');
     if(window._ws){try{window._ws.close()}catch(e){}}
     _fetchOk('/api/presets/'+encodeURIComponent(_selFile)+'/load',{method:'POST'},'模板加载成功','加载失败',function(d,err){
-      if(!err) navTo('page-game');
+      if(!err) showCoverThenGame(_selFileName,_selRank,d?d.opening_monologue||d.world_intro||'':null);
     });
   });
 }
@@ -982,6 +1080,21 @@ function reportComment(cid){
 }
 
 // ── 从详情页开始游戏 ──
+/* ── D1: 副本封面过渡动画 ── */
+function showCoverThenGame(name,rank,quote){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.popup-overlay').forEach(function(e){e.classList.remove('active');if(e.id!=='popup-api'&&e.id!=='popup-saves'&&e.id!=='popup-ending')e.remove()});
+  document.getElementById('cover-title').textContent=name||'未知副本';
+  var survRate=rank?('预估存活率 '+(rank==='S'?'5':rank==='A'?'15':rank==='B'?'30':rank==='C'?'50':rank==='D'?'70':'50')+'%'):'存活率 ??%';
+  document.getElementById('cover-meta').textContent=survRate;
+  var quotes={S:'踏入此地者，十不存一。',A:'规则之下，唯有谨慎者能活。',B:'真相往往比表象更加可怖。',C:'每一次选择，都在靠近死亡。',D:'你确定要进入吗？'};
+  document.getElementById('cover-quote').textContent=quote||quotes[rank]||'你是否已经准备好面对未知的恐惧？';
+  document.getElementById('page-cover').classList.add('active');
+  setTimeout(function(){
+    document.getElementById('page-cover').classList.remove('active');
+    navTo('page-game');
+  },3500);
+}
 function startFromDetail(){
   var tok = _auth();
   if(!tok){ showToast('请先登录','error'); navTo('page-login'); return; }
@@ -989,13 +1102,13 @@ function startFromDetail(){
     showToast('加载中...','loading');
     if(window._ws){try{window._ws.close()}catch(e){}}
     if(_detailType==='preset'){
-      _fetchOk('/api/presets/'+encodeURIComponent(_detailId)+'/load',{method:'POST'},_detailName+' 加载成功','加载失败',function(d,err){if(!err)navTo('page-game')})
+      _fetchOk('/api/presets/'+encodeURIComponent(_detailId)+'/load',{method:'POST'},_detailName+' 加载成功','加载失败',function(d,err){if(!err)showCoverThenGame(_detailName,_detailInfo.rank||'',d?d.opening_monologue||d.world_intro||'':null)})
     }else if(_detailType==='cloud'){
-      _fetchOk('/api/copies/'+_detailId+'/load',{method:'POST'},_detailName+' 加载成功','加载失败',function(d,err){if(!err)navTo('page-game')})
+      _fetchOk('/api/copies/'+_detailId+'/load',{method:'POST'},_detailName+' 加载成功','加载失败',function(d,err){if(!err)showCoverThenGame(_detailName,'',null)})
     }else{
       fetch('/api/saves/'+_detailId,{headers:{'Authorization':'Bearer '+tok}}).then(function(r){return r.json()}).then(function(d){
         if(d.error){ showToast(d.error,'error'); return; }
-        if(d.save){fetch('/api/saves/upload',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({slot_name:'loaded',save_data:d.save})}).then(function(r2){return r2.json()}).then(function(d2){if(d2.ok){showToast('模板加载成功','success');navTo('page-game')}else{showToast(d2.error||'模板无效','error')}})}else showToast('模板无效','error')
+        if(d.save){fetch('/api/saves/upload',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({slot_name:'loaded',save_data:d.save})}).then(function(r2){return r2.json()}).then(function(d2){if(d2.ok){showToast('模板加载成功','success');showCoverThenGame(_detailName,'',null)}else{showToast(d2.error||'模板无效','error')}})}else showToast('模板无效','error')
       }).catch(function(e){showToast('网络错误: '+e.message,'error')})
     }
   })
@@ -1003,7 +1116,15 @@ function startFromDetail(){
 
 function savePreset(target,preData){var name,data;if(preData){data=preData;name=data.name||''}else{name=(document.getElementById('editor-name')||{}).value||'';var raw=(document.getElementById('editor-json')||{}).value||'';if(!name||!raw){showAlert('请填写名称和内容');return}try{data=JSON.parse(raw)}catch(e){showAlert('JSON格式错误');return}data.name=name}if(!name){showAlert('请填写模板名称');return}if(target==='local'){ST.set('preset_'+Date.now(),data);showToast('已保存到本地','success');showAlert('已保存到本地')}else if(target==='server'){fetch('/api/saves/upload',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({slot_name:'preset_'+name,is_auto:false,save_data:data})}).then(function(r){return r.json()}).then(function(d){if(d.ok){showToast('已保存到服务器','success');showAlert('已保存到服务器')}else showToast('保存失败','error')}).catch(function(e){showToast('网络错误: '+e.message,'error')})}else{showToast('上传中...','loading');fetch('/api/copies/upload',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({title:name,desc:data.desc||'',tags:'',save_data:data})}).then(function(r){return r.json()}).then(function(d){if(d.ok){showToast('已上传云端','success');showAlert('已上传云端')}else showToast('上传失败','error')}).catch(function(e){showToast('网络错误: '+e.message,'error')})}}
 
-function connectWS(){if(_ws&&_ws.readyState===WebSocket.OPEN)return;var tok=_token||ST.getS('token','');_ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/ws?token='+encodeURIComponent(tok));_ws.onopen=function(){var s=document.getElementById('game-status');if(s){s.textContent='已连接';s.style.color='#4a4'}};_ws.onclose=function(){_busy=false;setBtns(false);if(window._cp==='page-game'){var s=document.getElementById('game-status');if(s){s.textContent='断开,重连中...';s.style.color='#a44'};clearTimeout(window._reconnectTimer);window._reconnectTimer=setTimeout(connectWS,3000)}};_ws.onmessage=function(ev){try{handleWS(JSON.parse(ev.data))}catch(e){console.error('WS parse error:',e)}}}
+/* ── M4: WS重连管理 ── */
+var _wsReconnectTimer=null,_wsFailTimer=null,_wsEverConnected=false;
+function showWSOverlay(){document.getElementById('ws-overlay').classList.add('active');document.getElementById('ws-text').textContent='网络已断开，正在重连...';document.getElementById('ws-text').classList.remove('clickable');document.getElementById('ws-text').onclick=null}
+function hideWSOverlay(){document.getElementById('ws-overlay').classList.remove('active');clearTimeout(_wsFailTimer);_wsFailTimer=null}
+function wsReconnectFailed(){document.getElementById('ws-text').textContent='重连失败，点击刷新';document.getElementById('ws-text').classList.add('clickable');document.getElementById('ws-text').onclick=function(){location.reload()}}
+function connectWS(){if(_ws&&_ws.readyState===WebSocket.OPEN)return;var tok=_token||ST.getS('token','');_ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/ws?token='+encodeURIComponent(tok));
+_ws.onopen=function(){var s=document.getElementById('game-status');if(s){s.textContent='已连接';s.style.color='#4a4'};hideWSOverlay();if(_wsEverConnected)showToast('已重连','success');_wsEverConnected=true;clearTimeout(_wsFailTimer);_wsFailTimer=null};
+_ws.onclose=function(){_busy=false;setBtns(false);if(window._cp==='page-game'){var s=document.getElementById('game-status');if(s){s.textContent='断开,重连中...';s.style.color='#a44'};showWSOverlay();clearTimeout(window._reconnectTimer);window._reconnectTimer=setTimeout(connectWS,3000);if(!_wsFailTimer)_wsFailTimer=setTimeout(wsReconnectFailed,30000)}};
+_ws.onmessage=function(ev){try{handleWS(JSON.parse(ev.data))}catch(e){console.error('WS parse error:',e)}}}
 function handleWS(d){
   if(d.type==='init_state'||d.type==='turn_complete'){
     // 侧栏: 角色卡片（XSS修复）
@@ -1022,6 +1143,7 @@ function handleWS(d){
     // 读取 AI 头像
     if(d.type==='init_state'&&d.ai_avatar_url){window._aiAvatar=d.ai_avatar_url}
     if(d.type==='init_state'&&d.all_tags_by_category){window._lastTagsByCat=d.all_tags_by_category;window._worldBook=d.world_book||[];renderVars();}
+    if(d.type==='init_state'){_setupMsgPagination();_initMsgBuffer();}
   }
   if(d.type==='turn_complete'){
     _turnCount++;
@@ -1030,10 +1152,15 @@ function handleWS(d){
     document.getElementById('st-ops').textContent='+'+d.created+' ~'+d.updated+' -'+d.dropped;
     document.getElementById('st-tk').textContent=(d.pass1_tokens||0)+(d.pass2_tokens||0)
     var et=d.ending_type||'none';
-    if(et!=='none')showEnding(et);
+    if(et!=='none')showEnding(et,d.ending_desc||'');
+    // N1: 检测规则触发——红色边框闪烁+震动
+    if(d.hook_effects&&Array.isArray(d.hook_effects)){for(var _n1i=0;_n1i<d.hook_effects.length;_n1i++){var _n1ef=d.hook_effects[_n1i];if(_n1ef&&(_n1ef.type==='rule_reveal'||_n1ef.type==='flash_red'||_n1ef.type==='blood_edge')){document.body.classList.add('rule-triggered');if(window.navigator&&navigator.vibrate)navigator.vibrate(200);setTimeout(function(){document.body.classList.remove('rule-triggered')},1300);break}}
     // 重新渲染最近AI气泡（引号高亮）
     var msgs=document.getElementById('chat-msgs'),aiBubbles=msgs.querySelectorAll('.chat-msg-ai .bubble');
-    for(var bi=aiBubbles.length-1;bi>=0;bi--){var raw=aiBubbles[bi].getAttribute('data-raw');if(raw){aiBubbles[bi].innerHTML=highlightQuotes(raw);break}}
+    for(var bi=aiBubbles.length-1;bi>=0;bi--){var raw=aiBubbles[bi].getAttribute('data-raw');if(raw){var _hq=highlightQuotes(raw);_hq=highlightNPCs(_hq);aiBubbles[bi].innerHTML=_hq;break}}
+    // M5: 追踪AI回复到消息缓冲
+    var lastAIBub=msgs.querySelector('.chat-msg-ai:last-child .bubble');
+    if(lastAIBub){_allMsgs.push({role:'ai',content:lastAIBub.textContent,turn:_turnCount});_msgsShown++}
     // 更新变量面板
     if(d.all_tags_by_category){window._lastTagsByCat=d.all_tags_by_category;renderVars();}
   }else if(d.type==='narrative_chunk'){
@@ -1222,7 +1349,76 @@ function renderEffect_attr_change(p,next){ var msgs=document.getElementById('cha
 function renderEffect_point_reward(p,next){ var msgs=document.getElementById('chat-msgs');if(!msgs){next();return} var div=document.createElement('div');div.className='chat-msg-system';div.textContent='⭐ 积分 +'+(p.amount||0);msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;next();}
 function renderEffect_local_flag(p,next){ next(); }
 function renderEffect_diary_flip(p,next){ var ov=document.createElement('div');ov.className='hook-popup-overlay';ov.style.zIndex='270'; ov.innerHTML='<div class="hook-note-card diary"><h3>'+escHTML(p.title||'')+'</h3>'+(p.image?'<img src="'+escHTML(p.image)+'" style="max-width:100%;max-height:200px;object-fit:contain;margin:6px 0;border-radius:4px" onerror="this.remove()">':'')+'<p>'+escHTML(p.content||'')+'</p><button class="btn btn-sm" style="margin-top:8px;background:#888;color:#fff" id="_dfclose">关闭</button></div>'; document.body.appendChild(ov); ov.querySelector('#_dfclose').onclick=function(){ov.remove();next()}; ov.onclick=function(e){if(e.target===ov){ov.remove();next()}}; }
-function sendMsg(){var inp=document.getElementById('game-input'),msg=inp.value.trim();if(!msg||_busy)return;var ak1=_apikey1||ST.getS('apikey1','');if(!ak1){showToast('请先在系统设置中填写API Key','error');return}var ak2=_apikey2||ST.getS('apikey2','');if(!ak2)ak2=ak1;if(!_ws||_ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(function(){sendMsg()},800);return}inp.value='';inp.style.height='auto';setBtns(true);window._lastUserInput=msg;var div=document.createElement('div');div.className='chat-msg-user';div.setAttribute('data-turn',_turnCount);var img=document.createElement('img');img.className='chat-avatar';img.src=getPlayerAvatar();img.setAttribute('onerror','this.remove()');div.appendChild(img);var bub=document.createElement('div');bub.className='bubble';bub.innerHTML='<b>你:</b> '+escHTML(msg);div.appendChild(bub);document.getElementById('chat-msgs').appendChild(div);addEditButton(div);var m1=ST.getS('model1','deepseek-v4-flash'),m2=ST.getS('model2','deepseek-v4-pro');_ws.send(JSON.stringify({type:'user_turn',userInput:msg,apiKey1:ak1,apiKey2:ak2,modelSmall:m1,modelLarge:m2,nValue:_nValue,myWorldBook:_getMyWorldBook()}));showThinking()}
+/* ── M5: 历史消息上拉加载分页 ── */
+function _setupMsgPagination(){
+  var chatEl=document.getElementById('chat-msgs');if(!chatEl)return;
+  chatEl.addEventListener('scroll',function(){
+    if(chatEl.scrollTop<50&&_allMsgs.length>_msgsShown&&!_msgLoadingMore)loadMoreMsgs();
+  });
+}
+var _msgLoadingMore=false;
+function _scrollChatBottom(){var c=document.getElementById('chat-msgs');if(c)c.scrollTop=c.scrollHeight}
+function loadMoreMsgs(){
+  if(_msgLoadingMore)return;_msgLoadingMore=true;
+  var chatEl=document.getElementById('chat-msgs');if(!chatEl){_msgLoadingMore=false;return}
+  var newShown=Math.min(_allMsgs.length,_msgsShown+_msgsPageSize);
+  if(newShown<=_msgsShown){_msgLoadingMore=false;return}
+  var oldH=chatEl.scrollHeight;
+  var start=_allMsgs.length-newShown,end=_allMsgs.length-_msgsShown;
+  var frag='';
+  for(var i=start;i<end;i++){
+    var m=_allMsgs[i];
+    if(m.role==='user')frag+='<div class="chat-msg-user" data-turn="'+(m.turn||0)+'"><img class="chat-avatar" src="'+getPlayerAvatar()+'" onerror="this.remove()"><div class="bubble"><b>你:</b> '+escHTML(m.content)+'</div></div>';
+    else if(m.role==='ai')frag+='<div class="chat-msg-ai"><img class="chat-avatar" src="'+getAIAvatar()+'" onerror="this.remove()"><div class="bubble">'+highlightQuotes(m.content)+'</div></div>';
+    else frag+='<div class="chat-msg-system">'+escHTML(m.content)+'</div>';
+  }
+  // Remove existing hint
+  var hint=chatEl.querySelector('.load-more-hint');if(hint)hint.remove();
+  chatEl.insertAdjacentHTML('afterbegin',frag);
+  chatEl.scrollTop=chatEl.scrollHeight-oldH;
+  _msgsShown=newShown;
+  if(_msgsShown>=_allMsgs.length){
+    chatEl.insertAdjacentHTML('afterbegin','<div class="load-more-hint" style="color:#888;cursor:default">—— 没有更多消息了 ——</div>');
+  }else{
+    chatEl.insertAdjacentHTML('afterbegin','<div class="load-more-hint" onclick="loadMoreMsgs()">↑ 加载更早的消息 (剩余' + (_allMsgs.length-_msgsShown) + '条)</div>');
+  }
+  _msgLoadingMore=false;
+}
+function _initMsgBuffer(){
+  var chatEl=document.getElementById('chat-msgs');if(!chatEl)return;
+  // Read current DOM messages into _allMsgs
+  _allMsgs=[];
+  var children=chatEl.children;
+  for(var i=0;i<children.length;i++){
+    var c=children[i];
+    if(c.classList.contains('chat-msg-user')){
+      var bub=c.querySelector('.bubble');var txt=bub?bub.textContent.replace(/^你: /,''):'';
+      _allMsgs.push({role:'user',content:txt,turn:parseInt(c.getAttribute('data-turn'))||0});
+    }else if(c.classList.contains('chat-msg-ai')){
+      var bub2=c.querySelector('.bubble');_allMsgs.push({role:'ai',content:bub2?bub2.textContent:'',turn:0});
+    }else if(c.classList.contains('chat-msg-system')){
+      _allMsgs.push({role:'system',content:c.textContent,turn:0});
+    }
+  }
+  if(_allMsgs.length>_msgsPageSize){
+    _msgsShown=_msgsPageSize;
+    // Re-render with only last 20
+    chatEl.innerHTML='';
+    var start2=_allMsgs.length-_msgsShown;
+    for(var j=start2;j<_allMsgs.length;j++){
+      var m2=_allMsgs[j];
+      if(m2.role==='user'){var d=document.createElement('div');d.className='chat-msg-user';d.setAttribute('data-turn',m2.turn||0);d.innerHTML='<img class="chat-avatar" src="'+getPlayerAvatar()+'" onerror="this.remove()"><div class="bubble"><b>你:</b> '+escHTML(m2.content)+'</div>';chatEl.appendChild(d);addEditButton(d)}
+      else if(m2.role==='ai'){var d2=document.createElement('div');d2.className='chat-msg-ai';d2.innerHTML='<img class="chat-avatar" src="'+getAIAvatar()+'" onerror="this.remove()"><div class="bubble">'+highlightQuotes(m2.content)+'</div>';chatEl.appendChild(d2)}
+      else{var d3=document.createElement('div');d3.className='chat-msg-system';d3.textContent=m2.content;chatEl.appendChild(d3)}
+    }
+    chatEl.insertAdjacentHTML('afterbegin','<div class="load-more-hint" onclick="loadMoreMsgs()">↑ 加载更早的消息 ('+(_allMsgs.length-_msgsShown)+'条)</div>');
+  }else{
+    _msgsShown=_allMsgs.length;
+    chatEl.insertAdjacentHTML('afterbegin','<div class="load-more-hint" style="color:#888;cursor:default">—— 没有更多消息了 ——</div>');
+  }
+  _scrollChatBottom();
+}
+function sendMsg(){var inp=document.getElementById('game-input'),msg=inp.value.trim();if(!msg||_busy)return;var ak1=_apikey1||ST.getS('apikey1','');if(!ak1){showToast('请先在系统设置中填写API Key','error');return}var ak2=_apikey2||ST.getS('apikey2','');if(!ak2)ak2=ak1;if(!_ws||_ws.readyState!==WebSocket.OPEN){connectWS();setTimeout(function(){sendMsg()},800);return}inp.value='';inp.style.height='auto';setBtns(true);window._lastUserInput=msg;var div=document.createElement('div');div.className='chat-msg-user';div.setAttribute('data-turn',_turnCount);var img=document.createElement('img');img.className='chat-avatar';img.src=getPlayerAvatar();img.setAttribute('onerror','this.remove()');div.appendChild(img);var bub=document.createElement('div');bub.className='bubble';bub.innerHTML='<b>你:</b> '+escHTML(msg);div.appendChild(bub);document.getElementById('chat-msgs').appendChild(div);addEditButton(div);_allMsgs.push({role:'user',content:msg,turn:_turnCount});_msgsShown++;var m1=ST.getS('model1','deepseek-v4-flash'),m2=ST.getS('model2','deepseek-v4-pro');_ws.send(JSON.stringify({type:'user_turn',userInput:msg,apiKey1:ak1,apiKey2:ak2,modelSmall:m1,modelLarge:m2,nValue:_nValue,myWorldBook:_getMyWorldBook()}));showThinking()}
 function cancelMsg(){if(_ws&&_busy)_ws.send(JSON.stringify({type:'cancel'}))}
 function doRollback(){showConfirm('回滚将丢弃当前未存档的进度，确定吗？',function(){if(_busy)cancelMsg();setTimeout(function(){location.reload()},500)})}
 
@@ -1349,7 +1545,7 @@ function loadMySuggestions(){
 
 // ── 管理面板 ──────────────────────────────────────
 var _adminTab='users',_adminPage=1;
-function adminTab(tab){_adminTab=tab;_adminPage=1;var el=document.getElementById('admin-content');if(tab==='users')loadAdminUsers(1);else if(tab==='codes')loadAdminCodes(1);else if(tab==='comments')loadAdminComments(1);else if(tab==='reports')loadAdminReports(1);else if(tab==='suggestions')loadAdminSuggestions(1);else if(tab==='announce')loadAdminAnnounce();else if(tab==='stats')loadAdminStats();}
+function adminTab(tab){_adminTab=tab;_adminPage=1;var el=document.getElementById('admin-content');if(tab==='users')loadAdminUsers(1);else if(tab==='codes')loadAdminCodes(1);else if(tab==='comments')loadAdminComments(1);else if(tab==='reports')loadAdminReports(1);else if(tab==='suggestions')loadAdminSuggestions(1);else if(tab==='announce')loadAdminAnnounce();else if(tab==='stats')loadAdminStats();else if(tab==='config')loadAdminConfig();}
 
 function _adminFetch(url,opts,cb,errMsg){
   opts=opts||{};opts.headers=opts.headers||{};opts.headers['Authorization']='Bearer '+_auth();
@@ -1474,6 +1670,38 @@ function loadAdminStats(){
     html+='</div>';
     document.getElementById('admin-content').innerHTML=html;
   },'加载失败')
+}
+
+function loadAdminConfig(){
+  _fetch('/api/admin/config').then(function(d){
+    var html = '<div style="padding:20px">';
+    var labels = {
+      'register_bonus': '注册赠送积分',
+      'turn_cost': '每轮对话消耗',
+      'sign_in_max': '签到每日上限',
+      'rate_limit_user_per_min': '用户每分钟对话上限',
+      'rate_limit_ws_per_ip': '每IP WS并发上限',
+      'rate_limit_register_per_hour': '每IP每小时注册上限',
+      'save_max_size_kb': '存档大小上限(KB)',
+      'ws_idle_timeout_min': 'WS空闲超时(分钟)',
+    };
+    for(var k in d.config){
+      html += '<div class="input-row"><label>'+ (labels[k]||k) +' ('+k+')</label><input type="number" id="cfg_'+k+'" value="'+escHTML(d.config[k])+'"></div>';
+    }
+    html += '<button class="btn btn-primary" onclick="saveConfig()" style="margin-top:12px">保存配置</button>';
+    html += '</div>';
+    document.getElementById('admin-content').innerHTML = html;
+  });
+}
+
+function saveConfig(){
+  var config = {};
+  document.querySelectorAll('[id^="cfg_"]').forEach(function(el){
+    config[el.id.replace('cfg_','')] = el.value;
+  });
+  _fetch('/api/admin/config', {method:'PUT', body:JSON.stringify(config), headers:{'Content-Type':'application/json'}})
+    .then(function(d){ showToast('配置已保存','success'); })
+    .catch(function(e){ showToast('保存失败: '+e.message,'error'); });
 }
 
 // ── 引导式模板编辑器 ──────────────────────────────────

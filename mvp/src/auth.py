@@ -1,7 +1,7 @@
 """简易 JWT — Python 内置库，零依赖"""
-import json, hmac, hashlib, base64, time
+import json, hmac, hashlib, base64, time, os
 
-SECRET = "fenli-infinite-flow-secret-2026"
+SECRET = os.environ.get("JWT_SECRET", os.urandom(32).hex())
 
 def b64e(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
