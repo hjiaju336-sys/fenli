@@ -160,6 +160,22 @@ def _ensure_phase3_tables():
         s.execute(text("ALTER TABLE comment_reports ADD UNIQUE KEY uk_report (comment_id, reporter_id)"))
     except Exception as e:
         print(f"[Phase3] ALTER comment_reports.uk_report skipped: {e}")
+    # 创建 shared_copies 表（如果不存在）
+    s.execute(text("""CREATE TABLE IF NOT EXISTS shared_copies (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        uploader_id VARCHAR(255),
+        title VARCHAR(255),
+        description TEXT,
+        tags TEXT,
+        save_data TEXT,
+        downloads INT DEFAULT 0,
+        created_at VARCHAR(50),
+        cover_image VARCHAR(500),
+        opening_monologue TEXT,
+        avg_rating FLOAT DEFAULT 0,
+        rating_count INT DEFAULT 0,
+        play_count INT DEFAULT 0
+    )"""))
     # ALTER shared_copies 表加字段
     for col, typ in [("cover_image", "VARCHAR(500)"), ("opening_monologue", "TEXT"),
                       ("avg_rating", "FLOAT DEFAULT 0"), ("rating_count", "INT DEFAULT 0"), ("play_count", "INT DEFAULT 0")]:
