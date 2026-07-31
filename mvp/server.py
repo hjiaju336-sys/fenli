@@ -44,7 +44,7 @@ def _ensure_user_table():
     if admin_pw:
         existing = s.execute(text("SELECT 1 FROM users WHERE username='admin'")).fetchone()
         if not existing:
-            s.execute(text("INSERT INTO users (player_id,username,password_hash,created_at) VALUES (:pid,:un,:pw,:ca)"),
+            s.execute(text("INSERT INTO users (player_id,username,password_hash,created_at,is_admin) VALUES (:pid,:un,:pw,:ca,1)"),
                       {"pid":"u001","un":"admin","pw":_hash(admin_pw),"ca":"2026-01-01"})
     s.commit(); s.close()
 
