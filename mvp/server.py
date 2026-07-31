@@ -862,23 +862,30 @@ def load_preset(filename: str, request: Request):
     path = os.path.join("presets", filename)
     if not os.path.exists(path): return {"error": "not found"}
     with open(path, encoding="utf-8") as f: data = json.load(f)
-    s = get_session(); td = TagDAO(s, pid); md = MemoryDAO(s, pid)
-    # 清空当前数据
-    for t in ["world_library","world_detail_library","map_library","map_detail_library",
-              "rule_library","rule_detail_library","character_library","character_detail_library",
-              "item_library","item_detail_library"]:
-        s.execute(text(f"DELETE FROM {t} WHERE player_id=:pid"), {"pid":pid})
-    # 写入预设
-    for tag in data["tags"]:
-        td.create(tag["category"], tag["tag_name"], tag["tag_hint"], tag["tag_detail"])
-    # 保存世界书和hooks到缓存
-    wb = data.get("world_book") or []
-    preset_hooks = data.get("hooks") or []
-    HOT_INIT[pid] = ([t["tag_name"] for t in td.all_hints()], [m["memory_id"] for m in md.all_hints()], wb, preset_hooks)
-    # 重置hook会话（切换副本）
-    HOOK_SESSION.pop(pid, None)
-    s.commit(); s.close()
-    return {"ok": True, "name": data["name"]}
+    s = get_session()
+    try:
+        td = TagDAO(s, pid); md = MemoryDAO(s, pid)
+        # 清空当前数据
+        for t in ["world_library","world_detail_library","map_library","map_detail_library",
+                  "rule_library","rule_detail_library","character_library","character_detail_library",
+                  "item_library","item_detail_library"]:
+            s.execute(text(f"DELETE FROM {t} WHERE player_id=:pid"), {"pid":pid})
+        # 写入预设
+        for tag in data["tags"]:
+            td.create(tag["category"], tag["tag_name"], tag["tag_hint"], tag["tag_detail"])
+        s.commit()
+        # DB 操作成功后才更新 HOT_INIT 缓存（避免状态不一致）
+        wb = data.get("world_book") or []
+        preset_hooks = data.get("hooks") or []
+        HOT_INIT[pid] = ([t["tag_name"] for t in td.all_hints()], [m["memory_id"] for m in md.all_hints()], wb, preset_hooks)
+        # 重置hook会话（切换副本）
+        HOOK_SESSION.pop(pid, None)
+        return {"ok": True, "name": data["name"]}
+    except Exception as e:
+        s.rollback()
+        return {"error": f"加载失败: {str(e)[:100]}"}
+    finally:
+        s.close()
 
 # ── 云端副本 API ──
 @app.get("/api/copies")
@@ -905,23 +912,31 @@ async def upload_copy(request: Request):
 
 @app.post("/api/copies/{cid}/load")
 async def load_copy(cid: int, request: Request):
-    pid = _pid(request); s = get_session(); dao = CloudDAO(s); data = dao.get(cid)
-    if not data: s.close(); return {"error": "not found"}
-    # 清空+写入用户数据
-    td = TagDAO(s, pid)
-    for t in ["world_library","world_detail_library","map_library","map_detail_library",
-              "rule_library","rule_detail_library","character_library","character_detail_library",
-              "item_library","item_detail_library"]:
-        s.execute(text(f"DELETE FROM {t} WHERE player_id=:pid"), {"pid":pid})
-    for tag in data.get("tags",[]):
-        td.create(tag.get("category","character"), tag["tag_name"], tag.get("tag_hint",""), tag.get("tag_detail",{}))
-    wb = data.get("world_book") or []
-    preset_hooks = data.get("hooks") or []
-    HOT_INIT[pid] = ([t["tag_name"] for t in td.all_hints()], [], wb, preset_hooks)
-    # 重置hook会话（切换副本）
-    HOOK_SESSION.pop(pid, None)
-    s.commit(); s.close()
-    return {"ok": True}
+    pid = _pid(request); s = get_session()
+    try:
+        dao = CloudDAO(s); data = dao.get(cid)
+        if not data: return {"error": "not found"}
+        # 清空+写入用户数据
+        td = TagDAO(s, pid)
+        for t in ["world_library","world_detail_library","map_library","map_detail_library",
+                  "rule_library","rule_detail_library","character_library","character_detail_library",
+                  "item_library","item_detail_library"]:
+            s.execute(text(f"DELETE FROM {t} WHERE player_id=:pid"), {"pid":pid})
+        for tag in data.get("tags",[]):
+            td.create(tag.get("category","character"), tag["tag_name"], tag.get("tag_hint",""), tag.get("tag_detail",{}))
+        s.commit()
+        # DB 操作成功后才更新 HOT_INIT 缓存（避免状态不一致）
+        wb = data.get("world_book") or []
+        preset_hooks = data.get("hooks") or []
+        HOT_INIT[pid] = ([t["tag_name"] for t in td.all_hints()], [], wb, preset_hooks)
+        # 重置hook会话（切换副本）
+        HOOK_SESSION.pop(pid, None)
+        return {"ok": True}
+    except Exception as e:
+        s.rollback()
+        return {"error": f"加载失败: {str(e)[:100]}"}
+    finally:
+        s.close()
 
 @app.delete("/api/copies/{cid}")
 def delete_copy(cid: int, request: Request):
