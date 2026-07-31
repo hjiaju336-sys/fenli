@@ -1,0 +1,122 @@
+/* common.css - Shared styles for fenli project */
+/* Shared animations, overlays, and utility styles */
+/* Generated from index.html (desktop) as base; compatible with m.html (mobile) */
+
+/* =============================================
+   Animations
+   ============================================= */
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes dotBounce{0%,80%,100%{transform:translateY(0);opacity:.3}40%{transform:translateY(-6px);opacity:1}}
+@keyframes wsSpin{to{transform:rotate(360deg)}}
+@keyframes ruleFlash{0%,100%{box-shadow:inset 0 0 0 transparent}25%,75%{box-shadow:inset 0 0 100px rgba(220,40,40,.65)}}
+@keyframes endingCardIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+@keyframes flashRed{0%,100%{box-shadow:inset 0 0 80px rgba(255,0,0,.6)}50%{box-shadow:inset 0 0 0px rgba(255,0,0,0)}}
+@keyframes screenShake{0%,100%{transform:translate(0)}10%{transform:translate(-4px,2px)}20%{transform:translate(4px,-1px)}30%{transform:translate(-3px,-2px)}40%{transform:translate(3px,1px)}50%{transform:translate(-2px,-1px)}60%{transform:translate(2px,1px)}70%{transform:translate(-1px,0)}80%{transform:translate(1px,-1px)}90%{transform:translate(0,1px)}}
+@keyframes goldenGlow{0%,100%{box-shadow:0 0 20px rgba(212,165,116,.3),inset 0 0 30px rgba(212,165,116,.1)}50%{box-shadow:0 0 40px rgba(232,196,160,.5),inset 0 0 50px rgba(212,165,116,.2)}}
+@keyframes vignettePulse{0%,100%{box-shadow:inset 0 0 80px rgba(0,0,0,.5)}50%{box-shadow:inset 0 0 120px rgba(0,0,0,.8)}}
+@keyframes bloodEdge{0%{box-shadow:inset 0 0 0px rgba(180,74,92,0)}100%{box-shadow:inset 0 0 60px rgba(180,74,92,.5)}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-60px)}}
+@keyframes toastIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-12px)}}
+@keyframes coverEnter{0%,85%{opacity:1}100%{opacity:0;pointer-events:none}}
+@keyframes coverFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* =============================================
+   Rule-triggered body effect
+   ============================================= */
+
+body.rule-triggered{animation:ruleFlash .6s ease-in-out 2;pointer-events:none}
+
+/* =============================================
+   Hook effect classes
+   ============================================= */
+
+.hook-flash-red{animation:flashRed .3s ease-in-out 3}
+.hook-screen-shake{animation:screenShake .4s ease-in-out}
+.hook-golden-glow{animation:goldenGlow 3s ease-in-out}
+.hook-vignette-pulse{animation:vignettePulse 3s ease-in-out}
+.hook-blood-edge{animation:bloodEdge 3s ease-in-out forwards}
+
+/* =============================================
+   Hook popup / overlay components
+   ============================================= */
+
+.hook-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:250;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s ease}
+.hook-portrait-popup{text-align:center;max-width:420px;width:90%}.hook-portrait-popup img{max-width:200px;max-height:260px;object-fit:contain;border-radius:8px;border:2px solid var(--gold);margin-bottom:12px;box-shadow:0 0 30px rgba(200,160,100,.3)}.hook-portrait-popup .npc-line{font-size:16px;color:var(--ink);line-height:1.6;margin:8px 0}
+.hook-ending-card{text-align:center;padding:30px 20px;background:linear-gradient(175deg,var(--surface),var(--parchment));border:2px solid var(--gold);border-radius:12px;max-width:450px;width:90%}.hook-ending-card .end-icon{font-size:56px;margin-bottom:10px}.hook-ending-card .end-title{font-size:20px;font-weight:700;color:var(--blood);margin-bottom:6px}.hook-ending-card .end-desc{font-size:14px;color:var(--ink);margin-bottom:14px}
+.hook-note-card{max-width:400px;width:90%;padding:20px;border-radius:8px;border:2px solid;font-size:14px;line-height:1.7}.hook-note-card.parchment{background:#f5e6c8;color:#3a2a10;border-color:#c8a060}.hook-note-card.medical{background:#e8f0e8;color:#1a3a1a;border-color:#6a9060;font-family:monospace}.hook-note-card.diary{background:#f0e0e8;color:#3a1a2a;border-color:#c080a0}
+.hook-clue-image{max-width:500px;width:90%;text-align:center}.hook-clue-image img{max-width:100%;max-height:60vh;object-fit:contain;border-radius:6px;border:2px solid var(--border)}.hook-clue-image .caption{font-size:13px;color:var(--ink-light);margin-top:8px}
+.hook-binary-choice{max-width:400px;width:90%;text-align:center;padding:20px;background:var(--parchment);border:2px solid var(--blood);border-radius:10px}.hook-binary-choice .bc-btns{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.hook-fullscreen-text{position:fixed;inset:0;z-index:260;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;letter-spacing:4px;animation:fadeIn .5s ease;pointer-events:none}.hook-fullscreen-text.normal{color:var(--ink)}.hook-fullscreen-text.blood{color:var(--blood)}.hook-fullscreen-text.gold{color:var(--gold)}
+.hook-chapter-title{text-align:center;padding:20px;font-size:24px;font-weight:700;color:var(--gold);letter-spacing:6px;animation:fadeIn .8s ease}
+.hook-scene-transition{text-align:center;padding:16px;font-size:16px;color:var(--ink-light);font-style:italic;letter-spacing:2px}
+
+/* =============================================
+   Toast notifications
+   ============================================= */
+
+.toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:10px 22px;border-radius:6px;font-size:13px;font-family:var(--font);color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.3);animation:toastIn .3s ease,toastOut .35s ease 3.5s forwards;pointer-events:auto;white-space:nowrap}
+.toast-success{background:#3a7d3a;border:1px solid #5a9d5a}.toast-error{background:#8b2020;border:1px solid #b84c3c}.toast-info{background:#2a5a8a;border:1px solid #4a7aaa}.toast-loading{background:#4a3a5a;border:1px solid #6a5a7a}
+
+/* =============================================
+   WebSocket disconnect overlay
+   ============================================= */
+
+.ws-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);align-items:center;justify-content:center;flex-direction:column;gap:18px}
+.ws-overlay.active{display:flex}
+.ws-overlay .ws-text{color:#e8d5c8;font-size:16px;font-family:var(--font);text-align:center;line-height:1.6}
+.ws-overlay .ws-spinner{width:40px;height:40px;border:3px solid rgba(212,165,116,.25);border-top-color:var(--gold);border-radius:50%;animation:wsSpin .8s linear infinite}
+.ws-overlay .ws-text.clickable{cursor:pointer;text-decoration:underline;color:var(--gold);transition:color .2s}
+.ws-overlay .ws-text.clickable:hover{color:var(--gold-light)}
+
+/* =============================================
+   Thinking dots animation
+   ============================================= */
+
+.thinking-dots{display:inline-flex;gap:3px;vertical-align:middle;align-items:center;margin-left:4px}
+.thinking-dots span{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite}
+.thinking-dots span:nth-child(1){animation-delay:0s}.thinking-dots span:nth-child(2){animation-delay:.2s}.thinking-dots span:nth-child(3){animation-delay:.4s}
+
+/* =============================================
+   Particle and float effects
+   ============================================= */
+
+.particle{position:fixed;pointer-events:none;z-index:240;animation:floatUp 4s ease-out forwards}
+.fav-float{position:fixed;z-index:255;font-size:20px;font-weight:700;pointer-events:none;animation:floatUp 2s ease-out forwards}
+.degrade-notice{position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:300;background:rgba(60,30,30,.9);color:#f0c0a0;padding:6px 16px;border-radius:16px;font-size:11px;animation:fadeIn .3s ease;pointer-events:none;white-space:nowrap;border:1px solid rgba(200,100,80,.4)}
+
+/* =============================================
+   Input lock overlay
+   ============================================= */
+
+.input-lock-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px}.input-lock-overlay .lock-text{font-size:14px;color:var(--blood);margin-bottom:8px;text-align:center;padding:0 20px}.input-lock-overlay .lock-timer{font-size:24px;font-weight:700;color:var(--gold);margin-bottom:8px}.input-lock-overlay .lock-close{position:absolute;top:8px;right:12px;width:28px;height:28px;border-radius:50%;border:2px solid var(--blood);background:rgba(0,0,0,.6);color:var(--blood);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}.input-lock-overlay .lock-keyword-input{width:200px;padding:6px 10px;border:1.5px solid var(--gold);border-radius:4px;background:rgba(0,0,0,.5);color:var(--ink);font-size:13px;text-align:center;margin-top:8px}
+
+/* =============================================
+   Load more hint
+   ============================================= */
+
+.load-more-hint{text-align:center;padding:12px;font-size:11px;color:var(--ink-light);cursor:pointer;user-select:none}
+.load-more-hint:hover{color:var(--gold)}
+
+/* =============================================
+   Message error inline
+   ============================================= */
+
+.msg-error{display:flex;align-items:center;gap:8px;padding:8px 14px;margin:6px 0;background:rgba(200,40,40,.08);border:1px solid rgba(200,40,40,.2);border-radius:6px;font-size:12px;color:#e07070;cursor:pointer;text-align:center;justify-content:center}
+.msg-error button{flex-shrink:0;padding:4px 14px;border:1px solid #e07070;border-radius:14px;background:transparent;color:#e07070;font-size:11px;cursor:pointer;font-family:var(--font)}
+.msg-error:hover{background:rgba(200,40,40,.12)}
+
+/* =============================================
+   Scrollbar
+   ============================================= */
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#3a3050;border-radius:3px}
+
+/* =============================================
+   Quote highlight (both desktop and mobile class names)
+   ============================================= */
+
+.quote-highlight{color:var(--blood);font-weight:700}
+.quote-hl{color:var(--gold);font-weight:600}
