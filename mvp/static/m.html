@@ -103,6 +103,34 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── 封面过渡动画 (Mobile) ── */
+#page-cover.page{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:transparent;flex:none}
+#page-cover.page.active{display:flex}
+#page-cover.animating{animation:coverBgDark .8s ease forwards}
+#page-cover::before{content:'';position:absolute;inset:-10%;z-index:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.85) 75%);opacity:0}
+#page-cover.animating::before{animation:coverVignette .8s ease forwards}
+#page-cover::after{content:'';position:absolute;inset:0;z-index:4;pointer-events:none;background:#fff;opacity:0}
+#page-cover.animating::after{animation:coverFlash .3s ease forwards;animation-delay:3.1s}
+.cover-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px;will-change:opacity,transform}
+#page-cover.animating .cover-inner{animation:coverZoomOut .7s ease forwards;animation-delay:2.5s}
+.cover-title{font-size:26px;font-weight:700;color:var(--gold);text-align:center;opacity:0;filter:blur(8px);transform:translateY(12px);will-change:filter,opacity,transform}
+#page-cover.animating .cover-title{animation:coverTitleReveal .8s ease forwards;animation-delay:.8s}
+.cover-sep{width:60%;height:2px;margin:16px auto;background:var(--accent);transform:scaleX(0);transform-origin:center;will-change:transform}
+#page-cover.animating .cover-sep{animation:coverSepExtend .5s ease forwards;animation-delay:.8s}
+.cover-meta{font-size:14px;color:var(--text2);opacity:0;will-change:opacity}
+#page-cover.animating .cover-meta{animation:coverMetaIn .4s ease forwards;animation-delay:1.2s}
+.cover-quote{font-size:13px;color:var(--text2);font-style:italic;opacity:0;transform:translateY(16px);will-change:opacity,transform}
+#page-cover.animating .cover-quote{animation:coverQuoteRise .5s ease forwards;animation-delay:1.4s}
+#cover-canvas{position:absolute;inset:0;z-index:1;pointer-events:none}
+@keyframes coverBgDark{0%{background:transparent}100%{background:#000}}
+@keyframes coverVignette{0%{opacity:0}100%{opacity:1}}
+@keyframes coverTitleReveal{0%{filter:blur(8px);opacity:0;transform:translateY(12px)}100%{filter:blur(0);opacity:1;transform:translateY(0)}}
+@keyframes coverSepExtend{0%{transform:scaleX(0);opacity:0}100%{transform:scaleX(1);opacity:1}}
+@keyframes coverMetaIn{0%{opacity:0}100%{opacity:1}}
+@keyframes coverQuoteRise{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes coverZoomOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.05)}}
+@keyframes coverFlash{0%{opacity:0}50%{opacity:.7}100%{opacity:0}}
+
 </style><link rel="stylesheet" href="/static/common.css"></head>
 <body>
 <!-- M4: 网络断开遮罩 -->
@@ -230,6 +258,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
  </div>
 </div>
 
+<!-- 封面过渡动画 -->
+<div id="page-cover" class="page">
+ <div class="cover-inner">
+  <div class="cover-title" id="cover-title">--</div>
+  <div class="cover-sep"></div>
+  <div class="cover-meta" id="cover-meta">存活率 --</div>
+  <div class="cover-quote" id="cover-quote">--</div>
+ </div>
+ <canvas id="cover-canvas"></canvas>
+</div>
+
 <!-- 变量面板抽屉 -->
 <div class="drawer" id="drawer-vars"><div class="drawer-handle"></div>
  <div class="drawer-header">变量面板 <button class="btn-icon" style="font-size:14px" onclick="closeDrawer()">✕</button></div>
@@ -294,7 +333,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 <script>
 // ═══ 全局状态 ═══
 var _token='',_user='',_apikey1='',_apikey2='',_ws=null,_busy=false,_turnCount=0,_nValue=5;
-var _curPage='pg-login',_detailType='',_detailId='',_worldBook=[],_lastTags={};
+var _curPage='pg-login',_detailType='',_detailId='',_detailRank='',_worldBook=[],_lastTags={};
 /* ── M4: WS重连管理 ── */
 /* ── M5: 消息分页 ── */
 var _allMsgs=[],_msgsShown=0,_msgsPageSize=20;
@@ -464,7 +503,7 @@ function loadTemplates(type){
   }
 }
 function openDetail(type,id,name,desc,rank){
-  _detailType=type;_detailId=id;
+  _detailType=type;_detailId=id;_detailRank=rank;
   document.getElementById('dtl-name').textContent=name;
   var info='<div style="margin-bottom:12px"><span style="color:var(--accent)">'+(rank||'')+'级</span> · '+esc(desc||'')+'</div>';
   info+='<div style="font-size:13px;color:var(--text2)">加载评分中...</div>';
@@ -483,7 +522,10 @@ function startFromDetail(){
     // 关闭旧连接，确保加载新预设后重新获取init_state
     if(_ws){try{_ws.close()}catch(e){}}
     _fetch(url,{method:'POST'}).then(function(d){
-      if(d.ok||!d.error){navigateTo('pg-chat')}else toast(d.error||'加载失败','error')
+      if(d.ok||!d.error){
+        var name = document.getElementById('dtl-name').textContent || '';
+        showCoverThenGame(name, window._detailRank || '', d?d.opening_monologue||d.world_intro||'':'');
+      }else toast(d.error||'加载失败','error')
     })
   })
 }
@@ -627,4 +669,84 @@ function delCmt(id){showConfirm('确定删除此评论？',function(){fetch('/ap
 
 // ═══ 加载公告 ═══
 window.addEventListener("load",function(){fetch("/api/announcements").then(function(r){return r.json()}).then(function(d){if(d.announcement){var e=document.getElementById("home-announce");e.textContent=d.announcement.content;e.style.display="block"}})});
+
+// ═══ 封面过渡动画 (Mobile) ═══
+var _coverRafId = null;
+var _coverTimeout = null;
+var _coverParticles = [];
+
+function startCoverParticlesMobile(canvasId) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  var ctx = canvas.getContext('2d');
+  _coverParticles = [];
+  var count = 45; // 移动端减半
+  for (var i = 0; i < count; i++) {
+    _coverParticles.push({
+      x: Math.random() * canvas.width,
+      y: canvas.height + Math.random() * 80,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -(0.3 + Math.random() * 0.6),
+      size: 1.5 + Math.random() * 3,
+      alpha: 0.4 + Math.random() * 0.4,
+      color: Math.random() < 0.5 ? 'rgba(180,74,92,ALPHA)' : 'rgba(212,165,116,ALPHA)'
+    });
+  }
+  function draw() {
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (var i = 0; i < _coverParticles.length; i++) {
+      var p = _coverParticles[i];
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = p.color.replace('ALPHA', String(p.alpha));
+      ctx.fill();
+    }
+    _coverRafId = requestAnimationFrame(draw);
+  }
+  _coverRafId = requestAnimationFrame(draw);
+}
+
+function stopCoverParticlesMobile() {
+  if (_coverRafId) { cancelAnimationFrame(_coverRafId); _coverRafId = null; }
+  _coverParticles = [];
+  // 清理 canvas
+  var canvas = document.getElementById('cover-canvas');
+  if (canvas) { var ctx = canvas.getContext('2d'); if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); }
+}
+
+function showCoverThenGame(name, rank, quote) {
+  // 0. 重入防御：清除旧动画和定时器
+  stopCoverParticlesMobile();
+  if (_coverTimeout) { clearTimeout(_coverTimeout); _coverTimeout = null; }
+  var cover = document.getElementById('page-cover');
+  cover.classList.remove('animating');
+  // 1. 隐藏所有页面
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  // 2. 关闭所有抽屉
+  document.querySelectorAll('.drawer').forEach(function(d) { d.classList.remove('open'); });
+  // 3. 设置文字
+  document.getElementById('cover-title').textContent = name || '未知副本';
+  var survRate = rank ? ('预估存活率 ' + (rank==='S'?'5':rank==='A'?'15':rank==='B'?'30':rank==='C'?'50':rank==='D'?'70':'50') + '%') : '存活率 ??%';
+  document.getElementById('cover-meta').textContent = survRate;
+  var quotes = {S:'踏入此地者，十不存一。',A:'规则之下，唯有谨慎者能活。',B:'真相往往比表象更加可怖。',C:'每一次选择，都在靠近死亡。',D:'你确定要进入吗？'};
+  document.getElementById('cover-quote').textContent = quote || quotes[rank] || '你是否已经准备好面对未知的恐惧？';
+  // 4. 显示封面
+  cover.classList.add('active');
+  // 5. 触发动画：使用 reflow 确保 active 生效后再添加 animating
+  void cover.offsetWidth;
+  cover.classList.add('animating');
+  // 6. 启动 Canvas 粒子
+  startCoverParticlesMobile('cover-canvas');
+  // 7. 3.5s 后跳转
+  _coverTimeout = setTimeout(function() {
+    stopCoverParticlesMobile();
+    cover.classList.remove('active', 'animating');
+    navigateTo('pg-chat');
+  }, 3500);
+}
 </script></body></html>
