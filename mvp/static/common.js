@@ -290,7 +290,7 @@
         if(d.world_name){ var sn = document.getElementById('sd-world-name'); if(sn) sn.textContent = d.world_name; }
         if(d.world_desc){ var sd2 = document.getElementById('sd-world-desc'); if(sd2) sd2.textContent = d.world_desc; }
         window._lastPlayerDetail = d.player_detail||{};
-        if(d.player_detail){ var pd = d.player_detail; var pdEl = document.getElementById('chat-pdetail'); if(pdEl){ pdEl.style.display='inline'; pdEl.textContent='❤️ '+(pd.hp!=null?pd.hp:'?')+'/'+(pd.max_hp!=null?pd.max_hp:'?')+' | 🧠 '+(pd.sanity!=null?pd.sanity:'?')+'/'+(pd.max_sanity!=null?pd.max_sanity:'?'); } }
+        if(d.player_detail){ var pd = d.player_detail; var pdEl = document.getElementById('chat-pdetail'); if(pdEl){ var hp=pd.hp||pd['血量']||pd['HP']||pd['生命值']||'?',maxHp=pd.max_hp||pd['最大血量']||pd['最大生命值']||hp,sanity=pd.sanity||pd['理智']||pd['SAN']||pd['理智值']||'?',maxSan=pd.max_sanity||pd['最大理智']||pd['最大理智值']||sanity; pdEl.style.display='inline'; pdEl.textContent='❤️ '+hp+'/'+maxHp+' | 🧠 '+sanity+'/'+maxSan; } }
         var msgs = document.getElementById('chat-msgs'), html = '';
         var saved = window._savedMessages||[];
         if(saved.length>0){
@@ -741,8 +741,8 @@
       if(Object.keys(pd).length){
         html+='<h3 style="font-size:11px;color:var(--blood);margin:8px 0 4px;border-bottom:1px solid rgba(180,120,180,.3)">👤 玩家状态</h3>';
         html+='<div class="status-card" style="background:rgba(139,32,32,.06)">';
-        var hp=pd['生命值']||pd['HP']||pd['hp']||'?',maxHp=pd['最大生命值']||pd['max_hp']||'?';
-        var san=pd['理智值']||pd['SAN']||pd['sanity']||'?',maxSan=pd['最大理智值']||pd['max_sanity']||'?';
+        var hp=pd['血量']||pd['生命值']||pd['HP']||pd['hp']||'?',maxHp=pd['最大血量']||pd['最大生命值']||pd['max_hp']||hp;
+        var san=pd['理智']||pd['理智值']||pd['SAN']||pd['sanity']||'?',maxSan=pd['最大理智']||pd['最大理智值']||pd['max_sanity']||san;
         html+='❤️ HP: '+hp+'/'+maxHp+' | 🧠 SAN: '+san+'/'+maxSan;
         html+='</div>';
       }
