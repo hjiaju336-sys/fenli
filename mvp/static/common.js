@@ -110,7 +110,7 @@
       // Desktop: create popup dynamically
       // _cleanPopups() - clean up dynamic popups but keep persistent ones
       document.querySelectorAll('.popup-overlay').forEach(function(el){
-        if(el.id !== 'popup-api' && el.id !== 'popup-saves' && el.id !== 'popup-ending'){
+        if(el.id !== 'popup-api' && el.id !== 'popup-saves' && el.id !== 'popup-ending' && el.id !== 'popup-debug'){
           el.remove();
         }
       });
