@@ -77,6 +77,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-outline:active{background:rgba(255,255,255,.05)}
 .btn-sm{padding:6px 14px;font-size:12px;border-radius:14px}
 .btn-block{display:block;width:100%;text-align:center;margin:8px 0}
+.dtl-bottom-bar{position:sticky;bottom:0;background:var(--surface);z-index:10;padding:12px 16px;border-top:1px solid var(--border);margin-top:8px}
 
 /* 输入框 */
 .m-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-family:var(--font);font-size:14px;outline:none}.m-input:focus{border-color:var(--gold)}
@@ -164,7 +165,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
      <button class="btn btn-outline btn-sm" onclick="navigateTo('pg-templates')">📖 模板市场</button>
      <button class="btn btn-outline btn-sm" onclick="showModal('modal-api')">🔑 双API配置</button>
      <button class="btn btn-outline btn-sm" onclick="navigateTo('pg-profile')">👤 个人中心</button>
-     <button class="btn btn-outline btn-sm" id="btn-admin-home" style="display:none" onclick="navigateTo('pg-admin')">🛡 管理</button>
+     <button class="btn btn-outline btn-sm" onclick="showSuggestions()">💡 建议反馈</button>
+	     <button class="btn btn-outline btn-sm" id="btn-admin-home" style="display:none" onclick="navigateTo('pg-admin')">🛡 管理</button>
     </div>
    </div>
    <div id="home-announce" style="margin-top:16px;padding:12px;background:var(--card);border-radius:10px;font-size:12px;color:var(--text2);display:none"></div>
@@ -191,6 +193,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
    </div>
    <div id="dtl-ratings" style="margin:16px 0"></div>
    <div id="dtl-comments"></div>
+   <div class="dtl-bottom-bar"><button class="btn btn-gold btn-block" onclick="startFromDetail()">开始游戏</button></div>
   </div>
  </div>
 
@@ -244,6 +247,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
    <button class="btn btn-sm btn-outline" onclick="adminTab('comments')">评论</button>
    <button class="btn btn-sm btn-outline" onclick="adminTab('suggestions')">建议</button>
    <button class="btn btn-sm btn-outline" onclick="adminTab('announce')">公告</button>
+	   <button class="btn btn-sm btn-outline" onclick="adminTab('reports')">举报</button>
+	   <button class="btn btn-sm btn-outline" onclick="adminTab('config')">配置</button>
    <button class="btn btn-sm btn-outline" onclick="adminTab('stats')">统计</button>
   </div>
   <div style="flex:1;overflow-y:auto;padding:12px" id="admin-content"></div>
@@ -320,6 +325,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
  <div class="m-input-row"><label>Pass2 地址</label><input type="text" id="cfg-url2" class="m-input" value="https://api.deepseek.com"></div>
  <div class="m-input-row"><label>Pass2 模型</label><div style="display:flex;gap:6px"><input type="text" id="cfg-model2" class="m-input" value="deepseek-v4-pro" list="mlist2"><datalist id="mlist2"></datalist><button class="btn btn-sm btn-outline" onclick="fetchModels(2)">拉取</button></div></div>
  <div class="modal-btns"><button class="btn btn-outline btn-sm" onclick="closeModal('modal-api')">取消</button><button class="btn btn-primary btn-sm" onclick="saveApiConfig()">保存</button></div>
+</div></div>
+
+<!-- 建议反馈弹窗 -->
+<div class="modal-overlay" id="modal-suggestions"><div class="modal">
+ <h3>建议反馈</h3>
+ <div class="m-input-row"><label>分类</label><select id="sug-category" class="m-input"><option value="bug">Bug反馈</option><option value="feature">功能建议</option><option value="other">其他</option></select></div>
+ <div class="m-input-row"><label>内容</label><textarea id="sug-content" class="m-input" style="min-height:80px" placeholder="请描述你的建议或问题..."></textarea></div>
+ <button class="btn btn-gold btn-sm btn-block" onclick="postSuggestion()">提交</button>
+ <div id="sug-my-list" style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px"><div class="loading">加载中...</div></div>
+ <div class="modal-btns"><button class="btn btn-outline btn-sm" onclick="closeModal('modal-suggestions')">关闭</button></div>
 </div></div>
 
 <!-- 通用确认弹窗 -->
@@ -415,7 +430,7 @@ function doRegister(){
     if(d.token){_token=d.token;_user=d.username;LG.setS('token',d.token);LG.setS('user',d.username);LG.setS('last_user',u);toast('注册成功','success');navigateTo('pg-home')}else toast(d.error||'注册失败','error')
   }).catch(function(e){toast('网络错误','error')})
 }
-function checkAdmin(){fetch('/api/user/profile',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){var b=document.getElementById('btn-admin-home');if(b)b.style.display=d.is_admin?'block':'none'})}
+function checkAdmin(){fetch('/api/user/profile',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){var b=document.getElementById('btn-admin-home');if(b)b.style.display=d.is_admin?'block':'none';window._myPlayerId=d.player_id||''})}
 
 // ═══ D6: 侧栏抽屉 ═══
 function openSideDrawer(){
@@ -535,12 +550,14 @@ function rateMe(star){
 function loadComments(page){
   fetch('/api/comments/'+_detailType+'/'+encodeURIComponent(_detailId)+'?page='+(page||1)+'&size=10').then(function(r){return r.json()}).then(function(d){
     var html='<div style="margin-top:12px"><textarea id="cmt-input" class="m-input" placeholder="写下评论..." style="min-height:60px;font-size:13px"></textarea><button class="btn btn-sm btn-gold" onclick="postCmt()" style="margin-top:8px">发表</button></div>';
-    (d.comments||[]).forEach(function(c){html+='<div style="padding:10px 0;border-bottom:1px solid var(--border)"><b style="font-size:13px">'+esc(c.username)+'</b> <span style="font-size:11px;color:var(--text2)">'+esc(c.created_at||'')+'</span><div style="font-size:13px;margin:4px 0">'+esc(c.content||'')+'</div><span style="font-size:11px;color:var(--text2);cursor:pointer" onclick="likeCmt('+c.id+')">❤ '+c.likes+'</span></div>'});
+    (d.comments||[]).forEach(function(c){var isMine=window._myPlayerId&&c.player_id===window._myPlayerId;html+='<div style="padding:10px 0;border-bottom:1px solid var(--border)"><b style="font-size:13px">'+esc(c.username)+'</b> <span style="font-size:11px;color:var(--text2)">'+esc(c.created_at||'')+'</span><div style="font-size:13px;margin:4px 0">'+esc(c.content||'')+'</div><span style="font-size:11px;color:var(--text2);cursor:pointer" onclick="likeCmt('+c.id+')">❤ '+c.likes+'</span>'+(isMine?' <button class="btn btn-sm btn-outline" onclick="delMyCmt('+c.id+')" style="font-size:10px;padding:2px 8px;margin-left:4px">删除</button>':'')+' <button class="btn btn-sm btn-outline" onclick="reportCmt('+c.id+')" style="font-size:10px;padding:2px 8px;margin-left:4px">举报</button></div>'});
     document.getElementById('dtl-comments').innerHTML=html||'暂无评论';
   })
 }
 function postCmt(){var c=document.getElementById('cmt-input').value.trim();if(!c)return;fetch('/api/comments/'+_detailType+'/'+encodeURIComponent(_detailId),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({content:c})}).then(function(r){return r.json()}).then(function(d){if(!d.error){toast('评论成功','success');loadComments(1)}})}
 function likeCmt(cid){fetch('/api/comments/like/'+cid,{method:'POST',headers:{'Authorization':'Bearer '+_auth()}}).then(function(){loadComments(1)})}
+function delMyCmt(cid){showConfirm('确定删除自己的评论？',function(){fetch('/api/comments/'+_detailType+'/'+encodeURIComponent(_detailId)+'/'+cid,{method:'DELETE',headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){if(!d.error){toast('已删除','success');loadComments(1)}else toast(d.error||'删除失败','error')}).catch(function(e){toast('删除失败','error')})})}
+function reportCmt(cid){var r=prompt('请输入举报原因:');if(!r)return;fetch('/api/comments/report/'+cid,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({reason:r})}).then(function(r){return r.json()}).then(function(d){if(!d.error)toast('举报已提交','success');else toast(d.error||'举报失败','error')}).catch(function(e){toast('举报失败','error')})}
 
 function showEnding(endingType,desc){
   var cfg={victory:{icon:'🏆',title:'恭喜通关！',titleEn:'SURVIVED',border:'var(--gold)',bg:'rgba(212,165,116,.08)',desc:'你成功完成了这个副本的挑战。'},death:{icon:'💀',title:'你已迷失...',titleEn:'LOST',border:'var(--accent)',bg:'rgba(180,74,92,.1)',desc:'在这个规则怪谈中，你没能活到最后...'},escape:{icon:'🏃',title:'侥幸逃脱',titleEn:'ESCAPED',border:'#8a9ab5',bg:'rgba(130,150,180,.08)',desc:'你使用了特殊手段逃离了这里。'}};
@@ -599,11 +616,41 @@ function loadProfile(){
   fetch('/api/user/profile',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
     var h='<div style="text-align:center;margin-bottom:20px"><div style="font-size:48px">👤</div><div style="font-size:18px;font-weight:700">'+esc(d.username||'')+'</div><div style="font-size:12px;color:var(--text2)">'+esc(d.player_id||'')+'</div></div>';
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px"><div style="padding:12px;background:var(--card);border-radius:10px;text-align:center"><div style="font-size:22px;color:var(--gold);font-weight:700">'+(d.points||0)+'</div><div style="font-size:11px;color:var(--text2)">积分</div></div><div style="padding:12px;background:var(--card);border-radius:10px;text-align:center"><div style="font-size:22px;color:var(--gold);font-weight:700">'+(d.sign_in_streak||0)+'</div><div style="font-size:11px;color:var(--text2)">连续签到(天)</div></div></div>';
-    h+='<button class="btn btn-gold btn-block" onclick="doSignIn()">签到领积分</button>';
-    document.getElementById('profile-content').innerHTML=h
+    window._myPlayerId=d.player_id||'';h+='<button class="btn btn-gold btn-block" onclick="doSignIn()">签到领积分</button>';h+='<button class="btn btn-outline btn-block" onclick="doExchange()" style="margin-top:8px">🎫 兑换码</button>';
+    document.getElementById('profile-content').innerHTML=h;loadPointHistory()
   })
 }
 function doSignIn(){fetch('/api/user/sign-in',{method:'POST',headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){if(d.ok)toast('签到成功 +'+d.bonus,'success');else toast(d.error||'签到失败','error');loadProfile()})}
+function loadPointHistory(){fetch('/api/user/point-history',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){var h='<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px"><div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">积分历史</div>';if(d.history&&d.history.length){for(var i=0;i<Math.min(d.history.length,20);i++){var ph=d.history[i];h+='<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;display:flex;justify-content:space-between"><span>'+esc(ph.reason||'')+'</span><span style="color:'+(ph.amount>=0?'var(--gold)':'var(--accent)')+'">'+(ph.amount>=0?'+':'')+ph.amount+'</span></div>'}h+='<div style="font-size:11px;color:var(--text2);text-align:center;margin-top:8px">最近'+Math.min(d.history.length,20)+'条</div>'}else{h+='<div style="color:var(--text2);font-size:12px;text-align:center">暂无记录</div>'}h+='</div>';var pc=document.getElementById('profile-content');if(pc)pc.innerHTML+=h}).catch(function(){})}
+function doExchange(){var c=prompt('请输入兑换码:');if(!c)return;fetch('/api/points/exchange',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({code:c})}).then(function(r){return r.json()}).then(function(d){if(!d.error){toast('兑换成功 +'+d.points,'success');loadProfile()}else toast(d.error||'兑换失败','error')}).catch(function(e){toast('兑换失败','error')})}
+function showSuggestions(){
+  showModal('modal-suggestions');
+  loadMySuggestions();
+}
+function postSuggestion(){
+  var cat=document.getElementById('sug-category').value;
+  var c=document.getElementById('sug-content').value.trim();
+  if(!c){toast('请输入内容','error');return}
+  fetch('/api/suggestions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({category:cat,content:c})}).then(function(r){return r.json()}).then(function(d){
+    if(!d.error){toast('谢谢你的反馈！','success');document.getElementById('sug-content').value='';loadMySuggestions()}
+    else toast(d.error||'提交失败','error')
+  }).catch(function(e){toast('提交失败','error')})
+}
+function loadMySuggestions(){
+  fetch('/api/suggestions/my',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){return r.json()}).then(function(d){
+    var el=document.getElementById('sug-my-list'),h='';
+    if(d.suggestions&&d.suggestions.length){
+      h+='<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">我的建议</div>';
+      for(var i=0;i<d.suggestions.length;i++){
+        var s=d.suggestions[i],stLabel={pending:'审核中',acknowledged:'已查看',implemented:'已采纳',declined:'已拒绝'}[s.status]||s.status;
+        h+='<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px"><div><span style="color:var(--gold)">'+esc(s.category||'')+'</span> <span style="color:var(--accent);font-size:11px">'+stLabel+'</span></div><div style="margin:4px 0;color:var(--text)">'+esc((s.content||'').substring(0,100))+'</div>';
+        if(s.admin_reply)h+='<div style="color:var(--gold);font-size:11px;margin-top:2px">回复: '+esc(s.admin_reply||'')+'</div>';
+        h+='</div>';
+      }
+    }else{h='<div style="color:var(--text2);font-size:12px;text-align:center">暂无建议</div>'}
+    el.innerHTML=h
+  }).catch(function(){document.getElementById('sug-my-list').innerHTML='<div style="color:var(--text2);font-size:12px;text-align:center">加载失败</div>'})
+}
 
 // ═══ 变量面板 ═══
 function renderWorldBook(){
@@ -611,13 +658,12 @@ function renderWorldBook(){
   var wb=_worldBook||[];
   if(wb.length){wb.forEach(function(e){html+='<div style="padding:6px;margin:4px 0;background:var(--card);border-radius:6px;font-size:11px;border-left:3px solid '+(e.constant?'#4af':'var(--gold)')+'">'+(e.constant?'🔵':'🟢')+' <span style="color:var(--text2)">['+(e.keys||[]).join(',')+']</span> '+esc((e.content||'').substring(0,60))+'</div>'})}else{html+='<div style="color:var(--text2);font-size:12px">（空）</div>'}
   html+='<div style="margin:16px 0 8px"><b style="color:var(--gold)">📝 我的世界书</b> <button class="btn btn-sm btn-gold" onclick="openMyWbEditor()">+</button></div>';
-  var myWb=_getMyWb();
+  var myWb=_getMyWorldBook();
   if(myWb.length){myWb.forEach(function(e,i){if(!e.enabled)return;html+='<div class="list-item" onclick="openMyWbEditor('+i+')"><div><div class="li-title" style="font-size:12px">'+(e.constant?'🔵':'🟢')+' ['+(e.keys||[]).join(',')+']</div><div class="li-sub">'+esc((e.content||'').substring(0,50))+'</div></div><span style="font-size:11px;color:var(--text2)">编辑</span></div>'})}else{html+='<div style="color:var(--text2);font-size:12px">（空）点击+添加</div>'}
   document.getElementById('wb-content').innerHTML=html
 }
-function _getMyWb(){try{return JSON.parse(localStorage.getItem('mvp_my_worldbook')||'[]')}catch(e){return[]}}
 function openMyWbEditor(idx){
-  var myWb=_getMyWb(),isNew=idx===undefined,entry=isNew?{keys:[],content:'',constant:false,enabled:true}:myWb[idx]||{};
+  var myWb=_getMyWorldBook(),isNew=idx===undefined,entry=isNew?{keys:[],content:'',constant:false,enabled:true}:myWb[idx]||{};
   var html='<h3>'+(isNew?'新增':'编辑')+'世界书</h3>';
   html+='<div class="m-input-row"><label>触发关键词(逗号分隔)</label><input type="text" id="_wbkeys" class="m-input" value="'+esc((entry.keys||[]).join(','))+'"></div>';
   html+='<div class="m-input-row"><label>内容</label><textarea id="_wbcontent" class="m-input" style="min-height:80px">'+esc(entry.content||'')+'</textarea></div>';
@@ -627,8 +673,8 @@ function openMyWbEditor(idx){
   modal.innerHTML='<div class="modal">'+html+'</div>';modal.onclick=function(e){if(e.target===modal)modal.remove()};
   document.body.appendChild(modal)
 }
-function _saveWb(idx){var myWb=_getMyWb(),keys=document.getElementById('_wbkeys').value.split(',').map(function(s){return s.trim()}).filter(Boolean),content=document.getElementById('_wbcontent').value.trim(),constant=document.getElementById('_wbconst').checked;if(!content)return;var entry={keys:keys,content:content,constant:constant,enabled:true};if(idx===undefined||idx>=myWb.length)myWb.push(entry);else myWb[idx]=entry;localStorage.setItem('mvp_my_worldbook',JSON.stringify(myWb));document.getElementById('modal-wbeditor').remove();renderWorldBook();toast('保存成功','success')}
-function _delWb(idx){var myWb=_getMyWb();myWb.splice(idx,1);localStorage.setItem('mvp_my_worldbook',JSON.stringify(myWb));renderWorldBook();toast('已删除','info')}
+function _saveWb(idx){var myWb=_getMyWorldBook(),keys=document.getElementById('_wbkeys').value.split(',').map(function(s){return s.trim()}).filter(Boolean),content=document.getElementById('_wbcontent').value.trim(),constant=document.getElementById('_wbconst').checked;if(!content)return;var entry={keys:keys,content:content,constant:constant,enabled:true};if(idx===undefined||idx>=myWb.length)myWb.push(entry);else myWb[idx]=entry;localStorage.setItem('mvp_my_worldbook',JSON.stringify(myWb));document.getElementById('modal-wbeditor').remove();renderWorldBook();toast('保存成功','success')}
+function _delWb(idx){var myWb=_getMyWorldBook();myWb.splice(idx,1);localStorage.setItem('mvp_my_worldbook',JSON.stringify(myWb));renderWorldBook();toast('已删除','info')}
 
 // ═══ 编辑/回滚消息 ═══
 function editMsg(btn){
@@ -659,16 +705,30 @@ function adminTab(tab){
   if(tab==='users'){fetchAdmin('/api/admin/users?page=1&size=20',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">用户管理</div>';if(d.users)for(var i=0;i<d.users.length;i++){var u=d.users[i];h+='<div class="list-item"><div><div class="li-title">'+esc(u.username)+'</div><div class="li-sub">积分:'+(u.points||0)+' | '+(u.is_banned?'已封禁':'正常')+'</div></div></div>'}c.innerHTML=h})}
   else if(tab==='codes'){fetchAdmin('/api/admin/exchange-codes',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">兑换码管理</div>';h+='<div class="m-input-row"><label>数量</label><input type="number" id="ad-code-count" class="m-input" value="3"></div><div class="m-input-row"><label>积分</label><input type="number" id="ad-code-pts" class="m-input" value="500"></div><div class="m-input-row"><label>批次名</label><input type="text" id="ad-code-batch" class="m-input" value="batch1"></div><button class="btn btn-gold btn-sm" onclick="genCodes()">生成兑换码</button>';if(d.codes)for(var i=0;i<d.codes.length;i++){var cd=d.codes[i];h+='<div class="list-item" style="font-size:11px"><span>'+cd.code.substring(0,20)+'... | '+cd.points+'分 | '+(cd.is_used?'已用':'未用')+'</span></div>'}c.innerHTML=h})}
   else if(tab==='comments'){fetchAdmin('/api/admin/comments?status=all',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">评论管理</div>';if(d.comments)for(var i=0;i<d.comments.length;i++){var cm=d.comments[i];h+='<div class="list-item"><div><div class="li-title" style="font-size:13px">'+esc(cm.username)+'</div><div class="li-sub">'+esc((cm.content||'').substring(0,60))+'</div></div><button class="btn btn-sm btn-outline" onclick="delCmt('+cm.id+')">删</button></div>'}c.innerHTML=h})}
-  else if(tab==='suggestions'){fetchAdmin('/api/admin/suggestions',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">建议列表</div>';if(d.suggestions)for(var i=0;i<d.suggestions.length;i++){var sg=d.suggestions[i];h+='<div class="list-item"><div><div class="li-title" style="font-size:13px">'+esc(sg.username)+' · '+esc(sg.category)+'</div><div class="li-sub">'+esc((sg.content||'').substring(0,60))+'</div><div class="li-sub" style="color:var(--accent)">状态: '+esc(sg.status||'pending')+'</div></div></div>'}c.innerHTML=h})}
-  else if(tab==='announce'){fetchAdmin('/api/admin/announcements',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">系统公告</div>';h+='<textarea id="ad-announce" class="m-input" style="min-height:60px" placeholder="公告内容..."></textarea><button class="btn btn-gold btn-sm" onclick="postAnnounce()" style="margin-top:8px">发布</button>';if(d.announcements)for(var i=0;i<d.announcements.length;i++){var an=d.announcements[i];h+='<div class="list-item"><div><div class="li-sub">'+esc((an.content||'').substring(0,80))+'</div><div class="li-sub" style="color:var(--text2)">'+(an.is_active?'活跃':'已下线')+'</div></div></div>'}c.innerHTML=h})}
-  else if(tab==='stats'){fetchAdmin('/api/admin/stats',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">系统统计</div>';h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';['total_users','total_templates','total_comments','total_points_issued','today_active'].forEach(function(k){h+='<div style="padding:12px;background:var(--card);border-radius:10px;text-align:center"><div style="font-size:22px;color:var(--gold);font-weight:700">'+(d[k]||0)+'</div><div style="font-size:11px;color:var(--text2)">'+k+'</div></div>'});h+='</div>';c.innerHTML=h})}
+  else if(tab==='suggestions'){fetchAdmin('/api/admin/suggestions',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">建议列表</div>';if(d.suggestions)for(var i=0;i<d.suggestions.length;i++){var sg=d.suggestions[i];h+='<div class="list-item" style="flex-wrap:wrap"><div style="flex:1;min-width:0"><div class="li-title" style="font-size:13px">'+esc(sg.username)+' · '+esc(sg.category)+'</div><div class="li-sub">'+esc((sg.content||'').substring(0,60))+'</div><div class="li-sub" style="color:var(--accent)">状态: '+esc(sg.status||'pending')+(sg.admin_reply?' | 回复: '+esc(sg.admin_reply||''):'')+'</div></div><div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;margin-top:4px"><select onchange="updateSugStatus('+sg.id+',this.value)" style="padding:3px 6px;border-radius:6px;background:var(--card);color:var(--text);border:1px solid var(--border);font-size:11px"><option value="pending"'+(sg.status==='pending'?' selected':'')+'>审核中</option><option value="acknowledged"'+(sg.status==='acknowledged'?' selected':'')+'>已查看</option><option value="implemented"'+(sg.status==='implemented'?' selected':'')+'>已采纳</option><option value="declined"'+(sg.status==='declined'?' selected':'')+'>已拒绝</option></select><button class="btn btn-sm btn-outline" onclick="replySuggestion('+sg.id+')" style="font-size:10px;padding:2px 8px">回复</button></div></div>'}c.innerHTML=h})}
+  else if(tab==='announce'){fetchAdmin('/api/admin/announcements',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">系统公告</div>';h+='<textarea id="ad-announce" class="m-input" style="min-height:60px" placeholder="公告内容..."></textarea><button class="btn btn-gold btn-sm" onclick="postAnnounce()" style="margin-top:8px">发布</button>';if(d.announcements)for(var i=0;i<d.announcements.length;i++){var an=d.announcements[i];h+='<div class="list-item"><div><div class="li-sub">'+esc((an.content||'').substring(0,80))+'</div><div class="li-sub" style="color:'+(an.is_active?'var(--gold)':'var(--text2)')+'">'+(an.is_active?'🟢 活跃':'⚫ 已下线')+'</div></div><div style="display:flex;gap:4px;flex-shrink:0"><button class="btn btn-sm btn-outline" onclick="editAnnounce('+an.id+')">编辑</button> <button class="btn btn-sm btn-outline" onclick="toggleAnnounce('+an.id+','+(an.is_active?'true':'false')+')">'+(an.is_active?'下线':'上线')+'</button></div></div>'}c.innerHTML=h})}
+  else if(tab==='reports'){fetchAdmin('/api/admin/reports',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">举报管理</div>';if(d.reports)for(var i=0;i<d.reports.length;i++){var rp=d.reports[i];h+='<div class="list-item"><div><div class="li-title" style="font-size:13px">'+esc(rp.reporter||'')+' 举报了评论 #'+rp.comment_id+'</div><div class="li-sub">原因: '+esc(rp.reason||'')+'</div><div class="li-sub" style="color:'+(rp.status==='resolved'?'var(--gold)':'var(--accent)')+'">状态: '+esc(rp.status||'pending')+'</div></div>'+(rp.status!=='resolved'?'<button class="btn btn-sm btn-outline" onclick="resolveReport('+rp.id+')">标记已处理</button>':'')+'</div>'}c.innerHTML=h||'暂无举报'})}else if(tab==='config'){fetchAdmin('/api/admin/config',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">系统配置</div>';var cfg=d.config||d||{};var keys=Object.keys(cfg);for(var i=0;i<keys.length;i++){var k=keys[i];h+='<div class="m-input-row"><label>'+esc(k)+'</label><input type="text" id="cfg-'+esc(k)+'" class="m-input" value="'+esc(String(cfg[k]))+'"></div>'}h+='<button class="btn btn-gold btn-sm" onclick="saveAdminConfig()">保存配置</button><div id="cfg-save-status" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>';c.innerHTML=h})}else if(tab==='stats'){fetchAdmin('/api/admin/stats',function(d){h='<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">系统统计</div>';h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';['total_users','total_templates','total_comments','total_points_issued','today_active'].forEach(function(k){h+='<div style="padding:12px;background:var(--card);border-radius:10px;text-align:center"><div style="font-size:22px;color:var(--gold);font-weight:700">'+(d[k]||0)+'</div><div style="font-size:11px;color:var(--text2)">'+k+'</div></div>'});h+='</div>';c.innerHTML=h})}
 }
 function genCodes(){var cnt=document.getElementById('ad-code-count').value,pts=document.getElementById('ad-code-pts').value,batch=document.getElementById('ad-code-batch').value;fetch('/api/admin/exchange-codes',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({count:parseInt(cnt),points:parseInt(pts),batch_id:batch})}).then(function(r){return r.json()}).then(function(d){if(d.ok)toast('生成'+d.count+'个兑换码','success')})}
 function postAnnounce(){var c=document.getElementById('ad-announce').value.trim();if(!c)return;fetch('/api/admin/announcements',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({content:c})}).then(function(r){return r.json()}).then(function(d){if(d.ok)toast('公告已发布','success')})}
 function delCmt(id){showConfirm('确定删除此评论？',function(){fetch('/api/admin/comments/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+_auth()}}).then(function(){adminTab('comments')})})}
+function editAnnounce(id){var c=prompt('编辑公告（将覆盖当前内容）:');if(c!=null&&c.trim()){fetch('/api/admin/announcements/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({content:c.trim()})}).then(function(r){return r.json()}).then(function(d){if(!d.error){toast('已更新','success');adminTab('announce')}else toast(d.error||'更新失败','error')})}}
+function toggleAnnounce(id,isActive){var newState=!isActive;fetch('/api/admin/announcements/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({is_active:newState})}).then(function(r){return r.json()}).then(function(d){if(!d.error){toast(newState?'已上线':'已下线','success');adminTab('announce')}else toast(d.error||'操作失败','error')})}
+function updateSugStatus(id,status){fetch('/api/admin/suggestions/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({status:status})}).then(function(r){return r.json()}).then(function(d){if(!d.error)toast('状态已更新','success');else toast(d.error||'更新失败','error')})}
+function replySuggestion(id){var r=prompt('输入回复内容:');if(!r)return;fetch('/api/admin/suggestions/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({admin_reply:r})}).then(function(r){return r.json()}).then(function(d){if(!d.error){toast('已回复','success');adminTab('suggestions')}else toast(d.error||'回复失败','error')})}
+function resolveReport(id){fetch('/api/admin/reports/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({status:'resolved'})}).then(function(r){return r.json()}).then(function(d){if(!d.error){toast('已处理','success');adminTab('reports')}else toast(d.error||'操作失败','error')})}
+function saveAdminConfig(){var cfg={};var inputs=document.querySelectorAll('#admin-content input[id^="cfg-"]');for(var i=0;i<inputs.length;i++){var k=inputs[i].id.replace('cfg-','');cfg[k]=inputs[i].value}fetch('/api/admin/config',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify(cfg)}).then(function(r){return r.json()}).then(function(d){if(!d.error){toast('配置已保存','success')}else toast(d.error||'保存失败','error')})}
 
 // ═══ 加载公告 ═══
-window.addEventListener("load",function(){fetch("/api/announcements").then(function(r){return r.json()}).then(function(d){if(d.announcement){var e=document.getElementById("home-announce");e.textContent=d.announcement.content;e.style.display="block"}})});
+	(function(){
+	  fetch("/api/announcements").then(function(r){return r.json()}).then(function(d){
+	    if(d && d.content){
+	      var e=document.getElementById("home-announce");
+	      e.innerHTML='<div style="padding:10px 14px;background:rgba(180,120,180,.06);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--gold);text-align:center;line-height:1.6">'+esc(d.content)+'</div>';
+	      e.style.display="block";
+	    }
+	  }).catch(function(){});
+	})();
 
 // ═══ 封面过渡动画 (Mobile) ═══
 var _coverRafId = null;

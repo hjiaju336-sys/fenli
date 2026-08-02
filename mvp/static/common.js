@@ -37,7 +37,7 @@
         window._token = '';
         showToast('登录已过期，请重新登录', 'error');
         setTimeout(function(){
-          if(window._isMobile) window.navigateTo('pg-login');
+          if(_isMobile) window.navigateTo('pg-login');
           else window.navTo('page-login');
         }, 1500);
         throw new Error('Unauthorized');
@@ -64,7 +64,7 @@
         window._Stor.remove('token');window._token='';
         showToast('登录已过期，请重新登录','error');
         setTimeout(function(){
-          if(window._isMobile) window.navigateTo('pg-login');
+          if(_isMobile) window.navigateTo('pg-login');
           else window.navTo('page-login');
         },1500);
         if(cb)cb(null,true);
@@ -291,13 +291,17 @@
         if(d.world_desc){ var sd2 = document.getElementById('sd-world-desc'); if(sd2) sd2.textContent = d.world_desc; }
         window._lastPlayerDetail = d.player_detail||{};
         if(d.player_detail){ var pd = d.player_detail; var pdEl = document.getElementById('chat-pdetail'); if(pdEl){ var hp=pd.hp||pd['血量']||pd['HP']||pd['生命值']||'?',maxHp=pd.max_hp||pd['最大血量']||pd['最大生命值']||hp,sanity=pd.sanity||pd['理智']||pd['SAN']||pd['理智值']||'?',maxSan=pd.max_sanity||pd['最大理智']||pd['最大理智值']||sanity; pdEl.style.display='inline'; pdEl.textContent='❤️ '+hp+'/'+maxHp+' | 🧠 '+sanity+'/'+maxSan; } }
-        var msgs = document.getElementById('chat-msgs'), html = '';
+        var msgs = document.getElementById('chat-msgs');
+        var sk = msgs.querySelector('.skeleton'); if(sk) sk.remove();
+        var html = '';
         var saved = window._savedMessages||[];
+        var _renderMsg = window.renderMsg || function(r,c){return window.esc(c);};
         if(saved.length>0){
-          for(var si=0;si<saved.length;si++){ var sm=saved[si]; html+=window.renderMsg?renderMsg(sm.role==='user'?'user':(sm.role==='ai'?'ai':'system'),sm.content):(''); }
+          for(var si=0;si<saved.length;si++){ var sm=saved[si]; html+=_renderMsg(sm.role==='user'?'user':(sm.role==='ai'?'ai':'system'),sm.content); }
           window._savedMessages=null;
-        }else if(d.world_intro){ html+=window.renderMsg?renderMsg('system',d.world_intro):''; }
-        if(d.opening_monologue&&!saved.length) html+=window.renderMsg?renderMsg('ai',d.opening_monologue):'';
+        }else if(d.world_intro){ html+=_renderMsg('system',d.world_intro); }
+        if(d.opening_monologue&&!saved.length) html+=_renderMsg('ai',d.opening_monologue);
+        if(!html) html='<div class="chat-msg system"><div class="bubble">副本已加载，等待AI响应...</div></div>';
         msgs.innerHTML = html; if(window.scrollChat) scrollChat();
         _setupMsgPagination(); _initMsgBuffer();
         if(d.ai_avatar_url) window._aiAvatar = d.ai_avatar_url;
@@ -318,7 +322,7 @@
         document.getElementById('btn-stop').style.display = 'none';
         document.getElementById('chat-status').textContent = 'OK '+(d.latency_ms||0)+'ms';
         document.getElementById('chat-status').style.color = '#4a4';
-        if(d.all_tags_by_category) window._lastTags = d.all_tags_by_category;
+        if(d.all_tags_by_category){ window._lastTags = d.all_tags_by_category; renderVars(); }
         var lastBubble = document.getElementById('chat-msgs').querySelector('.chat-msg.ai:last-child .bubble');
         if(lastBubble){
           var _mhq = highlightMQ(lastBubble.textContent); _mhq = highlightMNPCs(_mhq); lastBubble.innerHTML = _mhq;
@@ -661,6 +665,15 @@
           var t=list[i];
           html+='<div style="padding:6px 8px;margin:2px 0;background:var(--card);border-radius:6px;font-size:12px;border-left:3px solid var(--gold)">'+escHTML(t.tag_name||'')+'<br><span style="color:var(--text2);font-size:11px">'+escHTML((t.tag_hint||'').substring(0,40))+'</span></div>';
         }
+	      // World book cards (mobile simplified)
+	      var wb=window._worldBook||[];
+	      if(wb.length){
+	        html+='<div style="font-weight:700;color:var(--accent);margin:8px 0 4px;font-size:13px;border-bottom:1px solid rgba(180,120,180,.3)">📖 世界书</div>';
+	        for(var wi=0;wi<wb.length;wi++){
+	          var w=wb[wi],wkeys=(w.keys||[]).join(', '),wcontent=w.content||'';
+	          html+='<div style="padding:6px 8px;margin:2px 0;background:var(--card);border-radius:6px;font-size:12px;border-left:3px solid '+(w.constant?'#4af':'var(--gold)')+'">'+(w.constant?'🔵':'🟢')+' <span style="color:var(--text2)">['+escHTML(wkeys)+']</span> '+escHTML(wcontent.substring(0,60))+(wcontent.length>60?'...':'')+'</div>';
+	        }
+	      }
       }
       var el = document.getElementById('vars-content'); if(el) el.innerHTML=html||'暂无变量数据';
     }else{

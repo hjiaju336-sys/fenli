@@ -111,6 +111,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .comfort-section{margin-top:8px;border-top:1px solid #4a3a5a;padding-top:8px}.comfort-section h5{font-size:12px;color:var(--blood);margin-bottom:6px;text-align:center}.comfort-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:11px;color:var(--ink-light)}.comfort-toggle{position:relative;width:40px;height:22px;flex-shrink:0}.comfort-toggle input{opacity:0;width:0;height:0}.comfort-toggle .slider{position:absolute;cursor:pointer;inset:0;background:#3a3050;border-radius:22px;transition:.3s}.comfort-toggle .slider::before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:var(--ink-light);border-radius:50%;transition:.3s}.comfort-toggle input:checked+.slider{background:var(--blood)}.comfort-toggle input:checked+.slider::before{transform:translateX(18px);background:#fce8d0}
 /* ── 降级提示 ── */
 .degrade-notice{position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:300;background:rgba(60,30,30,.9);color:#f0c0a0;padding:6px 16px;border-radius:16px;font-size:11px;animation:fadeIn .3s ease;pointer-events:none;white-space:nowrap;border:1px solid rgba(200,100,80,.4)}
+/* ── 公告区域 ── */
+.announce-area{padding:10px 14px;background:rgba(180,120,180,.06);border:1px solid var(--border-light);border-radius:var(--radius);font-size:12px;color:var(--gold-light);text-align:center;line-height:1.6}
 /* ════════════════ D1: 封面过渡动画 ════════════════ */
 @keyframes coverBgDark{0%{background:transparent}100%{background:#0a0a0a}}
 @keyframes coverVignette{0%{opacity:0}100%{opacity:1}}
@@ -151,7 +153,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <button class="btn btn-primary" style="width:100%" onclick="doLogin()">确认登录</button>
 <div style="text-align:center;margin-top:8px"><span style="font-size:11px;cursor:pointer;text-decoration:underline" onclick="doRegister()">没有账号？点击注册</span></div>
 <div class="notice-box" id="login-notice">新玩家请直接注册，已有账号请登录</div>
-<div class="bottom-announce" style="margin-top:20px;padding:8px;text-align:center;font-size:11px;color:var(--purple);border-top:1px solid var(--border-light)">v0.7.0 — 无限流规则怪谈</div>
+<div id="login-announce" style="margin-top:14px;display:none"></div>
 </div></div>
 
 <div id="page-home" class="page">
@@ -168,6 +170,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <button class="btn btn-secondary btn-sm" onclick="navTo('page-debug')">调试面板</button>
 </div>
 <div class="notice-box">选择功能开始。新玩家建议先设置 API Key，再选择模板开局。</div>
+<div id="home-announce" style="margin:14px 0;display:none"></div>
 </div></div>
 
 <div id="page-template" class="page">
@@ -410,6 +413,21 @@ var _DEF_AVATAR_AI='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://
   if(_token)checkAdmin();
   // 加载舒适度设置
   loadComfortUI();
+  // 加载系统公告
+  fetch('/api/announcements').then(function(r){return r.json()}).then(function(d){
+    if(d && d.content){
+      var s='<div class="announce-area">'+escHTML(d.content)+'</div>';
+      var el1=document.getElementById('login-announce'), el2=document.getElementById('home-announce');
+      if(el1){el1.innerHTML=s;el1.style.display='block'}
+      if(el2){el2.innerHTML=s;el2.style.display='block'}
+    }
+  }).catch(function(){});
+  // 预获取当前用户 player_id（供评论删除等功能使用）
+  if(_token){
+    fetch('/api/user/profile',{headers:{'Authorization':'Bearer '+_token}}).then(function(r){return r.json()}).then(function(d){
+      if(d.player_id)window._myPlayerId=d.player_id;
+    }).catch(function(){});
+  }
 })();
 
 // ── 主题切换 ─────────────────────────────────────────
@@ -805,7 +823,11 @@ function renderComment(c,isReply){
   h+='<div class="c-actions">';
   h+='<span onclick="likeComment('+c.id+')">❤ '+c.likes+'</span>';
   h+='<span onclick="replyComment('+c.id+')">回复</span>';
-  h+='<span onclick="reportComment('+c.id+')">举报</span></div>';
+  h+='<span onclick="reportComment('+c.id+')">举报</span>';
+  if(c.player_id && window._myPlayerId && c.player_id===window._myPlayerId){
+    h+='<span onclick="deleteComment('+JSON.stringify(_detailType)+','+JSON.stringify(String(_detailId))+','+c.id+')" style="color:var(--blood)">删除</span>';
+  }
+  h+='</div>';
   // 回复列表
   if(c.replies){c.replies.forEach(function(r){h+='<div class="c-reply"><b>'+escHTML(r.username||'?')+':</b> '+escHTML(r.content||'')+'</div>'})}
   h+='</div>';return h
@@ -837,6 +859,13 @@ function replyComment(cid){
 }
 function reportComment(cid){
   showConfirm('确定举报该评论？',function(){var reason=prompt('举报原因（可选）:');_fetchOk('/api/comments/report/'+cid,{method:'POST',body:JSON.stringify({reason:reason||''})},'举报已提交','举报失败')})
+}
+function deleteComment(type,id,commentId){
+  showConfirm('确定删除这条评论吗？',function(){
+    _fetchOk('/api/comments/'+type+'/'+encodeURIComponent(id)+'/'+commentId,{method:'DELETE'},'评论已删除','删除失败',function(d,err){
+      if(!err)loadComments(_commentPage)
+    })
+  })
 }
 
 // ── 从详情页开始游戏 ──
@@ -1007,6 +1036,8 @@ function loadProfile(){
     h+='📝 模板: '+(d.template_count||0)+'个';
     h+='</div>';
     document.getElementById('profile-info').innerHTML=h;
+    // 存储当前用户 player_id
+    if(d.player_id)window._myPlayerId=d.player_id;
     // 管理员入口
     var adminBtn=document.getElementById('btn-admin-entry');
     if(adminBtn)adminBtn.style.display=d.is_admin?'block':'none';
@@ -1166,11 +1197,24 @@ function loadAdminAnnounce(){
   _adminFetch('/api/announcements/list?size=50',{},function(d){
     var list=d.announcements||[],html='<div style="font-weight:700;margin-bottom:8px;color:var(--blood)">系统公告</div>';
     html+='<div style="margin-bottom:10px"><textarea id="ann-content" style="width:100%;height:70px;padding:6px;border:1px solid #3a3050;border-radius:3px;font-family:var(--font);font-size:12px" placeholder="公告内容..."></textarea><button class="btn btn-primary btn-sm" style="margin-top:4px" onclick="postAnnounce()">发布公告</button></div>';
-    list.forEach(function(a){html+='<div style="padding:6px 0;border-bottom:1px solid #3a3050;font-size:11px">'+escHTML(a.content)+'<br><small>'+escHTML(a.created_at)+' | '+(a.is_active?'<span style="color:#4a4">激活</span>':'<span style="color:#888">已下线</span>')+'</small></div>'});
+    list.forEach(function(a){
+      html+='<div style="padding:6px 0;border-bottom:1px solid #3a3050;font-size:11px">'+escHTML(a.content)+'<br><small>'+escHTML(a.created_at)+' | '+(a.is_active?'<span style="color:#4a4">激活</span>':'<span style="color:#888">已下线</span>')+'</small>';
+      html+=' <button class="btn btn-sm btn-secondary" style="font-size:10px;padding:1px 6px" onclick="editAnnounce('+a.id+','+JSON.stringify(a.content)+')">编辑</button>';
+      html+=' <button class="btn btn-sm '+(a.is_active?'btn-secondary':'btn-primary')+'" style="font-size:10px;padding:1px 6px" onclick="toggleAnnounce('+a.id+','+(a.is_active?1:0)+')">'+(a.is_active?'下线':'上线')+'</button>';
+      html+='</div>';
+    });
     document.getElementById('admin-content').innerHTML=html;
   },'加载失败')
 }
 function postAnnounce(){var c=document.getElementById('ann-content').value.trim();if(!c)return;_adminFetch('/api/admin/announcements',{method:'POST',body:JSON.stringify({content:c})},function(d){showToast('已发布','success');loadAdminAnnounce()},'发布失败')}
+function editAnnounce(id,oldContent){
+  var content=prompt('修改公告内容:',oldContent);
+  if(content===null||content.trim()==='')return;
+  _adminFetch('/api/admin/announcements/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:content.trim()})},function(d){showToast('公告已更新','success');loadAdminAnnounce()},'更新失败')
+}
+function toggleAnnounce(id,isActive){
+  _adminFetch('/api/admin/announcements/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_active:isActive?0:1})},function(d){showToast(isActive?'公告已下线':'公告已上线','success');loadAdminAnnounce()},'操作失败')
+}
 
 // 统计
 function loadAdminStats(){
