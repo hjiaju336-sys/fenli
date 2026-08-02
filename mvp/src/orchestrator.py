@@ -5,8 +5,8 @@ import time, asyncio
 from db import TagDAO, MemoryDAO
 from ai_provider import AIProvider, create_provider
 from hard_sync import format_pass2_context
-from pass1 import run_pass1
-from pass2 import run_pass2
+from pass1 import run_pass1, build_pass1_prompt, PASS1_SYSTEM_PROMPT
+from pass2 import run_pass2, build_pass2_prompt, PASS2_SYSTEM_PROMPT
 from worldbook import scan_and_inject
 
 
@@ -76,6 +76,8 @@ async def process_turn_async(
     try:
         if not model_small:
             raise ValueError("no small model configured")
+        pass1_user_prompt = build_pass1_prompt(
+            user_input, hot_tag_names, all_tags, all_memories, recent_context)
         pass1_result = await run_pass1(
             provider=pass1_provider,
             api_key=api_key_small,
@@ -93,6 +95,8 @@ async def process_turn_async(
         fetch_mems = pass1_result["fetchMemories"]
         log["pass1"] = {
             "method": "ai",
+            "pass1_system_prompt": PASS1_SYSTEM_PROMPT,
+            "pass1_user_prompt": pass1_user_prompt,
             "input_tokens": pass1_result["input_tokens"],
             "output_tokens": pass1_result["output_tokens"],
             "latency_ms": pass1_result["latency_ms"],
@@ -109,6 +113,8 @@ async def process_turn_async(
             user_input, all_tags, all_memories, hot_tag_names)
         log["pass1"] = {
             "method": "keyword_fallback",
+            "pass1_system_prompt": "keyword_fallback",
+            "pass1_user_prompt": "keyword_fallback",
             "error": str(e)[:200],
             "input_tokens": 0, "output_tokens": 0, "latency_ms": (time.time() - t0) * 1000,
             "output": {"keepTags": keep_tags, "fetchTags": fetch_tags,
@@ -149,9 +155,13 @@ async def process_turn_async(
     last_error = None
     for attempt in range(max_retries):
         try:
+            pass2_user_prompt = build_pass2_prompt(
+                user_input, world_context, recent_context, hooks)
             pass2_result = await run_pass2(
                 provider, api_key_large, user_input, world_context, model_large, recent_context, hooks)
             log["pass2"] = {
+                "pass2_system_prompt": PASS2_SYSTEM_PROMPT,
+                "pass2_user_prompt": pass2_user_prompt,
                 "input_tokens": pass2_result["input_tokens"],
                 "output_tokens": pass2_result["output_tokens"],
                 "latency_ms": pass2_result["latency_ms"],

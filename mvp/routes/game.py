@@ -5,6 +5,7 @@ import glob
 import time
 
 from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from db import get_session, TagDAO, MemoryDAO, SaveDAO
@@ -253,3 +254,29 @@ def debug_turn_logs():
         except Exception as e:
             print(f"[TurnLog] Skip {f}: {e}")
     return {"recent_turns": logs}
+
+
+@router.get("/debug/last-turn")
+def debug_last_turn():
+    files = sorted(glob.glob("logs/turn_*.json"))
+    if not files:
+        return {"error": "no logs yet"}
+    try:
+        with open(files[-1], encoding="utf-8") as fh:
+            data = json.load(fh)
+        return {"turn": data}
+    except Exception as e:
+        return {"error": f"读取日志失败: {str(e)[:100]}"}
+
+
+@router.get("/debug/turn/{turn_id}")
+def debug_turn_by_id(turn_id: int):
+    filename = f"logs/turn_{turn_id:04d}.json"
+    if not os.path.exists(filename):
+        return JSONResponse(status_code=404, content={"error": "turn not found"})
+    try:
+        with open(filename, encoding="utf-8") as fh:
+            data = json.load(fh)
+        return {"turn": data}
+    except Exception as e:
+        return {"error": f"读取日志失败: {str(e)[:100]}"}

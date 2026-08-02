@@ -11,7 +11,7 @@ from db import get_session, TagDAO, MemoryDAO
 from auth import verify_token
 from orchestrator import process_turn_async as process_turn, TurnError
 from hook_engine import check_hooks, extract_ending_type, extract_achievements
-from logger import print_turn_summary
+from logger import print_turn_summary, save_turn_log
 from summary import run_summary
 from middleware import HOT_INIT, HOOK_SESSION, _WS_CONNECTIONS, check_rate_limit
 
@@ -349,6 +349,8 @@ async def ws_process_turn(ws, pid, session, d, ctx, hot_tags, hot_memories, worl
             model_small=model_small, model_large=model_large,
             world_book=merged_wb, hooks=hooks, inject_texts=inj_texts,
         )
+
+        save_turn_log(log)
 
         narrative = log["pass2"]["narrative"]
         for i in range(0, len(narrative), 10):

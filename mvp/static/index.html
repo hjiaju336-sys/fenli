@@ -141,6 +141,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 #page-cover.page.animating .cover-meta{animation:coverMetaIn .4s ease forwards;animation-delay:1.2s}
 #page-cover.page.animating .cover-quote{animation:coverQuoteRise .5s ease forwards;animation-delay:1.4s}
 #page-cover.page.animating .cover-inner{animation:coverZoomOut .7s ease forwards;animation-delay:2.5s}
+/* ── AI调试监控面板 ── */
+.debug-trigger{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);background:var(--parchment-dark);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--ink);transition:all .2s;flex-shrink:0}.debug-trigger:hover{background:var(--gold);box-shadow:0 2px 8px rgba(200,160,100,.35);color:#1a0c00}
+#popup-debug .popup{width:650px;max-height:85vh;overflow-y:auto;padding:20px 24px}
+.debug-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1.5px solid var(--border);padding-bottom:8px}
+.debug-panel-header h3{color:var(--blood);font-size:15px;margin:0}
+.debug-panel-header .debug-hdr-btns{display:flex;gap:6px}
+.debug-section{border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.debug-section-header{cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(180,120,180,.08);font-size:13px;font-weight:700;color:var(--gold);user-select:none;transition:background .2s}.debug-section-header:hover{background:rgba(180,120,180,.15)}
+.debug-section-header .debug-section-toggle{font-size:11px;transition:transform .2s}
+.debug-section-header.collapsed .debug-section-toggle{transform:rotate(-90deg)}
+.debug-section-body{padding:8px 12px;display:block}.debug-section-header.collapsed+.debug-section-body{display:none}
+.debug-block{margin-bottom:10px}
+.debug-block-label{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink-light);margin-bottom:2px}
+.debug-pre{background:#0a0a14;border:1px solid #2a2a4a;border-radius:4px;padding:8px 10px;font-family:Consolas,"Courier New",monospace;font-size:11px;color:var(--ink);white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;line-height:1.5;margin:2px 0 6px}
+.debug-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;padding:8px 12px;background:rgba(180,120,180,.05);border-radius:var(--radius);border:1px solid var(--border)}
+.debug-stats .stat-item{display:flex;justify-content:space-between}.debug-stats .stat-label{color:var(--ink-light)}.debug-stats .stat-val{color:var(--gold);font-weight:700}
+.debug-copy-btn{font-size:10px!important;padding:1px 8px!important;line-height:1.5!important}
+.debug-copy-btn.copied{background:var(--gold)!important;color:#1a0c00!important}
+.debug-empty{text-align:center;padding:20px;color:var(--ink-light);font-size:13px}
 </style><link rel="stylesheet" href="/static/common.css"><link id="theme-css" rel="stylesheet" href="data:text/css," disabled></head>
 <body>
 <canvas id="mouse-trail" style="position:fixed;inset:0;z-index:9998;pointer-events:none;display:none"></canvas>
@@ -283,6 +302,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
   <span style="display:flex;gap:8px;align-items:center">
     <button class="btn btn-sm btn-secondary" id="btn-rules-toggle" onclick="toggleVars()" title="显示/隐藏变量面板">📋</button>
     <button class="btn btn-sm btn-secondary" onclick="showBgMenu()" title="更换底图">🎨</button>
+    <button class="debug-trigger" onclick="openDebugPanel()" title="AI调试监控">⚙</button>
     <span id="game-status" style="font-size:10px;color:var(--ink-light)">未连接</span>
     <span style="font-size:10px;cursor:pointer;color:var(--blood);text-decoration:underline" onclick="leaveGame()">返回</span>
   </span>
@@ -377,6 +397,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <div style="font-weight:700;font-size:18px;margin-bottom:14px" id="ending-title"></div>
 <div style="margin-bottom:16px" id="ending-desc"></div>
 <button class="btn btn-primary" onclick="closePopup('popup-ending');navTo('page-home')">返回主菜单</button><button class="btn btn-gold" onclick="shareEnding()" style="margin-left:8px">📋 分享结局</button>
+</div></div>
+
+<div class="popup-overlay" id="popup-debug">
+<div class="popup">
+<div class="debug-panel-header">
+<h3>AI 调试监控</h3>
+<div class="debug-hdr-btns">
+<button class="btn btn-sm btn-secondary" onclick="loadDebugData()">刷新</button>
+<button class="btn btn-sm btn-secondary" onclick="closeDebugPanel()">关闭</button>
+</div>
+</div>
+<div id="debug-panel-content">
+<div class="debug-empty">加载中...</div>
+</div>
 </div></div>
 
 <script src="/static/common.js"></script>
@@ -492,7 +526,7 @@ function navTo(id){
     document.getElementById('page-login').classList.add('active');
     return;
   }
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});document.querySelectorAll('.popup-overlay').forEach(function(e){e.classList.remove('active');if(e.id!=='popup-api'&&e.id!=='popup-saves'&&e.id!=='popup-ending')e.remove()});var el=document.getElementById(id);if(!el)return;el.classList.add('active');window._cp=id;if(id==='page-template')loadTemplates();if(id==='page-debug')loadDebug();if(id==='page-game')connectWS();if(id==='page-profile')loadProfile();if(id==='page-suggestions')loadMySuggestions();if(id==='page-admin')adminTab('users');if(id==='page-editor')edInit()}
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});document.querySelectorAll('.popup-overlay').forEach(function(e){e.classList.remove('active');if(e.id!=='popup-api'&&e.id!=='popup-saves'&&e.id!=='popup-ending'&&e.id!=='popup-debug')e.remove()});var el=document.getElementById(id);if(!el)return;el.classList.add('active');window._cp=id;if(id==='page-template')loadTemplates();if(id==='page-debug')loadDebug();if(id==='page-game')connectWS();if(id==='page-profile')loadProfile();if(id==='page-suggestions')loadMySuggestions();if(id==='page-admin')adminTab('users');if(id==='page-editor')edInit()}
 function openPopup(id){document.getElementById(id).classList.add('active')}
 function closePopup(id){document.getElementById(id).classList.remove('active')}
 function toggleKey(fieldId,btnId){var e=document.getElementById(fieldId),b=document.getElementById(btnId);if(e.type==='password'){e.type='text';b.textContent='隐藏'}else{e.type='password';b.textContent='显示'}}
@@ -538,7 +572,7 @@ function _fetchOk(url,opts,okMsg,errMsg,cb){
 
 function _cleanPopups(){
   document.querySelectorAll('.popup-overlay').forEach(function(el) {
-    if (el.id !== 'popup-api' && el.id !== 'popup-saves' && el.id !== 'popup-ending') {
+    if (el.id !== 'popup-api' && el.id !== 'popup-saves' && el.id !== 'popup-ending' && el.id !== 'popup-debug') {
       el.remove();
     }
   });
@@ -1623,6 +1657,125 @@ function edUploadImage(targetId,ev){
     }).catch(function(e){showToast('上传失败: '+e.message,'error')})
   };
   inp.click();
+}
+
+// ── AI调试监控面板 ──
+function openDebugPanel(){
+  document.getElementById('popup-debug').classList.add('active');
+  loadDebugData();
+}
+function closeDebugPanel(){
+  document.getElementById('popup-debug').classList.remove('active');
+}
+function loadDebugData(){
+  var content=document.getElementById('debug-panel-content');
+  if(!content)return;
+  content.innerHTML='<div class="debug-empty">加载中...</div>';
+  fetch('/debug/last-turn',{headers:{'Authorization':'Bearer '+_auth()}}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(function(d){
+    if(!d.turn || Object.keys(d.turn).length===0){
+      content.innerHTML='<div class="debug-empty">暂无调试数据。请先进行至少一轮游戏。</div>';
+      return;
+    }
+    var t=d.turn;
+    var totalLatency=(t.pass1?t.pass1.latency_ms||0:0)+(t.pass2?t.pass2.latency_ms||0:0);
+    var html='';
+    // Pass1 section
+    html+='<div class="debug-section" id="debug-sec-pass1">';
+    html+='<div class="debug-section-header" onclick="toggleDebugSection(\'pass1\')">';
+    html+='<span>📋 Pass1 标签召回 <button class="btn btn-sm btn-secondary debug-copy-btn" onclick="event.stopPropagation();copyDebugBlock(\'pass1-all\')">复制全部</button></span>';
+    html+='<span class="debug-section-toggle">▼</span></div>';
+    html+='<div class="debug-section-body" id="debug-body-pass1">';
+    if(t.pass1){
+      html+=_debugBlock('pass1-system','System Prompt',t.pass1.pass1_system_prompt||'');
+      html+=_debugBlock('pass1-user','User Prompt',t.pass1.pass1_user_prompt||'');
+      html+=_debugBlock('pass1-raw','Raw Response',t.pass1.raw_output||'');
+    } else {
+      html+='<div class="debug-block" style="padding:8px;color:var(--ink-light)">(无 Pass1 数据)</div>';
+    }
+    html+='</div></div>';
+    // Pass2 section
+    html+='<div class="debug-section" id="debug-sec-pass2">';
+    html+='<div class="debug-section-header" onclick="toggleDebugSection(\'pass2\')">';
+    html+='<span>✍️ Pass2 叙事生成 <button class="btn btn-sm btn-secondary debug-copy-btn" onclick="event.stopPropagation();copyDebugBlock(\'pass2-all\')">复制全部</button></span>';
+    html+='<span class="debug-section-toggle">▼</span></div>';
+    html+='<div class="debug-section-body" id="debug-body-pass2">';
+    if(t.pass2){
+      html+=_debugBlock('pass2-system','System Prompt',t.pass2.pass2_system_prompt||'');
+      html+=_debugBlock('pass2-user','User Prompt',t.pass2.pass2_user_prompt||'');
+      html+=_debugBlock('pass2-raw','Raw Response',t.pass2.raw_output||'');
+    } else {
+      html+='<div class="debug-block" style="padding:8px;color:var(--ink-light)">(无 Pass2 数据)</div>';
+    }
+    html+='</div></div>';
+    // Stats section
+    html+='<div class="debug-stats">';
+    html+='<div class="stat-item"><span class="stat-label">Pass1 Tokens</span><span class="stat-val">'+(t.pass1?t.pass1.input_tokens||0:0)+' → '+(t.pass1?t.pass1.output_tokens||0:0)+'</span></div>';
+    html+='<div class="stat-item"><span class="stat-label">Pass2 Tokens</span><span class="stat-val">'+(t.pass2?t.pass2.input_tokens||0:0)+' → '+(t.pass2?t.pass2.output_tokens||0:0)+'</span></div>';
+    html+='<div class="stat-item"><span class="stat-label">总延迟</span><span class="stat-val">'+totalLatency+'ms</span></div>';
+    html+='<div class="stat-item"><span class="stat-label">轮次</span><span class="stat-val">#'+escHTML(String(t.turn_id||'?'))+'</span></div>';
+    html+='<div class="stat-item" style="grid-column:1/-1"><span class="stat-label">用户输入</span><span class="stat-val">'+escHTML(t.user_input||'(无)')+'</span></div>';
+    html+='</div>';
+    content.innerHTML=html;
+  }).catch(function(e){
+    content.innerHTML='<div class="debug-empty">加载失败: '+escHTML(e.message)+'</div>';
+  });
+}
+function _debugBlock(id,label,text){
+  var safeText=escHTML(text||'');
+  return '<div class="debug-block" id="db-'+id+'">'
+    +'<div class="debug-block-label"><span>'+label+'</span><button class="btn btn-sm btn-secondary debug-copy-btn" onclick="copyDebugBlock(\''+id+'\')">复制</button></div>'
+    +'<pre class="debug-pre">'+safeText+'</pre>'
+    +'</div>';
+}
+function toggleDebugSection(id){
+  var header=document.querySelector('#debug-sec-'+id+' .debug-section-header');
+  if(header)header.classList.toggle('collapsed');
+}
+function copyDebugBlock(blockId){
+  var text='';
+  if(blockId==='pass1-all'||blockId==='pass2-all'){
+    var pass=blockId==='pass1-all'?'pass1':'pass2';
+    ['system','user','raw'].forEach(function(k){
+      var el=document.querySelector('#db-'+pass+'-'+k+' .debug-pre');
+      if(el)text+=(text?'\n\n':'')+'=== '+(k==='system'?'System Prompt':k==='user'?'User Prompt':'Raw Response')+' ===\n'+el.textContent;
+    });
+  } else {
+    var el=document.querySelector('#db-'+blockId+' .debug-pre');
+    if(el)text=el.textContent;
+  }
+  if(!text){showToast('暂无内容可复制','info');return}
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      _debugCopyFeedback(blockId);
+    }).catch(function(){
+      _debugFallbackCopy(text,blockId);
+    });
+  } else {
+    _debugFallbackCopy(text,blockId);
+  }
+}
+function _debugCopyFeedback(blockId){
+  var btn;
+  if(blockId==='pass1-all')btn=document.querySelector('#debug-sec-pass1 .debug-copy-btn');
+  else if(blockId==='pass2-all')btn=document.querySelector('#debug-sec-pass2 .debug-copy-btn');
+  else btn=document.querySelector('#db-'+blockId+' .debug-copy-btn');
+  if(btn){
+    var orig=btn.textContent;
+    btn.textContent='已复制';
+    btn.classList.add('copied');
+    setTimeout(function(){btn.textContent=orig;btn.classList.remove('copied')},1500);
+  }
+  showToast('已复制到剪贴板','success');
+}
+function _debugFallbackCopy(text,blockId){
+  var ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.left='-9999px';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');showToast('已复制到剪贴板','success')}catch(e){showToast('复制失败','error')}
+  document.body.removeChild(ta);
 }
 
 window._cp='page-login';
