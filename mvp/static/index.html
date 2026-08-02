@@ -907,7 +907,7 @@ function deleteComment(type,id,commentId){
 var _coverAnimId=null,_coverTimeout=null;
 function showCoverThenGame(name,rank,quote){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
-  document.querySelectorAll('.popup-overlay').forEach(function(e){e.classList.remove('active');if(e.id!=='popup-api'&&e.id!=='popup-saves'&&e.id!=='popup-ending')e.remove()});
+  document.querySelectorAll('.popup-overlay').forEach(function(e){e.classList.remove('active');if(e.id!=='popup-api'&&e.id!=='popup-saves'&&e.id!=='popup-ending'&&e.id!=='popup-debug')e.remove()});
   document.getElementById('cover-title').textContent=name||'未知副本';
   var survRate=rank?('预估存活率 '+(rank==='S'?'5':rank==='A'?'15':rank==='B'?'30':rank==='C'?'50':rank==='D'?'70':'50')+'%'):'存活率 ??%';
   document.getElementById('cover-meta').textContent=survRate;
