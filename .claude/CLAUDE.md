@@ -48,10 +48,48 @@
 
 - **项目名称**: 无限流规则怪谈 (Fenli)
 - **技术栈**: Python FastAPI + MySQL + 原生 JS/CSS（桌面端 index.html + 移动端 m.html）
-- **当前版本**: v0.6.1
-- **当前阶段**: Hook系统 + AI召回恢复 + 前端稳定性修复（流式空内容/Token过期/弹窗叠加/CSS transition）；移动端已适配；orchestrator双Pass架构（Pass1 AI召回+Pass2叙事+keyword fallback）
-- **项目目录**: D:\project\规则怪谈\fenli\mvp
-- **启动方式**: 复制 .env.example 为 .env，填入所需变量后 source .env && cd mvp && python server.py
+- **当前版本**: v0.7.1
+- **当前阶段**: 双Pass AI架构（Pass1标签召回+Pass2叙事生成+keyword fallback）；Hook事件引擎（46种效果）；前端重构完成（common.js统一）；移动端适配；副本封面动画；AI调试监控面板；运营安全加固（速率限制+封禁+bcrypt）；健康检查+自愈cron
+- **项目目录**: `mvp/`
+- **启动方式**: 复制 `.env.example` 为 `.env`，填入所需变量后 `source .env && cd mvp && python server.py`
 - **测试地址**: http://localhost:8777
-- **测试账号**: 通过 ADMIN_PASSWORD 环境变量设置管理员密码
-- **API Key**: 通过 API_KEY 环境变量设置，详见 .env.example
+- **服务器**: 腾讯云 2核4G 成都 (162.14.64.4)，systemd 管理 (`fenli.service`)
+- **部署**: `ssh root@162.14.64.4` → `~/deploy.sh`（stop → pkill → start → verify）
+- **数据库**: MySQL (root/root)，库名 fenli
+- **管理员**: admin / ADMIN_PASSWORD 环境变量设定
+- **API Key**: 通过 API_KEY 环境变量设置，详见 `.env.example`
+
+### 架构概览
+
+```
+mvp/
+├── server.py              # FastAPI 入口（81行）
+├── ws_handler.py          # WebSocket 处理
+├── middleware.py           # 鉴权中间件
+├── routes/                # HTTP 路由（8个模块）
+│   ├── auth.py            # 登录/注册
+│   ├── game.py            # 预设/存档/调试
+│   ├── copies.py          # 云端副本
+│   ├── community.py       # 评分/评论/建议/公告
+│   ├── admin.py            # 管理面板
+│   ├── points.py           # 签到/兑换/积分
+│   ├── upload.py           # 图片上传
+│   └── health.py           # 健康检查
+├── src/                   # 核心引擎
+│   ├── orchestrator.py    # 双Pass编排
+│   ├── pass1.py           # AI标签召回
+│   ├── pass2.py           # AI叙事生成
+│   ├── ai_provider.py     # AI Provider抽象
+│   ├── hook_engine.py     # Hook触发引擎
+│   ├── hard_sync.py       # 硬同步
+│   ├── db.py              # DAO数据层
+│   ├── auth.py            # JWT
+│   └── worldbook.py       # 世界书
+├── ddl/migrations.py      # 数据库迁移
+├── static/                # 前端
+│   ├── index.html         # 桌面端
+│   ├── m.html             # 移动端
+│   ├── common.js          # 双端共用JS
+│   └── common.css         # 共用CSS
+└── presets/               # 6个预设副本JSON
+```
