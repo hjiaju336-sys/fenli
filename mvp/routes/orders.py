@@ -220,10 +220,26 @@ async def admin_reject_order(order_id: int, request: Request):
     s = get_session()
     try:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
+        order = s.execute(text(
+            "SELECT id, player_id, points, status FROM point_orders WHERE id=:oid"
+        ), {"oid": order_id}).fetchone()
+        if not order:
+            return {"error": "订单不存在"}
+        if order[3] != "pending":
+            return {"error": "订单已处理过"}
         s.execute(text(
             "UPDATE point_orders SET status='rejected', updated_at=:ca "
             "WHERE id=:oid AND status='pending'"
         ), {"ca": now, "oid": order_id})
+        # 发送拒绝通知
+        s.execute(text(
+            "INSERT INTO system_announcements "
+            "(title, content, target_player_id, is_active, created_at) "
+            "VALUES ('订单未通过', :msg, :tid, 1, :ca)"
+        ), {
+            "msg": f"您的订单 #{order_id} 未通过审核。请联系管理员或核对转账信息后重新提交。",
+            "tid": order[1], "ca": now
+        })
         s.commit()
         return {"ok": True, "message": "已拒绝"}
     except Exception as e:

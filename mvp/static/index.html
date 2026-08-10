@@ -308,7 +308,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 </div>
 <div class="shop-payment" id="shop-payment" style="display:none">
 <h4>📱 扫码支付</h4>
-<div class="qr-area"><div class="qr-placeholder">🏦<br>请上传收款二维码<br>管理员后台设置</div></div>
+<div class="qr-area">
+  <img id="shop-qr-img" src="/static/uploads/payment_qr.png" onerror="this.style.display='none';document.getElementById('shop-qr-placeholder').style.display='flex'" onload="document.getElementById('shop-qr-placeholder').style.display='none'" style="width:160px;height:160px;object-fit:contain">
+  <div class="qr-placeholder" id="shop-qr-placeholder" style="display:none">🏦<br>请上传收款二维码<br>管理员后台设置</div>
+</div>
 <div class="order-steps"><b>支付步骤：</b><br>1. 微信/支付宝扫描上方二维码<br>2. 转账所选金额<br>3. 在下方填写<b>转账单号/交易号</b><br>4. 提交后等待管理员核对发码</div>
 <div class="order-form">
 <div class="input-row"><label>你的支付账号（微信昵称/支付宝名）</label><input type="text" id="order-payer" placeholder="方便管理员核对"></div>
@@ -345,6 +348,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 	<button class="btn btn-sm btn-secondary" onclick="adminTab('announce')" style="display:block;width:100%">系统公告</button>
 	<button class="btn btn-sm btn-secondary" onclick="adminTab('stats')" style="display:block;width:100%">系统统计</button>
 		<button class="btn btn-sm btn-secondary" onclick="adminTab('config')" style="display:block;width:100%">系统配置</button>
+		<button class="btn btn-sm btn-secondary" onclick="adminTab('orders')" id="admin-tab-orders" style="display:block;width:100%">订单管理</button>
 	<button class="btn btn-sm btn-secondary" onclick="navTo('page-home')" style="display:block;width:100%;margin-top:auto">返回</button>
 	</div>
 	<div id="admin-content" style="flex:1;overflow-y:auto;font-size:12px;min-height:400px"></div>
@@ -1184,7 +1188,17 @@ function loadMySuggestions(){
 
 // ── 管理面板 ──────────────────────────────────────
 var _adminTab='users',_adminPage=1;
-function adminTab(tab){_adminTab=tab;_adminPage=1;var el=document.getElementById('admin-content');if(tab==='users')loadAdminUsers(1);else if(tab==='codes')loadAdminCodes(1);else if(tab==='comments')loadAdminComments(1);else if(tab==='reports')loadAdminReports(1);else if(tab==='suggestions')loadAdminSuggestions(1);else if(tab==='announce')loadAdminAnnounce();else if(tab==='stats')loadAdminStats();else if(tab==='config')loadAdminConfig();}
+function adminTab(tab){_adminTab=tab;_adminPage=1;var el=document.getElementById('admin-content');if(tab==='users')loadAdminUsers(1);else if(tab==='codes')loadAdminCodes(1);else if(tab==='comments')loadAdminComments(1);else if(tab==='reports')loadAdminReports(1);else if(tab==='suggestions')loadAdminSuggestions(1);else if(tab==='announce')loadAdminAnnounce();else if(tab==='stats')loadAdminStats();else if(tab==='config')loadAdminConfig();
+else if(tab==='orders'){
+  var content=document.getElementById('admin-content');
+  content.innerHTML='<div style="margin-bottom:12px;display:flex;gap:8px">'+
+    '<button class="btn btn-sm btn-secondary" onclick="adminOrdersList(\'pending\')">待处理</button>'+
+    '<button class="btn btn-sm btn-secondary" onclick="adminOrdersList(\'paid\')">已核发</button>'+
+    '<button class="btn btn-sm btn-secondary" onclick="adminOrdersList(\'rejected\')">已拒绝</button>'+
+    '<button class="btn btn-sm btn-secondary" onclick="adminOrdersList(\'all\')">全部</button>'+
+    '</div><div id="admin-orders-list">加载中...</div>';
+  adminOrdersList('pending');
+}}
 
 function _adminFetch(url,opts,cb,errMsg){
   opts=opts||{};opts.headers=opts.headers||{};opts.headers['Authorization']='Bearer '+_auth();
@@ -1859,11 +1873,48 @@ function submitOrder(){
   var payer=document.getElementById('order-payer').value.trim();
   var ref=document.getElementById('order-ref').value.trim();
   if(!payer||!ref){showToast('请填写支付账号和转账单号','error');return;}
-  fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_token},body:JSON.stringify({price:_selectedPrice.price,points:_selectedPrice.points,package:_selectedPrice.name,payer:payer,ref:ref})}).then(function(r){return r.json()}).then(function(d){
+  fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_auth()},body:JSON.stringify({price:_selectedPrice.price,points:_selectedPrice.points,package:_selectedPrice.name,payer:payer,ref:ref})}).then(function(r){return r.json()}).then(function(d){
     if(d.error){showToast(d.error,'error');return;}
     document.getElementById('shop-success').style.display='block';
     var form=document.querySelector('#shop-payment .order-form');
     if(form)form.style.display='none';
   }).catch(function(){showToast('网络错误，请重试','error')});
+}
+
+function adminOrdersList(status){
+  window._adminOrderFilter=status;
+  fetch('/api/admin/orders?status='+status+'&size=100',{headers:{'Authorization':'Bearer '+_auth()}})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.error){document.getElementById('admin-orders-list').innerHTML='<p style="color:red">'+escHTML(d.error)+'</p>';return;}
+    if(!d.orders||!d.orders.length){document.getElementById('admin-orders-list').innerHTML='<p>暂无订单</p>';return;}
+    var h='<table style="width:100%;font-size:11px;border-collapse:collapse">';
+    h+='<tr style="border-bottom:1px solid #4a3a5a"><th>ID</th><th>用户</th><th>套餐</th><th>金额</th><th>积分</th><th>支付账号</th><th>单号</th><th>状态</th><th>兑换码</th><th>时间</th><th>操作</th></tr>';
+    d.orders.forEach(function(o){
+      var st=o.status==='pending'?'<span style="color:#f0c060">待处理</span>':o.status==='paid'?'<span style="color:#4a8">已核发</span>':'<span style="color:#888">已拒绝</span>';
+      h+='<tr style="border-bottom:1px solid #2a2a4a">';
+      h+='<td>'+o.id+'</td><td>'+escHTML(o.username||o.player_id)+'</td><td>'+escHTML(o.package_name)+'</td><td>¥'+o.price+'</td><td>'+o.points+'</td>';
+      h+='<td>'+escHTML(o.payer_info)+'</td><td>'+escHTML(o.payment_ref)+'</td><td>'+st+'</td>';
+      h+='<td>'+(o.exchange_code||'-')+'</td><td>'+(o.created_at||'').substring(5,16)+'</td>';
+      h+='<td>';
+      if(o.status==='pending'){
+        h+='<button class="btn btn-sm btn-primary" onclick="adminOrderAct('+o.id+','approve')" style="margin:2px">核发</button>';
+        h+='<button class="btn btn-sm btn-secondary" onclick="adminOrderAct('+o.id+','reject')" style="margin:2px">拒绝</button>';
+      }
+      h+='</td></tr>';
+    });
+    h+='</table>';
+    document.getElementById('admin-orders-list').innerHTML=h;
+  });
+}
+function adminOrderAct(id,action){
+  if(action==='reject'&&!confirm('确定拒绝订单 #'+id+' ？'))return;
+  if(action==='approve'&&!confirm('核发订单 #'+id+'，将自动生成兑换码。确定？'))return;
+  fetch('/api/admin/orders/'+id+'/'+action,{method:'POST',headers:{'Authorization':'Bearer '+_auth()}})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.error){showToast(d.error,'error');return;}
+    if(d.exchange_code)showToast('已核发！兑换码：'+d.exchange_code,'success');
+    else showToast('操作成功','success');
+    adminOrdersList(window._adminOrderFilter||'pending');
+  });
 }
 </script></body></html>

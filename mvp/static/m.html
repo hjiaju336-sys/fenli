@@ -140,7 +140,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 @keyframes coverQuoteRise{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
 @keyframes coverZoomOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.05)}}
 @keyframes coverFlash{0%{opacity:0}50%{opacity:.7}100%{opacity:0}}
-
+.shop-card.selected{border-color:var(--accent)!important;box-shadow:0 0 0 2px rgba(180,74,92,.2)}
 </style><link rel="stylesheet" href="/static/common.css"></head>
 <body>
 <!-- M4: 网络断开遮罩 -->
@@ -181,6 +181,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
     </div>
    </div>
    <div id="home-announce" style="margin-top:16px;padding:12px;background:var(--card);border-radius:10px;font-size:12px;color:var(--text2);display:none"></div>
+   <button class="btn-gold" onclick="navigateTo('pg-shop')" style="width:100%;padding:12px;margin-top:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#d4a574,#e8c4a0);color:#1a0c00;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer">💰 购买积分</button>
   </div>
  </div>
 
@@ -263,6 +264,40 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
    <button class="btn btn-sm btn-outline" onclick="adminTab('stats')">统计</button>
   </div>
   <div style="flex:1;overflow-y:auto;padding:12px" id="admin-content"></div>
+ </div>
+
+ <!-- 积分购买页 -->
+ <div id="pg-shop" class="page">
+ <div class="topbar"><button class="btn-icon" onclick="navigateTo('pg-home')">←</button><h1>积分购买</h1><div style="width:36px"></div></div>
+ <div style="flex:1;overflow-y:auto;padding:16px">
+ <div style="text-align:center;color:var(--text2);font-size:13px;margin-bottom:16px;line-height:1.7">选择套餐，扫码支付，输入转账信息<br>管理员核对后自动发放兑换码</div>
+
+ <div id="shop-cards" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+ <div class="shop-card" onclick="mSelectPrice(this,'6','600','基础包')" style="border:2px solid #3a3050;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.03)">
+ <div><div style="font-size:15px;font-weight:700;color:var(--gold)">基础包</div><div style="font-size:11px;color:var(--text2)">+600 积分 · 约16轮</div></div>
+ <div style="font-size:22px;font-weight:700;color:var(--accent)">¥6</div></div>
+
+ <div class="shop-card" onclick="mSelectPrice(this,'30','3200','进阶包')" style="border:2px solid #3a3050;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.03)">
+ <div><div style="font-size:15px;font-weight:700;color:var(--gold)">进阶包</div><div style="font-size:11px;color:var(--text2)">+3200 积分 · 约90轮</div></div>
+ <div style="font-size:22px;font-weight:700;color:var(--accent)">¥30</div></div>
+
+ <div class="shop-card" onclick="mSelectPrice(this,'98','12000','巨佬包')" style="border:2px solid #3a3050;border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.03)">
+ <div><div style="font-size:15px;font-weight:700;color:var(--gold)">巨佬包</div><div style="font-size:11px;color:var(--text2)">+12000 积分 · 约340轮</div><div style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(200,160,60,.15);color:var(--gold);display:inline-block;margin-top:4px">超值</div></div>
+ <div style="font-size:22px;font-weight:700;color:var(--accent)">¥98</div></div>
+ </div>
+
+ <div id="shop-pay-area" style="display:none">
+ <div style="text-align:center;padding:12px;border:2px dashed #3a3050;border-radius:10px;margin-bottom:10px;background:rgba(255,255,255,.03)">
+ <img id="m-shop-qr" src="/static/uploads/payment_qr.png" onerror="this.style.display='none';document.getElementById('m-qr-placeholder').style.display='block'" onload="document.getElementById('m-qr-placeholder').style.display='none'" style="width:140px;height:140px;object-fit:contain">
+ <div id="m-qr-placeholder" style="display:none;padding:20px;color:var(--text2);font-size:12px">🏦<br>收款二维码<br>管理员后台设置</div>
+ </div>
+ <div style="font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:10px"><b>支付步骤：</b><br>1. 截图或长按保存上方二维码<br>2. 用微信/支付宝扫码转账<br>3. 填写下方信息提交</div>
+ <div style="margin-bottom:8px"><input type="text" id="m-payer" placeholder="你的微信昵称/支付宝名" style="width:100%;padding:10px;border:1.5px solid #3a3050;border-radius:8px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,.05);color:var(--text)"></div>
+ <div style="margin-bottom:12px"><input type="text" id="m-ref" placeholder="转账单号后6位" style="width:100%;padding:10px;border:1.5px solid #3a3050;border-radius:8px;font-size:14px;font-family:var(--font);background:rgba(255,255,255,.05);color:var(--text)"></div>
+ <button onclick="mSubmitOrder()" style="width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#fce8d0;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer">提交订单</button>
+ <div id="m-shop-ok" style="display:none;text-align:center;padding:16px;color:var(--gold);font-size:14px;margin-top:12px">订单已提交！<br><br>管理员核对后发放兑换码</div>
+ </div>
+ </div>
  </div>
 
  <!-- 底部Tab -->
@@ -915,5 +950,29 @@ function _debugCopyFeedback(blockId){
   var btn=document.getElementById('btn-'+blockId);if(!btn)return;
   var orig=btn.textContent;btn.textContent='已复制';btn.style.color='var(--gold)';
   setTimeout(function(){btn.textContent=orig;btn.style.color=''},1500)
+}
+var _mPrice=null;
+function mSelectPrice(el,price,points,name){
+  document.querySelectorAll('#shop-cards .shop-card').forEach(function(c){c.style.borderColor='#3a3050'});
+  el.style.borderColor='var(--accent)';el.style.boxShadow='0 0 0 2px rgba(180,74,92,.2)';
+  _mPrice={price:price,points:points,name:name};
+  document.getElementById('shop-pay-area').style.display='block';
+  document.getElementById('m-shop-ok').style.display='none';
+  el.classList.add('selected');
+}
+function mSubmitOrder(){
+  if(!_mPrice){toast('请先选择套餐','error');return;}
+  var payer=document.getElementById('m-payer').value.trim();
+  var ref=document.getElementById('m-ref').value.trim();
+  if(!payer||!ref){toast('请填写支付账号和转账单号','error');return;}
+  var tok=_auth()||'';
+  fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({price:_mPrice.price,points:_mPrice.points,package:_mPrice.name,payer:payer,ref:ref})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.error){toast(d.error,'error');return;}
+    document.getElementById('m-shop-ok').style.display='block';
+    document.getElementById('m-payer').disabled=true;
+    document.getElementById('m-ref').disabled=true;
+    document.querySelector('#shop-pay-area button').style.display='none';
+  }).catch(function(){toast('网络错误','error')});
 }
 </script></body></html>
