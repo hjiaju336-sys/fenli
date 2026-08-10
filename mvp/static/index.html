@@ -109,6 +109,26 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .hook-editor-toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 /* ── 舒适度开关 ── */
 .comfort-section{margin-top:8px;border-top:1px solid #4a3a5a;padding-top:8px}.comfort-section h5{font-size:12px;color:var(--blood);margin-bottom:6px;text-align:center}.comfort-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:11px;color:var(--ink-light)}.comfort-toggle{position:relative;width:40px;height:22px;flex-shrink:0}.comfort-toggle input{opacity:0;width:0;height:0}.comfort-toggle .slider{position:absolute;cursor:pointer;inset:0;background:#3a3050;border-radius:22px;transition:.3s}.comfort-toggle .slider::before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:var(--ink-light);border-radius:50%;transition:.3s}.comfort-toggle input:checked+.slider{background:var(--blood)}.comfort-toggle input:checked+.slider::before{transform:translateX(18px);background:#fce8d0}
+/* ── 积分购买页 ── */
+#page-shop .container{width:580px;padding:50px 40px 30px;margin:0 auto}
+.shop-intro{text-align:center;font-size:13px;color:var(--ink-light);margin-bottom:10px;line-height:1.7}
+.price-cards{display:flex;gap:12px;margin:18px 0;justify-content:center}
+.price-card{flex:1;border:2px solid #3a3050;border-radius:var(--radius);padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.03);max-width:160px}
+.price-card:hover{border-color:var(--gold);box-shadow:0 0 16px rgba(180,120,100,.15)}
+.price-card.selected{border-color:var(--blood);border-width:2px;box-shadow:0 0 0 3px rgba(180,74,92,.15)}
+.price-card .pkg-name{font-size:15px;font-weight:700;color:var(--gold);margin-bottom:6px}
+.price-card .pkg-price{font-size:28px;font-weight:700;color:var(--blood);margin-bottom:4px}
+.price-card .pkg-price span{font-size:13px;font-weight:400;color:var(--ink-light)}
+.price-card .pkg-points{font-size:12px;color:var(--ink-light)}
+.price-card .pkg-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(200,160,60,.15);color:var(--gold);margin-top:6px}
+.shop-payment{padding:16px;border:1.5px solid #4a3a5a;border-radius:var(--radius);background:rgba(180,120,180,.06);margin-top:12px}
+.shop-payment h4{color:var(--blood);font-size:13px;margin-bottom:8px;text-align:center}
+.shop-payment .qr-area{text-align:center;padding:12px;border:2px dashed #3a3050;border-radius:var(--radius);margin-bottom:8px;background:rgba(255,255,255,.03)}
+.shop-payment .qr-area img{width:160px;height:160px;object-fit:contain}
+.shop-payment .qr-area .qr-placeholder{width:160px;height:160px;margin:0 auto;background:rgba(255,255,255,.04);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--ink-light);font-size:12px}
+.order-steps{font-size:12px;color:var(--ink-light);line-height:2;margin-bottom:10px;padding-left:16px}
+.order-form{margin-top:10px}.order-form .input-row{margin-bottom:8px}
+.shop-success{display:none;text-align:center;padding:20px;color:var(--gold);font-size:14px}
 /* ── 降级提示 ── */
 .degrade-notice{position:fixed;top:50px;left:50%;transform:translateX(-50%);z-index:300;background:rgba(60,30,30,.9);color:#f0c0a0;padding:6px 16px;border-radius:16px;font-size:11px;animation:fadeIn .3s ease;pointer-events:none;white-space:nowrap;border:1px solid rgba(200,100,80,.4)}
 /* ── 公告区域 ── */
@@ -160,8 +180,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .debug-copy-btn{font-size:10px!important;padding:1px 8px!important;line-height:1.5!important}
 .debug-copy-btn.copied{background:var(--gold)!important;color:#1a0c00!important}
 .debug-empty{text-align:center;padding:20px;color:var(--ink-light);font-size:13px}
+
+/* ── 年龄确认弹窗 ── */
+#popup-age{display:flex;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center}
+#popup-age .age-box{background:linear-gradient(175deg,var(--surface),var(--parchment));border:2px solid var(--border);border-radius:10px;padding:32px 36px;text-align:center;max-width:400px;box-shadow:0 12px 48px rgba(0,0,0,.5)}
+#popup-age h2{color:var(--blood);font-size:20px;margin-bottom:12px;letter-spacing:3px}
+#popup-age p{color:var(--ink-light);font-size:13px;line-height:1.8;margin-bottom:20px}
+#popup-age .age-btns{display:flex;gap:12px;justify-content:center}
+#popup-age .age-btns .btn{min-width:100px}
 </style><link rel="stylesheet" href="/static/common.css"><link id="theme-css" rel="stylesheet" href="data:text/css," disabled></head>
 <body>
+<div id="popup-age"><div class="age-box"><h2>⚠ 内容提示</h2><p>本平台为AI驱动的<b>悬疑推理</b>互动小说。<br>内容可能包含悬疑、紧张情节，<br>适合<b>16岁以上</b>用户。<br><br>所有内容由AI实时生成，纯属虚构。</p><div class="age-btns"><button class="btn btn-primary" onclick="document.getElementById('popup-age').remove();localStorage.setItem('age_ok','1')">我已满16岁，进入</button><a href="about:blank" class="btn btn-secondary" style="text-decoration:none;line-height:2.2">离开</a></div></div></div>
 <canvas id="mouse-trail" style="position:fixed;inset:0;z-index:9998;pointer-events:none;display:none"></canvas>
 
 <div id="page-login" class="page active">
@@ -184,11 +213,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <button class="btn btn-secondary" onclick="navTo('page-template')">模板管理 — 浏览与自建</button>
 <button class="btn btn-secondary" onclick="openApiConfig()">系统设置 — API与模型</button>
 <button class="btn btn-secondary btn-sm" onclick="navTo('page-profile')">个人中心</button>
+<button class="btn btn-gold" onclick="navTo('page-shop')">💰 购买积分</button>
 <button class="btn btn-secondary btn-sm" onclick="navTo('page-suggestions')">建议反馈</button>
 <button class="btn btn-secondary btn-sm" onclick="navTo('page-admin')" id="btn-admin-entry" style="display:none">管理面板</button>
 <button class="btn btn-secondary btn-sm" onclick="navTo('page-debug')">调试面板</button>
 </div>
-<div class="notice-box">选择功能开始。新玩家建议先设置 API Key，再选择模板开局。</div>
+<div class="notice-box">📌 本平台内容由AI实时生成，纯属虚构。<br>🕯 暗黑悬疑推理 · 沉浸式互动小说 · 16+</div>
 <div id="home-announce" style="margin:14px 0;display:none"></div>
 </div></div>
 
@@ -265,6 +295,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 	<div id="profile-points-history" style="margin-top:12px;font-size:12px;max-height:200px;overflow-y:auto"></div>
 	</div></div>
 
+<div id="page-shop" class="page">
+<div class="container">
+<div class="topOverlay">积分购买</div>
+<button class="btn btn-sm btn-secondary" style="position:absolute;top:20px;left:20px;z-index:5" onclick="navTo('page-home')">← 返回</button>
+<div style="margin-top:30px">
+<div class="shop-intro">选择套餐，扫码支付，输入转账信息<br>管理员核对后自动发放兑换码</div>
+<div class="price-cards" id="price-cards">
+<div class="price-card" onclick="selectPrice(this,'6','600','基础包')"><div class="pkg-name">基础包</div><div class="pkg-price">¥6<span></span></div><div class="pkg-points">+600 积分</div><div class="pkg-badge">约16轮游戏</div></div>
+<div class="price-card" onclick="selectPrice(this,'30','3200','进阶包')"><div class="pkg-name">进阶包</div><div class="pkg-price">¥30<span></span></div><div class="pkg-points">+3200 积分</div><div class="pkg-badge">约90轮游戏</div></div>
+<div class="price-card" onclick="selectPrice(this,'98','12000','巨佬包')"><div class="pkg-name">巨佬包</div><div class="pkg-price">¥98<span></span></div><div class="pkg-points">+12000 积分</div><div class="pkg-badge">约340轮 · 超值</div></div>
+</div>
+<div class="shop-payment" id="shop-payment" style="display:none">
+<h4>📱 扫码支付</h4>
+<div class="qr-area"><div class="qr-placeholder">🏦<br>请上传收款二维码<br>管理员后台设置</div></div>
+<div class="order-steps"><b>支付步骤：</b><br>1. 微信/支付宝扫描上方二维码<br>2. 转账所选金额<br>3. 在下方填写<b>转账单号/交易号</b><br>4. 提交后等待管理员核对发码</div>
+<div class="order-form">
+<div class="input-row"><label>你的支付账号（微信昵称/支付宝名）</label><input type="text" id="order-payer" placeholder="方便管理员核对"></div>
+<div class="input-row"><label>转账单号（微信/支付宝交易号后6位）</label><input type="text" id="order-ref" placeholder="如：382917"></div>
+<button class="btn btn-primary" onclick="submitOrder()" style="width:100%;margin-top:8px">提交订单</button>
+</div>
+<div class="shop-success" id="shop-success">✅ 订单已提交！<br><br>管理员核对后，兑换码将发送到你的账户。<br>通常1小时内处理，请耐心等待。<br><br><a href="javascript:navTo('page-profile')" style="color:var(--gold)">前往个人中心查看积分 →</a></div>
+</div>
+</div>
+</div>
+</div>
+
 	<div id="page-suggestions" class="page">
 	<div class="container" style="width:600px;padding:20px 30px;margin:0 auto">
 	<button class="btn btn-secondary btn-sm" onclick="navTo('page-home')">← 返回</button>
@@ -298,6 +354,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <div id="page-game" class="page">
 <div class="container game-container">
 <div class="game-topbar">
+  <span style="font-size:11px;color:var(--ink-light)">📌 AI生成 · 纯属虚构</span>
   <span style="display:flex;gap:8px;align-items:center"><b id="world-name">--</b> <small id="world-desc">--</small></span>
   <span style="display:flex;gap:8px;align-items:center">
     <button class="btn btn-sm btn-secondary" id="btn-rules-toggle" onclick="toggleVars()" title="显示/隐藏变量面板">📋</button>
@@ -519,6 +576,7 @@ function _trailTick(){
 }
 
 function navTo(id){
+  if(!localStorage.getItem('age_ok')){return;}
   // 鉴权守卫：非登录页需要有效 token
   if(id!=='page-login'&&!_auth()){
     showToast('请先登录','error');
@@ -1788,4 +1846,24 @@ window.addEventListener('error',function(e){
       console.warn('[ResourceErr]',t.tagName,'src/href:',attr,'parent:',(t.parentElement||{}).id||(t.parentElement||{}).className||'?');
   }
 },true);
+var _selectedPrice=null;
+function selectPrice(el,price,points,name){
+  document.querySelectorAll('#price-cards .price-card').forEach(function(c){c.classList.remove('selected')});
+  el.classList.add('selected');
+  _selectedPrice={price:price,points:points,name:name};
+  document.getElementById('shop-payment').style.display='block';
+  document.getElementById('shop-success').style.display='none';
+}
+function submitOrder(){
+  if(!_selectedPrice){showToast('请先选择套餐','error');return;}
+  var payer=document.getElementById('order-payer').value.trim();
+  var ref=document.getElementById('order-ref').value.trim();
+  if(!payer||!ref){showToast('请填写支付账号和转账单号','error');return;}
+  fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_token},body:JSON.stringify({price:_selectedPrice.price,points:_selectedPrice.points,package:_selectedPrice.name,payer:payer,ref:ref})}).then(function(r){return r.json()}).then(function(d){
+    if(d.error){showToast(d.error,'error');return;}
+    document.getElementById('shop-success').style.display='block';
+    var form=document.querySelector('#shop-payment .order-form');
+    if(form)form.style.display='none';
+  }).catch(function(){showToast('网络错误，请重试','error')});
+}
 </script></body></html>

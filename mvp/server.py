@@ -20,6 +20,7 @@ from routes.admin import router as admin_router
 from routes.points import router as points_router
 from routes.upload import router as upload_router
 from routes.health import router as health_router
+from routes.orders import router as orders_router
 
 app = FastAPI(title="Infinite Flow MVP")
 
@@ -32,6 +33,7 @@ app.include_router(admin_router)
 app.include_router(points_router)
 app.include_router(upload_router)
 app.include_router(health_router)
+app.include_router(orders_router)
 
 # 注册 WebSocket
 app.websocket("/ws")(ws_handler)

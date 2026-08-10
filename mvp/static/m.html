@@ -10,6 +10,15 @@
 :root{--bg:#0d0d1a;--surface:#14142a;--card:#1a1a30;--text:#e8d5c8;--text2:#b8a898;--accent:#b84a5c;--accent-light:#d4708a;--gold:#d4a574;--gold-light:#e8c4a0;--purple:#7b68ae;--border:rgba(180,120,180,.1);--bubble-user:rgba(180,120,180,.12);--bubble-ai:rgba(20,20,40,.8);--font:"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;--safe-bottom:env(safe-area-inset-bottom,0px);--blood:var(--accent);--blood-light:var(--accent-light);--ink:var(--text);--ink-light:var(--text2);--parchment:var(--card);--parchment-dark:var(--card);--input-border:rgba(180,120,180,.1);--border-light:rgba(180,120,180,.1);--shadow:rgba(0,0,0,.3);--radius:8px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;user-select:none;-webkit-user-select:none}
+/* ── 年龄确认弹窗 ── */
+#popup-age{display:flex;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;align-items:center;justify-content:center}
+#popup-age .age-box{background:linear-gradient(175deg,var(--surface),var(--card));border:2px solid var(--border);border-radius:12px;padding:28px 24px;text-align:center;max-width:320px;margin:16px;box-shadow:0 12px 48px rgba(0,0,0,.5)}
+#popup-age h2{color:var(--accent);font-size:18px;margin-bottom:10px;letter-spacing:2px}
+#popup-age p{color:var(--text2);font-size:12px;line-height:1.7;margin-bottom:16px}
+#popup-age .age-btns{display:flex;gap:10px;justify-content:center}
+#popup-age .age-btns button{padding:10px 24px;border-radius:20px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)}
+#popup-age .btn-enter{background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#fce8d0}
+#popup-age .btn-leave{background:var(--card);color:var(--text2);border:1.5px solid var(--border)!important}
 #app{display:flex;flex-direction:column;height:100dvh;width:100%;max-width:100%;position:relative;overflow:hidden}@media(min-width:481px){#app{max-width:480px;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border)}}
 
 /* ── D6: 侧栏抽屉 ── */
@@ -136,6 +145,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 <body>
 <!-- M4: 网络断开遮罩 -->
 <div class="ws-overlay" id="ws-overlay"><div class="ws-spinner"></div><div class="ws-text" id="ws-text">网络已断开，正在重连...</div></div>
+<div id="popup-age"><div class="age-box"><h2>⚠ 内容提示</h2><p>本平台为AI驱动的<b>悬疑推理</b>互动小说。<br>内容可能包含悬疑、紧张情节，<br>适合<b>16岁以上</b>用户。<br><br>所有内容由AI实时生成，纯属虚构。</p><div class="age-btns"><button class="btn-enter" onclick="document.getElementById('popup-age').remove();localStorage.setItem('age_ok','1')">我已满16岁，进入</button><button class="btn-leave" onclick="location.href='about:blank'">离开</button></div></div></div>
 <div id="app">
  <!-- 登录页 -->
  <div class="page active" id="pg-login">
@@ -156,6 +166,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
  <!-- 首页 -->
  <div class="page" id="pg-home">
   <div class="topbar"><h1>规则怪谈</h1><button class="btn-icon" onclick="showModal('modal-settings')">⚙</button></div>
+  <div style="text-align:center;padding:8px;font-size:11px;color:var(--text2);background:rgba(180,120,180,.05);border-bottom:1px solid var(--border)">AI生成·纯属虚构 | 暗黑悬疑推理 · 16+</div>
   <div style="flex:1;overflow-y:auto;padding:16px">
    <button class="btn btn-gold btn-block" onclick="quickStart()" style="padding:14px;font-size:16px;margin-bottom:12px">⚡ 快速开始</button>
    <button class="btn btn-outline btn-block" onclick="openSaves()">💾 继续游戏</button>
@@ -199,7 +210,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dv
 
  <!-- 聊天页（核心） -->
  <div class="page" id="pg-chat">
-  <div class="topbar">
+  <div class="topbar"><span style="font-size:10px;color:var(--text2)">📌 AI生成·纯属虚构</span>
    <button class="btn-icon" onclick="toggleSideDrawer()">☰</button>
    <div style="text-align:center">
     <div id="chat-world" style="font-size:15px;font-weight:700;color:var(--gold)">加载中...</div>
@@ -396,6 +407,7 @@ function closeModal(id){document.getElementById(id).classList.remove('active')}
 
 // ═══ 导航 ═══
 function navigateTo(pgId){
+  if(!localStorage.getItem('age_ok')){return;}
   // 鉴权守卫
   var publicPages=['pg-login'];
   if(publicPages.indexOf(pgId)===-1&&!_auth()){
