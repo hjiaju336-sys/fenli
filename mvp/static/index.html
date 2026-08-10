@@ -191,6 +191,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 </style><link rel="stylesheet" href="/static/common.css"><link id="theme-css" rel="stylesheet" href="data:text/css," disabled></head>
 <body>
 <div id="popup-age"><div class="age-box"><h2>⚠ 内容提示</h2><p>本平台为AI驱动的<b>悬疑推理</b>互动小说。<br>内容可能包含悬疑、紧张情节，<br>适合<b>16岁以上</b>用户。<br><br>所有内容由AI实时生成，纯属虚构。</p><div class="age-btns"><button class="btn btn-primary" onclick="document.getElementById('popup-age').remove();localStorage.setItem('age_ok','1')">我已满16岁，进入</button><a href="about:blank" class="btn btn-secondary" style="text-decoration:none;line-height:2.2">离开</a></div></div></div>
+<script>if(localStorage.getItem('age_ok'))document.getElementById('popup-age').remove();</script>
 <canvas id="mouse-trail" style="position:fixed;inset:0;z-index:9998;pointer-events:none;display:none"></canvas>
 
 <div id="page-login" class="page active">
@@ -310,7 +311,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 <h4>📱 扫码支付</h4>
 <div class="qr-area">
   <img id="shop-qr-img" src="/static/uploads/payment_qr.png" onerror="this.style.display='none';document.getElementById('shop-qr-placeholder').style.display='flex'" onload="document.getElementById('shop-qr-placeholder').style.display='none'" style="width:160px;height:160px;object-fit:contain">
-  <div class="qr-placeholder" id="shop-qr-placeholder" style="display:none">🏦<br>请上传收款二维码<br>管理员后台设置</div>
+  <div class="qr-placeholder" id="shop-qr-placeholder" style="display:none">💳<br>收款二维码尚未配置<br>请联系站长上传</div>
 </div>
 <div class="order-steps"><b>支付步骤：</b><br>1. 微信/支付宝扫描上方二维码<br>2. 转账所选金额<br>3. 在下方填写<b>转账单号/交易号</b><br>4. 提交后等待管理员核对发码</div>
 <div class="order-form">
@@ -1897,8 +1898,8 @@ function adminOrdersList(status){
       h+='<td>'+(o.exchange_code||'-')+'</td><td>'+(o.created_at||'').substring(5,16)+'</td>';
       h+='<td>';
       if(o.status==='pending'){
-        h+='<button class="btn btn-sm btn-primary" onclick="adminOrderAct('+o.id+','approve')" style="margin:2px">核发</button>';
-        h+='<button class="btn btn-sm btn-secondary" onclick="adminOrderAct('+o.id+','reject')" style="margin:2px">拒绝</button>';
+        h+='<button class="btn btn-sm btn-primary" onclick="adminOrderAct('+o.id+',\'approve\')" style="margin:2px">核发</button>';
+        h+='<button class="btn btn-sm btn-secondary" onclick="adminOrderAct('+o.id+',\'reject\')" style="margin:2px">拒绝</button>';
       }
       h+='</td></tr>';
     });

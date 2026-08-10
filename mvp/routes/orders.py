@@ -16,8 +16,9 @@ router = APIRouter()
 def _gen_exchange_code(points: int, batch: str = "SHOP") -> str:
     """生成 HMAC 签名兑换码"""
     raw = f"{batch}-{points}-{time.time()}"
+    secret = XCHG_SECRET.encode() if isinstance(XCHG_SECRET, str) else XCHG_SECRET
     sig = hmac.new(
-        XCHG_SECRET.encode(),
+        secret,
         raw.encode(),
         "sha256"
     ).digest()
@@ -41,7 +42,7 @@ def _create_orders_table(session):
             exchange_code VARCHAR(64) DEFAULT '',
             created_at VARCHAR(50) DEFAULT '',
             updated_at VARCHAR(50) DEFAULT ''
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci
     """))
     session.commit()
 
@@ -132,7 +133,7 @@ def admin_orders(request: Request, status: str = "pending", page: int = 1, size:
                 "SELECT o.id, o.player_id, u.username, o.price, o.points, "
                 "o.package_name, o.payer_info, o.payment_ref, o.status, "
                 "o.exchange_code, o.created_at, o.updated_at "
-                "FROM point_orders o LEFT JOIN users u ON o.player_id=u.player_id "
+                "FROM point_orders o LEFT JOIN users u ON o.player_id COLLATE utf8mb4_unicode_ci = u.player_id "
                 "ORDER BY o.id DESC LIMIT :lim OFFSET :off"
             ), {"lim": size, "off": offset}).fetchall()
         else:
@@ -143,7 +144,7 @@ def admin_orders(request: Request, status: str = "pending", page: int = 1, size:
                 "SELECT o.id, o.player_id, u.username, o.price, o.points, "
                 "o.package_name, o.payer_info, o.payment_ref, o.status, "
                 "o.exchange_code, o.created_at, o.updated_at "
-                "FROM point_orders o LEFT JOIN users u ON o.player_id=u.player_id "
+                "FROM point_orders o LEFT JOIN users u ON o.player_id COLLATE utf8mb4_unicode_ci = u.player_id "
                 "WHERE o.status=:st ORDER BY o.id DESC LIMIT :lim OFFSET :off"
             ), {"st": status, "lim": size, "off": offset}).fetchall()
         orders = [{
@@ -196,11 +197,11 @@ async def admin_approve_order(order_id: int, request: Request):
         # 发送通知（通过系统公告）
         s.execute(text(
             "INSERT INTO system_announcements "
-            "(title, content, target_player_id, is_active, created_at) "
-            "VALUES ('订单已处理', :msg, :tid, 1, :ca)"
+            "(content, created_by, is_active, created_at) "
+            "VALUES (:msg, :pid, 1, :ca)"
         ), {
-            "msg": f"您的{order[2]}积分购买订单已处理！兑换码：{code}，请在个人中心兑换。",
-            "tid": order[1], "ca": now
+            "msg": f"订单已处理：您的{order[2]}积分购买订单已处理！兑换码：{code}，请在个人中心兑换。",
+            "pid": pid, "ca": now
         })
 
         s.commit()
@@ -234,11 +235,11 @@ async def admin_reject_order(order_id: int, request: Request):
         # 发送拒绝通知
         s.execute(text(
             "INSERT INTO system_announcements "
-            "(title, content, target_player_id, is_active, created_at) "
-            "VALUES ('订单未通过', :msg, :tid, 1, :ca)"
+            "(content, created_by, is_active, created_at) "
+            "VALUES (:msg, :pid, 1, :ca)"
         ), {
-            "msg": f"您的订单 #{order_id} 未通过审核。请联系管理员或核对转账信息后重新提交。",
-            "tid": order[1], "ca": now
+            "msg": f"订单未通过：您的订单 #{order_id} 未通过审核。请联系管理员或核对转账信息后重新提交。",
+            "pid": pid, "ca": now
         })
         s.commit()
         return {"ok": True, "message": "已拒绝"}
